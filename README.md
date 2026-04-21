@@ -1,5 +1,12 @@
 # Knife Level
 
+> **⚠️ v2.0 is under heavy construction.**
+
+### Planned for v2.0
+
+- Predefined angle profiles — save and select common sharpening angles without manual calibration each time
+- Hardware power latch button on the PCB for reliable turn off and wake, replacing the soft-off workaround
+
 A digital angle level for knife sharpening. Measures blade pitch in real time using an IMU and displays the angle on a small OLED. Alerts you when you drift from your calibrated sharpening angle.
 
 ---
