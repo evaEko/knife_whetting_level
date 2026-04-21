@@ -168,7 +168,7 @@ def main():
                 wake_pending[0] = True
             btn.pin.irq(trigger=Pin.IRQ_FALLING, handler=on_btn_press)
             while True:
-                machine.lightsleep(500)  # Longer sleep, IRQ will catch button
+                machine.idle()  # WFI - more reliable than lightsleep
                 if wake_pending[0] or btn.is_pressed():
                     wake_pending[0] = False
                     start = time.ticks_ms()
