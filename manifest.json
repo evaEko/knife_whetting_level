@@ -1,0 +1,20 @@
+{
+    "manifest": {
+        "dfu_version": 0.5,
+        "softdevice_bootloader": {
+            "bin_file": "sd_bl.bin",
+            "bl_size": 39000,
+            "dat_file": "sd_bl.dat",
+            "init_packet_data": {
+                "application_version": 4294967295,
+                "device_revision": 52840,
+                "device_type": 82,
+                "firmware_crc16": 28984,
+                "softdevice_req": [
+                    65534
+                ]
+            },
+            "sd_size": 151016
+        }
+    }
+}
