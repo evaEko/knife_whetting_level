@@ -122,6 +122,30 @@ screen /dev/ttyACM0 115200
 
 ---
 
+## Known Issues
+
+**Battery drain in soft-off mode** — when you power off with a long press, the MCU enters a low-power idle loop but does not fully cut power. The battery will slowly drain over time.
+
+Workaround: add a physical switch in series with the B+ wire between the battery and the MCU. Flip it off when storing the device.
+
+**Unreliable wake from soft-off** — the device fairly often does not wake up on button press. A workaround is to connect it to a power supply (USB charging), which reliably brings it back. The physical power switch described above also avoids this entirely by doing a hard power cycle. A dedicated power button will be added in the next version.
+
+---
+
+## Configuration
+
+All tunable settings are in [`config.py`](config.py):
+
+| Setting | Default | Description |
+|---|---|---|
+| `DEVIATION_THRESHOLD` | `2.0` | Degrees off-target before the display inverts to warn you |
+| `LONG_PRESS_MS` | `1000` | How long to hold the button for a long press (ms) |
+| `SMOOTHING` | `0.15` | Low-pass filter strength on the displayed angle — `0.0` is raw, higher is smoother but slower to respond; keep below `0.5` |
+
+Pin numbers and I2C addresses are also in `config.py` if you adapt the build to different hardware.
+
+---
+
 ## Usage
 
 1. Power on — battery percentage is shown for 1.5 s, then the live angle appears.
