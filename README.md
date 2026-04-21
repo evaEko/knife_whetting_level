@@ -29,15 +29,15 @@ pip install mpremote --break-system-packages
    /usr/bin/cp micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
 
 ### Deploy firmware
-mpremote connect /dev/ttyACM1 cp main.py :main.py
-mpremote connect /dev/ttyACM1 reset
+mpremote connect /dev/ttyACM0 cp main.py :main.py
+mpremote connect /dev/ttyACM0 reset
 
 ### REPL access
-screen /dev/ttyACM1 115200
+screen /dev/ttyACM0 115200
 
 # Flash
-mpremote connect /dev/ttyACM2 cp config.py :config.py
-mpremote connect /dev/ttyACM2 cp bmi160.py :bmi160.py
-mpremote connect /dev/ttyACM2 cp ssd1306.py :ssd1306.py
-mpremote connect /dev/ttyACM2 cp main.py :main.py
-mpremote connect /dev/ttyACM2 reset
+mpremote connect /dev/ttyACM0 cp config.py :config.py
+mpremote connect /dev/ttyACM0 cp bmi160.py :bmi160.py
+mpremote connect /dev/ttyACM0 cp ssd1306.py :ssd1306.py
+mpremote connect /dev/ttyACM0 cp main.py :main.py
+mpremote connect /dev/ttyACM0 reset

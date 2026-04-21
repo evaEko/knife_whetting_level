@@ -2,6 +2,7 @@ import machine
 import time
 import math
 from machine import I2C, Pin
+import machine
 
 from config import (
     SDA_IMU, SCL_IMU, SDA_OLED, SCK_OLED, BTN_CAL,
@@ -63,6 +64,54 @@ def display_error(oled, msg):
     oled.show()
 
 
+def read_battery_pct():
+    """Read battery % via nRF52840 internal VDDH/5 measurement (nice!nano v2)."""
+    try:
+        import struct, uctypes, time
+        S = 0x40007000
+        machine.mem32[S+0x500] = 0
+        machine.mem32[S+0x510] = 13      # VDDHDIV5
+        machine.mem32[S+0x514] = 0
+        machine.mem32[S+0x518] = (2<<10) # gain=1/6, ref=0.6V, tacq=10us
+        machine.mem32[S+0x5F0] = 2       # 12-bit
+        buf = bytearray(4)
+        machine.mem32[S+0x62C] = uctypes.addressof(buf)
+        machine.mem32[S+0x630] = 1
+        machine.mem32[S+0x500] = 1
+        machine.mem32[S+0x100] = 0
+        machine.mem32[S+0x104] = 0
+        machine.mem32[S+0x000] = 1
+        time.sleep_ms(10)
+        machine.mem32[S+0x004] = 1
+        time.sleep_ms(10)
+        machine.mem32[S+0x500] = 0
+        raw = max(0, struct.unpack('<h', buf[:2])[0])
+        vddh = raw * 18.0 / 4096
+        pct = (vddh - 3.2) / (4.2 - 3.2) * 100
+        return max(0, min(100, int(pct)))
+    except Exception as e:
+        print(f"BATT ERROR: {e}")
+        return None
+
+
+def display_battery(oled, pct):
+    oled.fill(0)
+    oled.text("BAT", (72 - 24) // 2, 2, 1)
+    if pct is None:
+        oled.text("--", (72 - 16) // 2, 16, 1)
+    else:
+        pct_str = f"{pct}%"
+        pw = len(pct_str) * 16  # scale=2 → 16px per char
+        oled.large_text(pct_str, (72 - pw) // 2, 14, scale=2)
+        # Bar outline + fill
+        bx, by, bw, bh = 6, 33, 60, 5
+        oled.fb.rect(bx, by, bw, bh, 1)
+        filled = int(bw * pct / 100)
+        if filled > 0:
+            oled.fb.fill_rect(bx, by, filled, bh, 1)
+    oled.show()
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     state          = STATE_INIT
@@ -91,10 +140,8 @@ def main():
         print(f"INIT ERROR: {e}")
         return
 
-    oled.fill(0)
-    oled.text("OK", 56, 12, 1)
-    oled.show()
-    time.sleep_ms(500)
+    display_battery(oled, read_battery_pct())
+    time.sleep_ms(1500)
 
     state = STATE_READY
     last_display = time.ticks_ms()
