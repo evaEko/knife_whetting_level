@@ -1224,6 +1224,16 @@
 	)
 	(wire
 		(pts
+			(xy 104.14 60.96) (xy 111.76 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1403b5e2-7c89-47e1-9105-ec17be4cbb34")
+	)
+	(wire
+		(pts
 			(xy 63.5 43.18) (xy 63.5 31.75)
 		)
 		(stroke
@@ -1241,6 +1251,16 @@
 			(type default)
 		)
 		(uuid "2ca6ba04-ec96-425c-8125-cf4f8068772e")
+	)
+	(wire
+		(pts
+			(xy 121.92 58.42) (xy 124.46 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2ce88d32-167b-4569-b87f-90aaf0b0bfd3")
 	)
 	(wire
 		(pts
@@ -1281,6 +1301,16 @@
 			(type default)
 		)
 		(uuid "630e27d5-d6c4-4c91-aa04-a7a96472ed2a")
+	)
+	(wire
+		(pts
+			(xy 111.76 60.96) (xy 111.76 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "77e346fd-ffaf-4832-89e0-64a7888b0497")
 	)
 	(wire
 		(pts
@@ -1498,7 +1528,7 @@
 			(uuid "72e2bd61-22f0-4a27-8b27-bd25723fd24a")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U2")
 					(unit 1)
@@ -1565,7 +1595,7 @@
 			(uuid "34064e33-41b3-43bc-ac7c-98a18f3c8291")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR02")
 					(unit 1)
@@ -1698,9 +1728,79 @@
 			(uuid "475ce4af-6109-42bf-8adf-95af79054263")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Switch:SW_Push")
+		(at 116.84 58.42 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "45bd2b8d-ba01-4813-a351-a0824b079c7d")
+		(property "Reference" "SW2"
+			(at 115.5699 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SW_Push"
+			(at 118.1099 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Button_Switch_SMD:SW_Push_1P1T_NO_CK_KSC6xxG"
+			(at 116.84 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 116.84 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Push button switch, generic, two pins"
+			(at 116.84 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "6cf46326-284c-4aa1-9499-a97b154f51ec")
+		)
+		(pin "1"
+			(uuid "c9623e51-ccb4-4a4d-82ca-0a64d51d6d78")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "SW2")
 					(unit 1)
 				)
 			)
@@ -1768,9 +1868,75 @@
 			(uuid "adfaaeaf-31c7-4606-aca4-002eae2384d2")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "SW1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 124.46 58.42 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5f0de83b-180c-48a5-9e9e-171672db402c")
+		(property "Reference" "#PWR07"
+			(at 130.81 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 129.54 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 124.46 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 124.46 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 124.46 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "36f11ac2-30ac-4a7a-a25e-94f0d5e986d8")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -1978,7 +2144,7 @@
 			(uuid "e4bfef15-13a3-4865-bf06-588d5cad2527")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U3")
 					(unit 1)
@@ -2044,7 +2210,7 @@
 			(uuid "d95a875e-8803-4b66-8041-346f4db55e62")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR01")
 					(unit 1)
@@ -2187,7 +2353,7 @@
 			(uuid "4444f632-fcbe-46cc-afcc-fe134a506282")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U1")
 					(unit 1)
