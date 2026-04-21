@@ -183,7 +183,9 @@ def main():
         if state == STATE_READY:
             if angle_offset != 0.0:
                 near_zero = abs(smooth_angle) <= DEVIATION_THRESHOLD
-                oled.invert(not near_zero)
+                # Mirror: calibrate at +X means -X is also correct (displays as -2X)
+                near_mirror = abs(smooth_angle + 2 * angle_offset) <= DEVIATION_THRESHOLD
+                oled.invert(not (near_zero or near_mirror))
             if update_display:
                 display_angle(oled, smooth_angle)
                 last_display = now
