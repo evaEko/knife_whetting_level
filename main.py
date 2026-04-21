@@ -162,13 +162,20 @@ def main():
             oled.show()
             oled._cmd(0xAE)  # display off
             imu.suspend()
+            # Use IRQ flag for reliable wake detection
+            wake_pending = [False]
+            def on_btn_press(pin):
+                wake_pending[0] = True
+            btn.pin.irq(trigger=Pin.IRQ_FALLING, handler=on_btn_press)
             while True:
-                machine.lightsleep(50)
-                if btn.is_pressed():
+                machine.lightsleep(500)  # Longer sleep, IRQ will catch button
+                if wake_pending[0] or btn.is_pressed():
+                    wake_pending[0] = False
                     start = time.ticks_ms()
                     while btn.is_pressed():
                         time.sleep_ms(10)
                     if time.ticks_diff(time.ticks_ms(), start) >= 30:
+                        btn.pin.irq(handler=None)  # Clean up IRQ
                         print("-> WAKE UP")
                         machine.reset()
 
