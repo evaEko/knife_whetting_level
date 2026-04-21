@@ -13,8 +13,8 @@ OLED_ADDR   = 0x3C
 DEVIATION_THRESHOLD = 3.0   # degrees
 LONG_PRESS_MS       = 1000  # ms to count as long press
 
-# Complementary filter
-ALPHA = 0.98  # gyro weight; 1-ALPHA = accel weight
+# Madgwick filter
+MADGWICK_BETA = 0.08  # accel correction gain (0.01=slow/smooth, 0.1=fast/noisy)
 
 # Output smoothing (low-pass on displayed angle)
 SMOOTHING = 0.15  # 0.0 = no smoothing, higher = more smooth (max ~0.5)
