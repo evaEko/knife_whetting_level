@@ -45,10 +45,10 @@ class Button:
 # ── Display helpers ───────────────────────────────────────────────────────────
 def display_angle(oled, angle, label=None):
     oled.fill(0)
-    text = f"{angle:+.0f}"
+    angle = round(angle * 2) / 2
+    text = f"{angle:+.1f}"
     # Scale 2 = 16px tall, fits on 72x40 display
-    char_w = 8 * 2
-    x = max(0, (oled.width - len(text) * char_w) // 2)
+    x = 0
     y = 4 if label else 12
     oled.large_text(text, x, y, scale=2)
     if label:
@@ -104,7 +104,7 @@ def main():
     while True:
         try:
             imu.update()
-            raw_angle = imu.get_roll()
+            raw_angle = imu.get_pitch()
             angle = raw_angle - angle_offset
             # Wrap to ±180
             while angle > 180.0:
@@ -159,7 +159,9 @@ def main():
         # ── READY ─────────────────────────────────────────────────────────────
         if state == STATE_READY:
             if angle_offset != 0.0:
-                oled.invert(abs(smooth_angle) > DEVIATION_THRESHOLD)
+                near_zero = abs(smooth_angle) <= DEVIATION_THRESHOLD
+                near_flip = abs(abs(smooth_angle) - 180.0) <= DEVIATION_THRESHOLD
+                oled.invert(not (near_zero or near_flip))
             if update_display:
                 display_angle(oled, smooth_angle)
                 last_display = now

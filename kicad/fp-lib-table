@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "nice_nano")(type "KiCad")(uri "${KIPRJMOD}/nice-nano-kicad")(options "")(descr "nice!nano v2 footprint"))
+)

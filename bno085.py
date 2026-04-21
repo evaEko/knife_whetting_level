@@ -128,6 +128,12 @@ class BNO085:
             roll += 360.0
         return roll
 
+    def get_pitch(self):
+        """Pitch angle (rotation around Y axis) in degrees, +/-90."""
+        w, x, y, z = self._quat
+        pitch = math.degrees(math.asin(max(-1.0, min(1.0, 2.0 * (w * y - z * x)))))
+        return pitch
+
     def suspend(self):
         """Soft-reset into sleep — on wake, just hard-reset or re-init."""
         pass
