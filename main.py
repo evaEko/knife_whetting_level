@@ -68,6 +68,11 @@ def main():
     state          = STATE_INIT
     angle_offset   = 0.0
     smooth_angle   = 0.0
+    imu_idle       = False
+    last_movement  = time.ticks_ms()
+    idle_ref_angle = 0.0
+    IDLE_TIMEOUT      = 60_000  # ms of no movement before sleeping
+    MOVEMENT_THRESHOLD = 0.5    # degrees delta to count as movement
 
     # ── INIT ──────────────────────────────────────────────────────────────────
     try:
@@ -122,8 +127,19 @@ def main():
         event = btn.update()
         loop_count += 1
 
-        # Only refresh display every DISPLAY_INTERVAL ms
+        # ── Idle / wake detection ─────────────────────────────────────────────
         now = time.ticks_ms()
+        if abs(smooth_angle - idle_ref_angle) >= MOVEMENT_THRESHOLD:
+            idle_ref_angle = smooth_angle
+            last_movement = now
+            if imu_idle:
+                imu.set_report_interval(10)
+                imu_idle = False
+                print("-> IMU WAKE")
+        elif not imu_idle and time.ticks_diff(now, last_movement) >= IDLE_TIMEOUT:
+            imu.set_report_interval(1000)
+            imu_idle = True
+            print("-> IMU IDLE")
         update_display = time.ticks_diff(now, last_display) >= DISPLAY_INTERVAL
 
         # Periodic log to serial
@@ -147,12 +163,12 @@ def main():
             oled._cmd(0xAE)  # display off
             imu.suspend()
             while True:
-                machine.lightsleep()
+                machine.lightsleep(50)
                 if btn.is_pressed():
                     start = time.ticks_ms()
                     while btn.is_pressed():
                         time.sleep_ms(10)
-                    if time.ticks_diff(time.ticks_ms(), start) >= LONG_PRESS_MS:
+                    if time.ticks_diff(time.ticks_ms(), start) >= 30:
                         print("-> WAKE UP")
                         machine.reset()
 
@@ -160,8 +176,7 @@ def main():
         if state == STATE_READY:
             if angle_offset != 0.0:
                 near_zero = abs(smooth_angle) <= DEVIATION_THRESHOLD
-                near_flip = abs(abs(smooth_angle) - 180.0) <= DEVIATION_THRESHOLD
-                oled.invert(not (near_zero or near_flip))
+                oled.invert(not near_zero)
             if update_display:
                 display_angle(oled, smooth_angle)
                 last_display = now

@@ -134,6 +134,19 @@ class BNO085:
         pitch = math.degrees(math.asin(max(-1.0, min(1.0, 2.0 * (w * y - z * x)))))
         return pitch
 
+    def set_report_interval(self, interval_ms):
+        """Change rotation vector report interval. Use 1000+ for low-power idle."""
+        interval_us = interval_ms * 1000
+        cmd = bytearray(17)
+        cmd[0] = _SET_FEATURE_CMD
+        cmd[1] = _GAME_ROTATION_VECTOR
+        struct.pack_into('<I', cmd, 5, interval_us)
+        self._send_packet(_CHAN_CONTROL, cmd)
+        time.sleep_ms(50)
+        for _ in range(5):
+            self._read_packet()
+            time.sleep_ms(10)
+
     def suspend(self):
         """Soft-reset into sleep — on wake, just hard-reset or re-init."""
         pass
