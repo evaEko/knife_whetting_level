@@ -35,8 +35,16 @@ class ComplementaryFilter:
         # Gyro integration (gx = roll rate)
         gyro_angle = self.angle + gx * dt
 
+        # Dynamic alpha: when accel magnitude deviates from 1g,
+        # linear acceleration is present — trust gyro more
+        accel_mag = math.sqrt(ax * ax + ay * ay + az * az)
+        if abs(accel_mag - 1.0) > 0.1:
+            alpha = 0.995
+        else:
+            alpha = self.alpha
+
         # Fuse
-        self.angle = self.alpha * gyro_angle + (1.0 - self.alpha) * accel_angle
+        self.angle = alpha * gyro_angle + (1.0 - alpha) * accel_angle
         return self.angle
 
 
@@ -68,7 +76,7 @@ class Button:
 # ── Display helpers ───────────────────────────────────────────────────────────
 def display_angle(oled, angle, label=None):
     oled.fill(0)
-    text = f"{angle:+.1f}"
+    text = f"{angle:+.0f}"
     # Scale 2 = 16px tall, fits on 72x40 display
     char_w = 8 * 2
     x = max(0, (oled.width - len(text) * char_w) // 2)
@@ -105,7 +113,18 @@ def main():
         print(f"INIT ERROR: {e}")
         return
 
-    print("INIT OK")
+    print("Calibrating gyro...")
+    oled.fill(0)
+    oled.text("HOLD STILL", 4, 12, 1)
+    oled.show()
+    bmi.calibrate_gyro(samples=200)
+    print(f"Gyro bias: gx={bmi.gx_bias:+.2f} gy={bmi.gy_bias:+.2f} gz={bmi.gz_bias:+.2f}")
+
+    # Seed the filter with the current accel angle so it doesn't start from 0
+    ax, ay, az, _, _, _ = bmi.read_all()
+    cf.angle = math.degrees(math.atan2(ay, math.sqrt(ax * ax + az * az)))
+    cf.last_time = time.ticks_ms()
+
     oled.fill(0)
     oled.text("OK", 56, 12, 1)
     oled.show()

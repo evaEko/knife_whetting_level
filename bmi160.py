@@ -26,6 +26,9 @@ class BMI160:
     def __init__(self, i2c, addr=0x68):
         self.i2c = i2c
         self.addr = addr
+        self.gx_bias = 0.0
+        self.gy_bias = 0.0
+        self.gz_bias = 0.0
         self._init()
 
     def _write(self, reg, val):
@@ -50,7 +53,7 @@ class BMI160:
         self._write(_ACC_CONF, 0x2B)
 
         # ±250 dps, 800Hz
-        self._write(_GYR_RANGE, 0x00)
+        self._write(_GYR_RANGE, 0x03)
         self._write(_GYR_CONF, 0x2B)
 
     def read_accel(self):
@@ -65,6 +68,19 @@ class BMI160:
         gx, gy, gz = struct.unpack('<hhh', d)
         return gx / GYR_SENS, gy / GYR_SENS, gz / GYR_SENS
 
+    def calibrate_gyro(self, samples=200):
+        """Average gyro readings at rest to measure zero-rate bias."""
+        sx = sy = sz = 0.0
+        for _ in range(samples):
+            gx, gy, gz = self.read_gyro()
+            sx += gx
+            sy += gy
+            sz += gz
+            time.sleep_ms(5)
+        self.gx_bias = sx / samples
+        self.gy_bias = sy / samples
+        self.gz_bias = sz / samples
+
     def suspend(self):
         """Put accelerometer and gyroscope into suspend mode."""
         self._write(_CMD, 0x10)  # acc suspend
@@ -77,4 +93,6 @@ class BMI160:
         d = self._read(_GYR_DATA, 12)
         gx, gy, gz, ax, ay, az = struct.unpack('<hhhhhh', d)
         return (ax / ACC_SENS, ay / ACC_SENS, az / ACC_SENS,
-                gx / GYR_SENS, gy / GYR_SENS, gz / GYR_SENS)
+                gx / GYR_SENS - self.gx_bias,
+                gy / GYR_SENS - self.gy_bias,
+                gz / GYR_SENS - self.gz_bias)
