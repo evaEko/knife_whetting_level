@@ -1,5 +1,7 @@
 # Knife Level
 
+Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for commercial use.
+
 > **⚠️ v2.0 is under heavy construction.**
 
 ### Planned for v2.0
