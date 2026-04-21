@@ -4,145 +4,17 @@ import math
 from machine import I2C, Pin
 
 from config import (
-    SDA_BMI, SCL_BMI, SDA_OLED, SCK_OLED, BTN_CAL,
-    BMI160_ADDR, OLED_ADDR,
-    DEVIATION_THRESHOLD, LONG_PRESS_MS, SMOOTHING, MADGWICK_BETA
+    SDA_IMU, SCL_IMU, SDA_OLED, SCK_OLED, BTN_CAL,
+    BNO085_ADDR, OLED_ADDR,
+    DEVIATION_THRESHOLD, LONG_PRESS_MS, SMOOTHING
 )
-from bmi160 import BMI160
+from bno085 import BNO085
 from ssd1306 import SSD1306
 
 # ── States ────────────────────────────────────────────────────────────────────
 STATE_INIT        = "INIT"
 STATE_READY       = "READY"
 STATE_CALIBRATION = "CALIBRATION"
-
-
-# ── Madgwick AHRS filter ─────────────────────────────────────────────────────
-_DEG2RAD = math.pi / 180.0
-
-class MadgwickFilter:
-    def __init__(self, beta=MADGWICK_BETA):
-        self.beta = beta
-        # Quaternion [w, x, y, z]
-        self.q0 = 1.0
-        self.q1 = 0.0
-        self.q2 = 0.0
-        self.q3 = 0.0
-        self.last_time = time.ticks_ms()
-
-    def seed(self, ax, ay, az):
-        """Initialize quaternion from accelerometer so it starts aligned."""
-        # Normalize accel
-        norm = math.sqrt(ax * ax + ay * ay + az * az)
-        if norm < 0.01:
-            return
-        ax /= norm
-        ay /= norm
-        az /= norm
-        # Compute pitch and roll from gravity
-        pitch = math.atan2(-ax, az)
-        roll = math.atan2(ay, math.sqrt(ax * ax + az * az))
-        # Convert to quaternion (yaw = 0)
-        cp = math.cos(pitch * 0.5)
-        sp = math.sin(pitch * 0.5)
-        cr = math.cos(roll * 0.5)
-        sr = math.sin(roll * 0.5)
-        self.q0 = cp * cr
-        self.q1 = sp * cr
-        self.q2 = cp * sr
-        self.q3 = sp * sr
-
-    def update(self, ax, ay, az, gx, gy, gz):
-        now = time.ticks_ms()
-        dt = time.ticks_diff(now, self.last_time) / 1000.0
-        self.last_time = now
-
-        q0, q1, q2, q3 = self.q0, self.q1, self.q2, self.q3
-
-        # Convert gyro to rad/s
-        gx *= _DEG2RAD
-        gy *= _DEG2RAD
-        gz *= _DEG2RAD
-
-        # Gyro quaternion rate of change
-        qDot0 = 0.5 * (-q1 * gx - q2 * gy - q3 * gz)
-        qDot1 = 0.5 * (q0 * gx + q2 * gz - q3 * gy)
-        qDot2 = 0.5 * (q0 * gy - q1 * gz + q3 * gx)
-        qDot3 = 0.5 * (q0 * gz + q1 * gy - q2 * gx)
-
-        # Accel correction (gradient descent step)
-        a_norm = math.sqrt(ax * ax + ay * ay + az * az)
-        if a_norm > 0.01:
-            ax /= a_norm
-            ay /= a_norm
-            az /= a_norm
-
-            # Precompute repeated terms
-            _2q0 = 2.0 * q0
-            _2q1 = 2.0 * q1
-            _2q2 = 2.0 * q2
-            _2q3 = 2.0 * q3
-            _4q0 = 4.0 * q0
-            _4q1 = 4.0 * q1
-            _4q2 = 4.0 * q2
-            q0q0 = q0 * q0
-            q1q1 = q1 * q1
-            q2q2 = q2 * q2
-            q3q3 = q3 * q3
-
-            # Gradient
-            s0 = _4q0 * q2q2 + _2q2 * ax + _4q0 * q1q1 - _2q1 * ay
-            s1 = _4q1 * q3q3 - _2q3 * ax + 4.0 * q0q0 * q1 - _2q0 * ay - _4q1 + 8.0 * q1q1 * q1 + 8.0 * q2q2 * q1 + _4q1 * az
-            s2 = 4.0 * q0q0 * q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + 8.0 * q1q1 * q2 + 8.0 * q2q2 * q2 + _4q2 * az
-            s3 = 4.0 * q1q1 * q3 - _2q1 * ax + 4.0 * q2q2 * q3 - _2q2 * ay
-
-            # Normalize gradient step
-            s_norm = math.sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3)
-            if s_norm > 0.0:
-                s0 /= s_norm
-                s1 /= s_norm
-                s2 /= s_norm
-                s3 /= s_norm
-
-            qDot0 -= self.beta * s0
-            qDot1 -= self.beta * s1
-            qDot2 -= self.beta * s2
-            qDot3 -= self.beta * s3
-
-        # Integrate
-        q0 += qDot0 * dt
-        q1 += qDot1 * dt
-        q2 += qDot2 * dt
-        q3 += qDot3 * dt
-
-        # Normalize quaternion
-        norm = math.sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3)
-        self.q0 = q0 / norm
-        self.q1 = q1 / norm
-        self.q2 = q2 / norm
-        self.q3 = q3 / norm
-
-    def get_pitch(self):
-        """Extract pitch angle in degrees (rotation around Y axis)."""
-        q0, q1, q2, q3 = self.q0, self.q1, self.q2, self.q3
-        sinp = 2.0 * (q0 * q2 - q3 * q1)
-        if sinp > 1.0:
-            sinp = 1.0
-        elif sinp < -1.0:
-            sinp = -1.0
-        return math.degrees(math.asin(sinp))
-
-    def get_roll(self):
-        """Extract roll angle in degrees (rotation around X axis), ±180."""
-        q0, q1, q2, q3 = self.q0, self.q1, self.q2, self.q3
-        roll = math.degrees(math.atan2(
-            2.0 * (q0 * q1 + q2 * q3),
-            1.0 - 2.0 * (q1 * q1 + q2 * q2)))
-        if roll > 180.0:
-            roll -= 360.0
-        elif roll < -180.0:
-            roll += 360.0
-        return roll
 
 
 # ── Button helper ─────────────────────────────────────────────────────────────
@@ -196,31 +68,23 @@ def main():
     state          = STATE_INIT
     angle_offset   = 0.0
     smooth_angle   = 0.0
-    mf             = MadgwickFilter()
 
     # ── INIT ──────────────────────────────────────────────────────────────────
     try:
-        i2c_bmi  = I2C(0, sda=Pin(SDA_BMI),  scl=Pin(SCL_BMI),  freq=400000)
+        i2c_imu  = I2C(0, sda=Pin(SDA_IMU),  scl=Pin(SCL_IMU),  freq=400000)
         i2c_oled = I2C(1, sda=Pin(SDA_OLED), scl=Pin(SCK_OLED), freq=400000)
         oled     = SSD1306(i2c_oled, addr=OLED_ADDR)
-        bmi      = BMI160(i2c_bmi, addr=BMI160_ADDR)
-        btn      = Button(BTN_CAL)
+
+        oled.fill(0)
+        oled.text("BNO085...", 4, 12, 1)
+        oled.show()
+
+        imu = BNO085(i2c_imu, addr=BNO085_ADDR)
+        imu.enable_rotation_vector(interval_ms=10)
+        btn = Button(BTN_CAL)
     except Exception as e:
-        # Can't show on display if display failed — fall back to print
         print(f"INIT ERROR: {e}")
         return
-
-    print("Calibrating gyro...")
-    oled.fill(0)
-    oled.text("HOLD STILL", 4, 12, 1)
-    oled.show()
-    bmi.calibrate_gyro(samples=200)
-    print(f"Gyro bias: gx={bmi.gx_bias:+.2f} gy={bmi.gy_bias:+.2f} gz={bmi.gz_bias:+.2f}")
-
-    # Seed the filter from accelerometer so it starts aligned
-    ax, ay, az, _, _, _ = bmi.read_all()
-    mf.seed(ax, ay, az)
-    mf.last_time = time.ticks_ms()
 
     oled.fill(0)
     oled.text("OK", 56, 12, 1)
@@ -238,11 +102,9 @@ def main():
 
     # ── Main loop ─────────────────────────────────────────────────────────────
     while True:
-        # Read sensor and update filter as fast as possible
         try:
-            ax, ay, az, gx, gy, gz = bmi.read_all()
-            mf.update(ax, ay, az, gx, gy, gz)
-            raw_angle = mf.get_roll()
+            imu.update()
+            raw_angle = imu.get_roll()
             angle = raw_angle - angle_offset
             # Wrap to ±180
             while angle > 180.0:
@@ -283,12 +145,9 @@ def main():
             oled.fill(0)
             oled.show()
             oled._cmd(0xAE)  # display off
-            bmi.suspend()
-            # Deep sleep until button long press wakes us
-            # No polling — CPU stays asleep until pin interrupt fires
+            imu.suspend()
             while True:
-                machine.lightsleep()  # no timeout = sleep until interrupt
-                # Woken by pin change; check for long press
+                machine.lightsleep()
                 if btn.is_pressed():
                     start = time.ticks_ms()
                     while btn.is_pressed():
@@ -296,7 +155,6 @@ def main():
                     if time.ticks_diff(time.ticks_ms(), start) >= LONG_PRESS_MS:
                         print("-> WAKE UP")
                         machine.reset()
-                    # Short press — ignore, go back to sleep
 
         # ── READY ─────────────────────────────────────────────────────────────
         if state == STATE_READY:
