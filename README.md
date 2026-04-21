@@ -1,5 +1,7 @@
 # Knife Level
 
+Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for commercial use.
+
 A digital angle level for knife sharpening. Measures blade pitch in real time using an IMU and displays the angle on a small OLED. Alerts you when you drift from your calibrated sharpening angle.
 
 ---
