@@ -6,11 +6,11 @@ from config import (
     SDA_IMU, SCL_IMU, SDA_OLED, SCK_OLED, BTN_CAL,
     BNO085_ADDR, OLED_ADDR, SMOOTHING,
 )
-from bno085 import BNO085
-from ssd1306 import SSD1306
-from button import Button
-from battery import read_battery_pct
-from oled import display_battery
+from drivers.bno085 import BNO085
+from drivers.ssd1306 import SSD1306
+from drivers.button import Button
+from drivers.battery import read_battery_pct
+from drivers.oled import display_battery
 from states import STATE_READY, STATE_CALIBRATION
 import states.ready as state_ready
 import states.calibration as state_calibration

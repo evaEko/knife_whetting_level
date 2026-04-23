@@ -1,6 +1,6 @@
 from states import STATE_CALIBRATION
 from config import DEVIATION_THRESHOLD
-from oled import display_angle
+from drivers.oled import display_angle
 
 
 def run(ctx, oled, event, update_display):

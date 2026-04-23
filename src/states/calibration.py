@@ -1,6 +1,6 @@
 import time
 from states import STATE_READY
-from oled import display_angle
+from drivers.oled import display_angle
 
 
 def run(ctx, oled, raw_angle, event, update_display):

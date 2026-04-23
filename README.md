@@ -102,6 +102,12 @@ The firmware file is included in the repo (`micropython-NRF52840-supermini-v1.24
 pip install mpremote --break-system-packages
 ```
 
+If `mpremote` is not found after installing, add `~/.local/bin` to your PATH:
+
+```bash
+echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
+```
+
 ### 3. Deploy code
 
 First, find which serial port your MCU is on — run `dmesg -w` in one terminal before plugging in and look for the assigned tty (e.g. `ttyACM0`).
