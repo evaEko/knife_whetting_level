@@ -104,22 +104,32 @@ pip install mpremote --break-system-packages
 
 ### 3. Deploy code
 
-To find which serial port your MCU is on, run `dmesg -w` in one terminal before plugging in — you will see the assigned tty (e.g. `ttyACM0`) in the output.
+First, find which serial port your MCU is on — run `dmesg -w` in one terminal before plugging in and look for the assigned tty (e.g. `ttyACM0`).
 
-Then flash to the tty:
+#### Flash automatically
+
+Run from the `knife_level_python` directory:
 
 ```bash
-mpremote connect /dev/ttyACM0 cp config.py :config.py
-mpremote connect /dev/ttyACM0 cp main.py :main.py
-mpremote connect /dev/ttyACM0 cp button.py :button.py
-mpremote connect /dev/ttyACM0 cp battery.py :battery.py
-mpremote connect /dev/ttyACM0 cp oled.py :oled.py
-mpremote connect /dev/ttyACM0 cp bno085.py :bno085.py
-mpremote connect /dev/ttyACM0 cp ssd1306.py :ssd1306.py
+python build_flash.py /dev/ttyACM0
+```
+
+#### Flash manually
+
+Run from the `knife_level_python` directory:
+
+```bash
 mpremote connect /dev/ttyACM0 mkdir :states
-mpremote connect /dev/ttyACM0 cp states/__init__.py :states/__init__.py
-mpremote connect /dev/ttyACM0 cp states/ready.py :states/ready.py
-mpremote connect /dev/ttyACM0 cp states/calibration.py :states/calibration.py
+mpremote connect /dev/ttyACM0 cp src/config.py :config.py
+mpremote connect /dev/ttyACM0 cp src/main.py :main.py
+mpremote connect /dev/ttyACM0 cp src/button.py :button.py
+mpremote connect /dev/ttyACM0 cp src/battery.py :battery.py
+mpremote connect /dev/ttyACM0 cp src/oled.py :oled.py
+mpremote connect /dev/ttyACM0 cp src/bno085.py :bno085.py
+mpremote connect /dev/ttyACM0 cp src/ssd1306.py :ssd1306.py
+mpremote connect /dev/ttyACM0 cp src/states/__init__.py :states/__init__.py
+mpremote connect /dev/ttyACM0 cp src/states/ready.py :states/ready.py
+mpremote connect /dev/ttyACM0 cp src/states/calibration.py :states/calibration.py
 mpremote connect /dev/ttyACM0 reset
 ```
 
