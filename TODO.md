@@ -3,8 +3,8 @@
 ## PCB
 
 
-- [ ] Make sure b+ and b- pins on nice!nano footprint are positioned correctly
-- [ ] Add physical switch in series with B+ for hard power cut
+- [ ] Tidy up
+- [ ] Breadboard the new solution 
 
 ## Firmware
 
