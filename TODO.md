@@ -2,8 +2,9 @@
 
 ## PCB
 
+
+- [ ] Make sure b+ and b- pins on nice!nano footprint are positioned correctly
 - [ ] Add physical switch in series with B+ for hard power cut
-- [ ] Fix pad wiring to B-
 
 ## Firmware
 
