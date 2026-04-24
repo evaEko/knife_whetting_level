@@ -1,5 +1,12 @@
 # TODO
 
+## GitHub
+
+- [ ] Merge v2.0 into main
+- [ ] Set v2.0 (or main) as default branch in GitHub Settings → General → Default branch
+- [ ] Verify GitHub Actions workflow appears in Actions tab and run it manually
+- [ ] Update QUICK_START.md to link to the firmware artifact download
+
 ## PCB
 
 
