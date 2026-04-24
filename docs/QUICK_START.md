@@ -22,6 +22,9 @@ Below is the simplest possible how-to recipe.
 | Latch switch | SPDT or SPST, for B+ power line |
 | LiPo battery | 3.7V ~100mAh, smallest that fits under Pro Micro footprint (~20×30mm) |
 
+
+**Note**: SuperMini clones sometimes need to have a resistor added to allow reading of battery voltage.
+
 ---
 
 ## 3. Solder

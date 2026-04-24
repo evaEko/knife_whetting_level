@@ -11,12 +11,6 @@ Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for comme
 
 If impatient, go over [Quick Start](docs/QUICK_START.md).
 
-
-
-### Why nice!nano?
-
-The nice!nano v2 integrates a LiPo charger. You can charge the battery over USB without any additional charging module or circuit. Battery percentage is read via the nRF52840's internal VDDHDIV5 channel — no external resistors needed.
-
 ## Features (v1.0)
 
 - Displays current pitch angle
