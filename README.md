@@ -9,7 +9,7 @@ Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for comme
 
 ### Why nice!nano?
 
-The nice!nano v2 integrates a LiPo charger. You can charge the battery over USB without any additional charging module or circuit. It also exposes a dedicated battery sense pin (BATIN/P0.04) with a built-in voltage divider, enabling direct battery percentage readout with no extra components.
+The nice!nano v2 integrates a LiPo charger. You can charge the battery over USB without any additional charging module or circuit. Battery percentage is read via the nRF52840's internal VDDHDIV5 channel — no external resistors needed.
 
 ## Features (v1.0)
 
