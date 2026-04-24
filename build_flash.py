@@ -4,10 +4,10 @@ import os
 import subprocess
 import sys
 
-def run(cmd):
+def run(cmd, ignore_errors=False):
     print(f"  {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
+    if result.returncode != 0 and not ignore_errors:
         print(f"ERROR: {result.stderr.strip()}")
         sys.exit(1)
 
@@ -39,7 +39,7 @@ src_files, dirs = find_files()
 print(f"Found {len(src_files)} files, flashing to {tty}...")
 
 for d in dirs:
-    run(["mpremote", "connect", tty, "mkdir", f":{d}"])
+    run(["mpremote", "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
 
 for src in src_files:
     dst = src.removeprefix("src/")
