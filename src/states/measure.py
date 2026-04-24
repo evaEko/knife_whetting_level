@@ -16,37 +16,36 @@ _last_display   = 0
 def measure():
     global _imu_idle, _last_movement, _idle_ref_angle, _last_display
 
-    if ctx.imu is None:
-        time.sleep_ms(10)
-        return None
-
-    try:
-        ctx.imu.update()
-        ctx.raw_angle = ctx.imu.get_pitch()
-        angle = ctx.raw_angle - ctx.angle_offset
-        while angle > 180.0:  angle -= 360.0
-        while angle < -180.0: angle += 360.0
-        if abs(angle - ctx.smooth_angle) > 180.0:
-            ctx.smooth_angle = angle
-        else:
-            ctx.smooth_angle = SMOOTHING * ctx.smooth_angle + (1.0 - SMOOTHING) * angle
-    except OSError:
-        time.sleep_ms(5)
-        return None
+    imu_ok = False
+    if ctx.imu is not None:
+        try:
+            ctx.imu.update()
+            ctx.raw_angle = ctx.imu.get_pitch()
+            angle = ctx.raw_angle - ctx.angle_offset
+            while angle > 180.0:  angle -= 360.0
+            while angle < -180.0: angle += 360.0
+            if abs(angle - ctx.smooth_angle) > 180.0:
+                ctx.smooth_angle = angle
+            else:
+                ctx.smooth_angle = SMOOTHING * ctx.smooth_angle + (1.0 - SMOOTHING) * angle
+            imu_ok = True
+        except OSError:
+            time.sleep_ms(5)
 
     now = time.ticks_ms()
 
-    if abs(ctx.smooth_angle - _idle_ref_angle) >= MOVEMENT_THRESHOLD:
-        _idle_ref_angle = ctx.smooth_angle
-        _last_movement = now
-        if _imu_idle:
-            ctx.imu.set_report_interval(10)
-            _imu_idle = False
-    elif not _imu_idle and time.ticks_diff(now, _last_movement) >= IDLE_TIMEOUT:
-        ctx.imu.set_report_interval(1000)
-        _imu_idle = True
+    if imu_ok:
+        if abs(ctx.smooth_angle - _idle_ref_angle) >= MOVEMENT_THRESHOLD:
+            _idle_ref_angle = ctx.smooth_angle
+            _last_movement = now
+            if _imu_idle:
+                ctx.imu.set_report_interval(10)
+                _imu_idle = False
+        elif not _imu_idle and time.ticks_diff(now, _last_movement) >= IDLE_TIMEOUT:
+            ctx.imu.set_report_interval(1000)
+            _imu_idle = True
 
-    if time.ticks_diff(now, _last_display) >= DISPLAY_INTERVAL:
+    if ctx.oled and time.ticks_diff(now, _last_display) >= DISPLAY_INTERVAL:
         _last_display = now
         angle_offset = ctx.angle_offset
         if angle_offset != 0.0:

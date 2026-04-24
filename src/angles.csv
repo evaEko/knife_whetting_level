@@ -1,0 +1,7 @@
+# knife_id, angle (degrees)
+# Edit this file before flashing to add your knives
+test,90
+my tanto,18
+japanese chef,15
+european chef,20
+chinese cleaver,25

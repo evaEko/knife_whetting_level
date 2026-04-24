@@ -4,14 +4,6 @@
 
 
 - [ ] Tidy up
-- [ ] Breadboard the new solution 
-
-## Firmware
-
-- [ ] Add second button (hardware + pin config)
-- [ ] Add preset angles to config (list of named angles, e.g. Japanese 15°, European 20°)
-- [ ] Second button long press: cycle through preset angles one by one
-- [ ] Second button long press on highlighted preset: select it as the target angle
 
 ## Long-term: Android App + Bluetooth
 
