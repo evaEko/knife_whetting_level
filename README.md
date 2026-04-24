@@ -2,10 +2,14 @@
 
 Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for commercial use.
 
+> **Disclaimer:** This project is provided as-is, without warranty of any kind. The author is not liable for any damage, injury, or loss arising from the use, misuse, or inability to use this project or any hardware built from it.
+
 ## Getting Started
 
 1. [Assemble the hardware](HOW_TO_HARDWARE.md)
 2. [Flash the firmware](HOW_TO_FIRMWARE.md)
+
+If impatient, go over [Quick Start](QUICK_START.md).
 
 ### Why nice!nano?
 
