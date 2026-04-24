@@ -39,12 +39,15 @@ src_files, dirs = find_files()
 print(f"Found {len(src_files)} files, flashing to {tty}...")
 
 # Flash blank main.py first to stop any running code
-import tempfile, os as _os
+import tempfile, os as _os, time as _time
 with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
     f.write("# flashing...\n")
     blank = f.name
 run(["mpremote", "connect", tty, "cp", blank, ":main.py"])
+run(["mpremote", "connect", tty, "reset"])
 _os.unlink(blank)
+print("  waiting for reboot...")
+_time.sleep(3)
 
 for d in dirs:
     run(["mpremote", "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
