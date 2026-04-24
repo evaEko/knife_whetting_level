@@ -21,7 +21,7 @@ def calibrate():
 
         display_angle(ctx.oled, ctx.smooth_angle, label="CAL")
 
-        event = ctx.btn.update()
+        event = ctx.btn_low.update()
         if event == 'short':
             ctx.angle_offset = ctx.raw_angle
             ctx.smooth_angle = 0.0

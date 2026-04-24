@@ -5,12 +5,16 @@ from states.power import off
 
 
 def main():
-    init()
+    try:
+        init()
+    except Exception as e:
+        print(f"INIT CRASH: {e}")
+        return
     while True:
         event = measure()
-        if event == 'short':
+        if event == ('short', 'low'):
             calibrate()
-        elif event == 'long':
+        elif event == ('long', 'low'):
             off()
 
 

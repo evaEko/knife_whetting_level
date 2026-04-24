@@ -3,7 +3,8 @@ SDA_IMU  = 38   # I2C data  — BNO085 IMU
 SCL_IMU  = 36   # I2C clock — BNO085 IMU
 SDA_OLED = 6    # I2C data  — SSD1306 OLED display
 SCK_OLED = 8    # I2C clock — SSD1306 OLED display
-BTN_CAL  = 43   # Calibration button (P1.11)
+BTN_LOW  = 43   # Low button (P1.11) — calibration / power off
+BTN_TOP  = 45   # Top button (P1.13) — preset cycling
 
 # I2C addresses
 BNO085_ADDR = 0x4B  # BNO085 default address (ADR pin low)

@@ -19,15 +19,15 @@ def off():
     def on_btn_press(pin):
         wake_pending[0] = True
 
-    ctx.btn.pin.irq(trigger=Pin.IRQ_FALLING, handler=on_btn_press)
+    ctx.btn_low.pin.irq(trigger=Pin.IRQ_FALLING, handler=on_btn_press)
     while True:
         machine.idle()
-        if wake_pending[0] or ctx.btn.is_pressed():
+        if wake_pending[0] or ctx.btn_low.is_pressed():
             wake_pending[0] = False
             start = time.ticks_ms()
-            while ctx.btn.is_pressed():
+            while ctx.btn_low.is_pressed():
                 time.sleep_ms(10)
             if time.ticks_diff(time.ticks_ms(), start) >= 30:
-                ctx.btn.pin.irq(handler=None)
+                ctx.btn_low.pin.irq(handler=None)
                 print("-> WAKE UP")
                 machine.reset()

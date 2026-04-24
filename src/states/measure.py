@@ -16,6 +16,10 @@ _last_display   = 0
 def measure():
     global _imu_idle, _last_movement, _idle_ref_angle, _last_display
 
+    if ctx.imu is None:
+        time.sleep_ms(10)
+        return None
+
     try:
         ctx.imu.update()
         ctx.raw_angle = ctx.imu.get_pitch()
@@ -51,4 +55,10 @@ def measure():
             ctx.oled.invert(not (near_zero or near_mirror))
         display_angle(ctx.oled, ctx.smooth_angle)
 
-    return ctx.btn.update()
+    ev_low = ctx.btn_low.update() if ctx.btn_low else None
+    ev_top = ctx.btn_top.update() if ctx.btn_top else None
+    if ev_low:
+        return (ev_low, 'low')
+    if ev_top:
+        return (ev_top, 'top')
+    return None
