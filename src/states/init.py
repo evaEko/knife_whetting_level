@@ -33,6 +33,19 @@ def init():
     except Exception as e:
         print(f"BTN ERROR: {e}")
 
+    try:
+        with open('angles.csv') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                parts = line.split(',')
+                if len(parts) == 2:
+                    ctx.angle_settings.append((parts[0].strip(), float(parts[1].strip())))
+        print(f"Loaded {len(ctx.angle_settings)} angle presets")
+    except Exception as e:
+        print(f"angles.csv error: {e}")
+
     if ctx.oled:
         display_battery(ctx.oled, read_battery_pct())
         time.sleep_ms(1500)

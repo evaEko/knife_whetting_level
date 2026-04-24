@@ -28,7 +28,7 @@ def pick_tty():
         return options[idx]
 
 def find_files():
-    all_files = glob.glob("src/**/*.py", recursive=True)
+    all_files = glob.glob("src/**/*.py", recursive=True) + glob.glob("src/**/*.csv", recursive=True)
     src_files = [f for f in all_files if not f.startswith("src/tools/")]
     dirs = sorted({os.path.dirname(f).replace("src/", "") for f in src_files if os.path.dirname(f) != "src"})
     return sorted(src_files), dirs
