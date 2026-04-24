@@ -1,0 +1,30 @@
+name: Build firmware package
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Package firmware
+        run: |
+          mkdir -p firmware_package/src
+          cp build_flash.py firmware_package/
+          cp flash.py firmware_package/
+          cp -r src/drivers src/states src/main.py src/config.py src/ctx.py src/angles.csv firmware_package/src/
+          cp assets/micropython-NRF52840-supermini-v1.24.0-preview.uf2 firmware_package/
+          cp docs/QUICK_START.md firmware_package/README.md
+          cd firmware_package && zip -r ../knife_level_firmware.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: knife_level_firmware
+          path: knife_level_firmware.zip
+          retention-days: 90
