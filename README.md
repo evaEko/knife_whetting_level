@@ -6,10 +6,12 @@ Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for comme
 
 ## Getting Started
 
-1. [Assemble the hardware](HOW_TO_HARDWARE.md)
-2. [Flash the firmware](HOW_TO_FIRMWARE.md)
+1. [Assemble the hardware](docs/HOW_TO_HARDWARE.md)
+2. [Flash the firmware](docs/HOW_TO_FIRMWARE.md)
 
-If impatient, go over [Quick Start](QUICK_START.md).
+If impatient, go over [Quick Start](docs/QUICK_START.md).
+
+
 
 ### Why nice!nano?
 
@@ -30,3 +32,4 @@ The nice!nano v2 integrates a LiPo charger. You can charge the battery over USB 
 - **Two-button interface** — low button for calibration, top button to cycle and select presets
 - **Flash mode** — long-press the top button to drop to REPL for flashing without unplugging
 - **Physical power switch** — B+ latch switch replaces soft power off
+

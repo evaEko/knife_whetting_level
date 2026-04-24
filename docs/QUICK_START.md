@@ -5,7 +5,7 @@ Below is the simplest possible how-to recipe.
 ## 1. Order the PCB
 
 1. Install [KiCad 9](https://www.kicad.org/download/)
-2. Open [`kicad/kicad.kicad_sch`](kicad/kicad.kicad_sch)
+2. Open [`kicad/kicad.kicad_sch`](../kicad/kicad.kicad_sch)
 3. Generate Gerbers: **File → Fabrication Outputs → Gerbers**
 4. Upload to a PCB manufacturer — [AISLER](https://aisler.net) is recommended (EU-based, good quality)
 
@@ -48,7 +48,7 @@ Opening the repo in **VS Code** is recommended — it makes editing `angles.csv`
 
 ### Customize before flashing
 
-Edit [`src/angles.csv`](src/angles.csv) to add your knives:
+Edit [`src/angles.csv`](../src/angles.csv) to add your knives:
 
 ```
 my tanto,18
@@ -56,7 +56,7 @@ japanese chef,15
 european chef,20
 ```
 
-Adjust any thresholds in [`src/config.py`](src/config.py) if needed.
+Adjust any thresholds in [`src/config.py`](../src/config.py) if needed.
 
 ### Flash MicroPython (one-time)
 

@@ -1,6 +1,6 @@
 # Hardware Assembly
 
-The KiCad schematic is in [`kicad/kicad.kicad_sch`](kicad/kicad.kicad_sch). Open it in KiCad 9 to view the full schematic and generate gerbers for PCB fabrication. Have it fabricated. It is possible to do this on perfboard: it is a good idea to breadboard it first and plan the perfboard version, use both sides (TODO: documentation of perfboard options).
+The KiCad schematic is in [`kicad/kicad.kicad_sch`](../kicad/kicad.kicad_sch). Open it in KiCad 9 to view the full schematic and generate gerbers for PCB fabrication. Have it fabricated. It is possible to do this on perfboard: it is a good idea to breadboard it first and plan the perfboard version, use both sides (TODO: documentation of perfboard options).
 
 Wire up the components according to the pin assignments table above. The nice!nano sits on the PCB via its castellated pads or through-hole pins.
 
@@ -19,7 +19,6 @@ Consider socketing the MCU using mill-max or machined pin headers instead of sol
 | Display | SSD1306 0.91" OLED | I2C, 128×32 px, addr `0x3C` |
 | Two push buttons  | Tactile push button | SMD, e.g. CK KSC6xxG footprint |
 | Battery | LiPo 3.7V 100mAh | Smallest single-cell LiPo that fits under the Pro Micro footprint (e.g. 20×30mm) |
-| Resistor | none required | Battery voltage is read via the nRF52840 internal VDDHDIV5 channel — no external resistors needed |
 | PCB| Custom PCB (see kicad folder) | The PCB makes everything simpler, however, you can perfboard it: you will need to use both sides: plan ahead. |
 
 ## Note on MCU Board
