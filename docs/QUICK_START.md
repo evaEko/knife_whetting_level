@@ -92,6 +92,15 @@ Found 14 files, flashing to /dev/ttyACM0...
 Done.
 ```
 
+### Level the board (first time only)
+
+> **What this is for:** The sensor may not sit perfectly flat on the PCB due to soldering, sockets, or mechanical tolerances. Board levelling stores a correction angle so all subsequent readings are accurate regardless of mounting. It is needed only the first time: the setting survives flashing and when the position of the sensor changes.
+
+1. Long-press the low button — display shows "Place on straight surface"
+2. Place the device on a known flat surface
+3. Short-press the low button — display shows "Reboot!"
+4. Power cycle the device — the correction is now active
+
 ---
 
 ## 5. Use
