@@ -1,5 +1,7 @@
 # TODO
 
+* tag v2.0 commit
+* reboot automatically after saving eeprom angle
 
 # Prepare for public:
 
