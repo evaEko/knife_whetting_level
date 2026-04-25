@@ -23,7 +23,7 @@ def measure():
             ctx.raw_angle = ctx.imu.get_pitch()
             # smooth_angle is relative to calibrated_offset so display shows
             # 0 at calibration point and target_angle at the correct sharpening angle
-            angle = ctx.raw_angle - ctx.calibrated_offset
+            angle = ctx.raw_angle - ctx.board_offset - ctx.calibrated_offset
             while angle > 180.0:  angle -= 360.0
             while angle < -180.0: angle += 360.0
             if abs(angle - ctx.smooth_angle) > 180.0:

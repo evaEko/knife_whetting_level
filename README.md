@@ -27,4 +27,5 @@ If impatient, go over [Quick Start](docs/QUICK_START.md).
 - **Two-button interface** — low button for calibration, top button to cycle and select presets
 - **Flash mode** — long-press the top button to drop to REPL for flashing without unplugging
 - **Physical power switch** — B+ latch switch replaces soft power off
+- **Board levelling** — correct for sensor mounting angle once; stored in flash, applied automatically on every boot
 

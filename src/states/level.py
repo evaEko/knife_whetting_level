@@ -2,12 +2,22 @@ import time
 import ctx
 
 
+def get_board_level():
+    try:
+        with open('board_offset.txt') as f:
+            value = float(f.read().strip())
+        print(f"Board level loaded: {value:+.2f}")
+        return value
+    except Exception:
+        print("No board level saved, using 0.0")
+        return 0.0
+
+
 def store_level_to_eeprom(angle):
-    ctx.board_offset = ctx.board_offset + angle
     try:
         with open('board_offset.txt', 'w') as f:
-            f.write(str(ctx.board_offset))
-        print(f"-> BOARD OFFSET saved: {ctx.board_offset:+.2f}")
+            f.write(str(angle))
+        print(f"-> BOARD OFFSET saved: {angle:+.2f}")
     except Exception as e:
         print(f"Save error: {e}")
 
@@ -23,22 +33,29 @@ def level():
     ctx.oled.text("surface", 12, 28, 1)
     ctx.oled.show()
 
-    # wait for button to be fully released
     while ctx.btn_low and ctx.btn_low.is_pressed():
         time.sleep_ms(10)
     time.sleep_ms(50)
 
     while True:
         if ctx.btn_low and ctx.btn_low.is_pressed():
-            time.sleep_ms(50)  # debounce
+            time.sleep_ms(50)
             if ctx.btn_low.is_pressed():
+                start = time.ticks_ms()
                 while ctx.btn_low.is_pressed():
                     time.sleep_ms(10)
-                store_level_to_eeprom(ctx.raw_angle)
-                ctx.oled.fill(0)
-                ctx.oled.text("Saved!", 20, 12, 1)
-                ctx.oled.show()
-                time.sleep_ms(1000)
+                duration = time.ticks_diff(time.ticks_ms(), start)
+                if duration >= 1000:
+                    store_level_to_eeprom(0.0)
+                    ctx.oled.fill(0)
+                    ctx.oled.text("Reset!", 20, 12, 1)
+                    ctx.oled.show()
+                else:
+                    store_level_to_eeprom(ctx.raw_angle)
+                    ctx.oled.fill(0)
+                    ctx.oled.text("Reboot!", 16, 12, 1)
+                    ctx.oled.show()
+                time.sleep_ms(2000)
                 return
 
         time.sleep_ms(10)

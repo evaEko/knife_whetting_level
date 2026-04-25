@@ -97,10 +97,11 @@ Done.
 ## 5. Use
 
 1. **Power on** — battery percentage shows for 1.5 s, then the live pitch angle appears
-2. **Calibrate** — place the device on your reference surface and short-press the low button; press again to lock it in. This sets the zero point. The display then shows angles relative to this reference.
-3. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives, confirm with the low button. The display will show the preset angle (e.g. 18°) when you are holding the knife at the correct sharpening angle.
-4. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
-5. **Reflash mode** — long-press the top button to drop to REPL so you can update the firmware or edit `angles.csv`.
+2. **Board levelling (first time only)** — if the sensor is not mounted perfectly flat, correct for it: long-press the low button, place the device on a flat surface, short-press the low button to save. Reboot. The correction is stored permanently.
+3. **Calibrate** — place the device on your reference surface and short-press the low button; press again to lock it in. This sets the zero point. The display then shows angles relative to this reference.
+4. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives, confirm with the low button. The display will show the preset angle (e.g. 18°) when you are holding the knife at the correct sharpening angle.
+5. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
+6. **Reflash mode** — long-press the top button to drop to REPL so you can update the firmware or edit `angles.csv`.
 
 ---
 

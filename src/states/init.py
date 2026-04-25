@@ -7,6 +7,7 @@ from drivers.bno085 import BNO085
 from drivers.button import Button
 from drivers.battery import read_battery_pct
 from drivers.oled import display_battery
+from states.level import get_board_level
 
 
 def init():
@@ -45,6 +46,8 @@ def init():
         print(f"Loaded {len(ctx.angle_settings)} angle presets")
     except Exception as e:
         print(f"angles.csv error: {e}")
+
+    ctx.board_offset = get_board_level()
 
     if ctx.oled:
         display_battery(ctx.oled, read_battery_pct())
