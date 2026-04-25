@@ -34,9 +34,10 @@ def select_angle():
 
         elif ev_low == 'short':
             name, angle = ctx.angle_settings[_index]
-            ctx.angle_offset = angle
+            ctx.target_angle = angle
+            ctx.angle_offset = ctx.calibrated_offset + angle
             ctx.smooth_angle = 0.0
-            print(f"-> PRESET '{name}' {angle}°")
+            print(f"-> PRESET '{name}' {angle}° (cal={ctx.calibrated_offset:+.1f})")
             ctx.oled.fill(0)
             ctx.oled.text("SET", 24, 4, 1)
             ctx.oled.large_text(f"{angle:.0f}", 0, 16, scale=2)

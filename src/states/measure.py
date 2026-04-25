@@ -21,7 +21,9 @@ def measure():
         try:
             ctx.imu.update()
             ctx.raw_angle = ctx.imu.get_pitch()
-            angle = ctx.raw_angle - ctx.angle_offset
+            # smooth_angle is relative to calibrated_offset so display shows
+            # 0 at calibration point and target_angle at the correct sharpening angle
+            angle = ctx.raw_angle - ctx.calibrated_offset
             while angle > 180.0:  angle -= 360.0
             while angle < -180.0: angle += 360.0
             if abs(angle - ctx.smooth_angle) > 180.0:
@@ -47,11 +49,10 @@ def measure():
 
     if ctx.oled and time.ticks_diff(now, _last_display) >= DISPLAY_INTERVAL:
         _last_display = now
-        angle_offset = ctx.angle_offset
-        if angle_offset != 0.0:
-            near_zero   = abs(ctx.smooth_angle) <= DEVIATION_THRESHOLD
-            near_mirror = abs(ctx.smooth_angle + 2 * angle_offset) <= DEVIATION_THRESHOLD
-            ctx.oled.invert(not (near_zero or near_mirror))
+        if ctx.target_angle != 0.0:
+            near_target = abs(ctx.smooth_angle - ctx.target_angle) <= DEVIATION_THRESHOLD
+            near_mirror = abs(ctx.smooth_angle + ctx.target_angle) <= DEVIATION_THRESHOLD
+            ctx.oled.invert(not (near_target or near_mirror))
         display_angle(ctx.oled, ctx.smooth_angle)
 
     ev_low = ctx.btn_low.update() if ctx.btn_low else None

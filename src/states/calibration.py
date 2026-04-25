@@ -11,7 +11,7 @@ def calibrate():
         try:
             ctx.imu.update()
             ctx.raw_angle = ctx.imu.get_pitch()
-            angle = ctx.raw_angle - ctx.angle_offset
+            angle = ctx.raw_angle - ctx.calibrated_offset
             while angle > 180.0:  angle -= 360.0
             while angle < -180.0: angle += 360.0
             ctx.smooth_angle = ctx.smooth_angle * 0.15 + angle * 0.85
@@ -23,9 +23,9 @@ def calibrate():
 
         event = ctx.btn_low.update()
         if event == 'short':
-            ctx.angle_offset = ctx.raw_angle
+            ctx.calibrated_offset = ctx.raw_angle
             ctx.smooth_angle = 0.0
-            print(f"-> SET offset={ctx.raw_angle:+.1f}, -> READY")
+            print(f"-> CAL calibrated_offset={ctx.calibrated_offset:+.1f}")
             display_angle(ctx.oled, 0.0, label="SET")
             time.sleep_ms(500)
             return
