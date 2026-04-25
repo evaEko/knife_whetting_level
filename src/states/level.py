@@ -38,6 +38,13 @@ def level():
     time.sleep_ms(50)
 
     while True:
+        if ctx.imu:
+            try:
+                ctx.imu.update()
+                ctx.raw_angle = ctx.imu.get_pitch()
+            except OSError:
+                pass
+
         if ctx.btn_low and ctx.btn_low.is_pressed():
             time.sleep_ms(50)
             if ctx.btn_low.is_pressed():
@@ -45,10 +52,11 @@ def level():
                 while ctx.btn_low.is_pressed():
                     time.sleep_ms(10)
                 duration = time.ticks_diff(time.ticks_ms(), start)
-                if duration >= 1000:
+                if duration >= 800:
                     store_level_to_eeprom(0.0)
                     ctx.oled.fill(0)
-                    ctx.oled.text("Reset!", 20, 12, 1)
+                    ctx.oled.text("BL reset", 16, 4, 1)
+                    ctx.oled.text("Reboot!", 4, 20, 1)
                     ctx.oled.show()
                 else:
                     store_level_to_eeprom(ctx.raw_angle)

@@ -48,6 +48,7 @@ def init():
         print(f"angles.csv error: {e}")
 
     ctx.board_offset = get_board_level()
+    print(f"ctx.board_offset set to: {ctx.board_offset}")
 
     if ctx.oled:
         display_battery(ctx.oled, read_battery_pct())
