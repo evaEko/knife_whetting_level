@@ -6,6 +6,7 @@ from states.measure import measure
 from states.calibration import calibrate
 from states.select_angle import select_angle
 from states.flash import flash
+from states.level import level
 
 
 def main():
@@ -22,6 +23,8 @@ def main():
             select_angle()
         elif event == ('long', 'top'):
             flash()
+        elif event == ('long', 'low'):
+            level()
 
 
 main()

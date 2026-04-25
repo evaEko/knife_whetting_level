@@ -1,5 +1,9 @@
 # TODO
 
+## Firmware
+
+- [ ] add return to presets menu 
+
 ## GitHub
 
 - [ ] Merge v2.0 into main
