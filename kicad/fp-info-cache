@@ -1,4 +1,4 @@
-27096222639147663
+27097999445727930
 Battery
 BatteryClip_Keystone_54_D16-19mm
 Battery clip for batteries with a diameter between 16-19 mm: https://www.keyelco.com/product.cfm/product_id/826
@@ -107330,6 +107330,13 @@ nice_nano
 0
 24
 24
+nice_nano
+nice_nano_with_bat_pins
+
+
+0
+26
+26
 waker
 OLED
 

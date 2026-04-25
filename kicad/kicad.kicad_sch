@@ -5,6 +5,119 @@
 	(uuid "80d6febd-194a-41da-8c93-73e5ad43e615")
 	(paper "A4")
 	(lib_symbols
+		(symbol "Connector_Generic:Conn_01x01"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x01"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Generic connector, single row, 01x01, script generated (kicad-library-utils/schlib/autogen/connector/)"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x01_1_1"
+				(rectangle
+					(start -1.27 1.27)
+					(end 1.27 -1.27)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(rectangle
+					(start -1.27 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Switch:SW_Push"
 			(pin_numbers
 				(hide yes)
@@ -145,6 +258,182 @@
 						)
 					)
 					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Switch:SW_SPDT"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "SW_SPDT"
+				(at 0 -5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 -7.62 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Switch, single pole double throw"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "switch single-pole double-throw spdt ON-ON"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SW_SPDT_0_1"
+				(circle
+					(center -2.032 0)
+					(radius 0.4572)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.651 0.254) (xy 1.651 2.286)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 2.54)
+					(radius 0.4572)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.032 -2.54)
+					(radius 0.4572)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "SW_SPDT_1_1"
+				(rectangle
+					(start -3.175 3.81)
+					(end 3.175 -3.81)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 2.54 180)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -2.54 180)
+					(length 2.54)
+					(name "C"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -541,7 +830,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "nice_nano:nice_nano"
+		(symbol "nice-nano:nice_nano_with_bat_pins"
 			(pin_names
 				(offset 1.016)
 			)
@@ -557,7 +846,7 @@
 				)
 			)
 			(property "Value" "nice_nano"
-				(at 0 2.54 0)
+				(at 2.032 -18.034 0)
 				(effects
 					(font
 						(size 1.524 1.524)
@@ -591,7 +880,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "nice_nano_0_1"
+			(symbol "nice_nano_with_bat_pins_0_1"
 				(rectangle
 					(start -12.7 -21.59)
 					(end 12.7 19.05)
@@ -604,7 +893,25 @@
 					)
 				)
 			)
-			(symbol "nice_nano_1_1"
+			(symbol "nice_nano_with_bat_pins_1_1"
+				(pin passive line
+					(at -17.78 16.51 0)
+					(length 5.08)
+					(name "B-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "26"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 				(pin input line
 					(at -17.78 13.97 0)
 					(length 5.08)
@@ -821,53 +1128,17 @@
 						)
 					)
 				)
-				(pin input line
-					(at -7.62 -26.67 90)
+				(pin power_in line
+					(at 17.78 16.51 180)
 					(length 5.08)
-					(name "P1.01"
+					(name "B+"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "31"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -3.81 -26.67 90)
-					(length 5.08)
-					(name "P1.02"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "32"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 0 -26.67 90)
-					(length 5.08)
-					(name "P1.07"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "33"
+					(number "25"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -878,7 +1149,7 @@
 				(pin input line
 					(at 17.78 13.97 180)
 					(length 5.08)
-					(name "BATIN/P0.04"
+					(name "P0.04"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1244,6 +1515,16 @@
 	)
 	(wire
 		(pts
+			(xy 121.92 58.42) (xy 124.46 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2ce88d32-167b-4569-b87f-90aaf0b0bfd3")
+	)
+	(wire
+		(pts
 			(xy 68.58 35.56) (xy 68.58 31.75)
 		)
 		(stroke
@@ -1261,6 +1542,16 @@
 			(type default)
 		)
 		(uuid "40618f4d-7ff9-4596-ba60-19ef53b18d36")
+	)
+	(wire
+		(pts
+			(xy 50.8 40.64) (xy 68.58 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4ec8d18f-fd43-47c2-aa50-e526165936b5")
 	)
 	(wire
 		(pts
@@ -1284,6 +1575,16 @@
 	)
 	(wire
 		(pts
+			(xy 111.76 58.42) (xy 111.76 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "77e346fd-ffaf-4832-89e0-64a7888b0497")
+	)
+	(wire
+		(pts
 			(xy 71.12 31.75) (xy 72.39 31.75)
 		)
 		(stroke
@@ -1301,6 +1602,16 @@
 			(type default)
 		)
 		(uuid "9cd8675c-9449-42c6-8610-831421d7875b")
+	)
+	(wire
+		(pts
+			(xy 111.76 63.5) (xy 104.14 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a3710a88-922f-4f95-b93c-2db920c1404c")
 	)
 	(wire
 		(pts
@@ -1361,6 +1672,16 @@
 			(type default)
 		)
 		(uuid "d90082df-caf0-44d5-a82b-737401cfcd6d")
+	)
+	(wire
+		(pts
+			(xy 104.14 40.64) (xy 111.76 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "db7c12f3-1911-424f-8b07-a1cd9ca9407d")
 	)
 	(wire
 		(pts
@@ -1498,7 +1819,7 @@
 			(uuid "72e2bd61-22f0-4a27-8b27-bd25723fd24a")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U2")
 					(unit 1)
@@ -1565,7 +1886,7 @@
 			(uuid "34064e33-41b3-43bc-ac7c-98a18f3c8291")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR02")
 					(unit 1)
@@ -1698,9 +2019,79 @@
 			(uuid "475ce4af-6109-42bf-8adf-95af79054263")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Switch:SW_Push")
+		(at 116.84 58.42 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "45bd2b8d-ba01-4813-a351-a0824b079c7d")
+		(property "Reference" "SW2"
+			(at 115.5699 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "SW_Push"
+			(at 118.1099 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Button_Switch_SMD:SW_Push_1P1T_NO_CK_KSC6xxG"
+			(at 116.84 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 116.84 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Push button switch, generic, two pins"
+			(at 116.84 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "6cf46326-284c-4aa1-9499-a97b154f51ec")
+		)
+		(pin "1"
+			(uuid "c9623e51-ccb4-4a4d-82ca-0a64d51d6d78")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "SW2")
 					(unit 1)
 				)
 			)
@@ -1768,9 +2159,140 @@
 			(uuid "adfaaeaf-31c7-4606-aca4-002eae2384d2")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "SW1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector_Generic:Conn_01x01")
+		(at 45.72 40.64 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5afc370e-04b6-4947-bba1-6857b789c9e5")
+		(property "Reference" "BAT-1"
+			(at 45.72 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Conn_01x01"
+			(at 45.72 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_Wire:SolderWire-0.1sqmm_1x01_D0.4mm_OD1mm"
+			(at 45.72 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 45.72 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x01, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 45.72 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c542b7f1-c4e2-4591-b62f-5d70b8a17404")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "BAT-1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 124.46 58.42 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5f0de83b-180c-48a5-9e9e-171672db402c")
+		(property "Reference" "#PWR07"
+			(at 130.81 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 129.54 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 124.46 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 124.46 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 124.46 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "36f11ac2-30ac-4a7a-a25e-94f0d5e986d8")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -1911,6 +2433,146 @@
 		)
 	)
 	(symbol
+		(lib_id "nice-nano:nice_nano_with_bat_pins")
+		(at 86.36 57.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b6ef4e42-dbc6-4135-964c-bbb757905c5b")
+		(property "Reference" "U1"
+			(at 86.36 33.02 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "nice_nano"
+			(at 86.36 35.56 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "nice_nano:nice_nano_with_bat_pins"
+			(at 113.03 120.65 90)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 113.03 120.65 90)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 86.36 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "15"
+			(uuid "63631542-1903-4c3f-905a-72c70faab6aa")
+		)
+		(pin "19"
+			(uuid "8510a9d1-d59b-40d9-922d-94423f785528")
+		)
+		(pin "7"
+			(uuid "f3cf5d95-5ba5-449f-9f49-cdc7edce6467")
+		)
+		(pin "17"
+			(uuid "61074bbb-742d-4ce9-982f-2b04248660a2")
+		)
+		(pin "10"
+			(uuid "4bc27d22-b5a9-4a5c-bbff-ca09659e15ab")
+		)
+		(pin "22"
+			(uuid "643d153e-ed67-41b3-8091-89b6dca593ea")
+		)
+		(pin "8"
+			(uuid "899715dc-ba34-4f59-8eef-288e0c5d0c18")
+		)
+		(pin "18"
+			(uuid "ce3fdd35-eec8-49ac-a1bf-369f9d6a5c35")
+		)
+		(pin "9"
+			(uuid "9efa0948-dcd5-490b-9741-dc9218b4cb21")
+		)
+		(pin "11"
+			(uuid "956cafd9-12cc-4c2a-8da4-6433ca195302")
+		)
+		(pin "12"
+			(uuid "a23728f3-8866-455c-b2f9-8424ed057f40")
+		)
+		(pin "13"
+			(uuid "86d18ba6-f12c-4545-adac-e7ab46534245")
+		)
+		(pin "16"
+			(uuid "efbefdd8-7898-4cfc-b7a5-bfdedfb6f5df")
+		)
+		(pin "24"
+			(uuid "d2b1aee6-58a3-400e-b645-4b653c567a8e")
+		)
+		(pin "14"
+			(uuid "8a913c11-223d-4c66-95f6-0c6605cebbe3")
+		)
+		(pin "2"
+			(uuid "d4038f4c-6377-405a-a353-54b51d22e8ce")
+		)
+		(pin "1"
+			(uuid "1bac598b-e3a9-4449-8f7a-13b4f931efbe")
+		)
+		(pin "4"
+			(uuid "2c83cf45-f32e-48c2-9ddb-455e78f2171b")
+		)
+		(pin "3"
+			(uuid "4e6828a4-32b0-44f5-9e14-4a2e64ddf7ec")
+		)
+		(pin "26"
+			(uuid "443af6d3-dece-44e6-918a-190dee650d43")
+		)
+		(pin "5"
+			(uuid "ae0dd710-b97c-4143-91a1-7aa5f14864f8")
+		)
+		(pin "6"
+			(uuid "ae4b8335-0bae-4189-be3e-d2224886f8af")
+		)
+		(pin "25"
+			(uuid "f9a12f0c-7bb1-481c-b053-17d295ab6e0f")
+		)
+		(pin "21"
+			(uuid "075cec07-eada-42a9-b232-8d3c02ce43d5")
+		)
+		(pin "20"
+			(uuid "e103bf31-067b-4c39-bb3a-9fdee46b1b2e")
+		)
+		(pin "23"
+			(uuid "80635497-ea52-4bd6-bd81-ced5534ac59d")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "knife_level:SSD1306_OLED_042")
 		(at 67.31 21.59 90)
 		(unit 1)
@@ -1978,9 +2640,80 @@
 			(uuid "e4bfef15-13a3-4865-bf06-588d5cad2527")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Switch:SW_SPDT")
+		(at 116.84 40.64 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d008a222-456a-4423-8e61-6df4b779ff41")
+		(property "Reference" "SW_POWER1"
+			(at 116.84 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "SW_SPDT"
+			(at 116.84 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Button_Switch_SMD:SW_SPDT_Shouhan_MSK12C02"
+			(at 116.84 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 116.84 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Switch, single pole double throw"
+			(at 116.84 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "b5f36cd5-5c5f-4c8f-a9b2-58d33f8586e1")
+		)
+		(pin "1"
+			(uuid "ff058db3-7dde-4a78-a57a-eeca218c42a3")
+		)
+		(pin "3"
+			(uuid "decd4209-9fe5-4db5-9f3c-89f2912e9eb6")
+		)
+		(instances
+			(project "kicad"
+				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
+					(reference "SW_POWER1")
 					(unit 1)
 				)
 			)
@@ -2044,7 +2777,7 @@
 			(uuid "d95a875e-8803-4b66-8041-346f4db55e62")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR01")
 					(unit 1)
@@ -2053,51 +2786,35 @@
 		)
 	)
 	(symbol
-		(lib_id "nice_nano:nice_nano")
-		(at 86.36 57.15 0)
+		(lib_id "Connector_Generic:Conn_01x01")
+		(at 127 43.18 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "d8545357-7c18-4c65-92e0-ad8acde15017")
-		(property "Reference" "U1"
-			(at 86.36 33.02 0)
+		(uuid "d8d3b6a1-cad1-45e2-9c74-ec6f9be01a09")
+		(property "Reference" "BAT+1"
+			(at 129.54 41.9099 0)
 			(effects
 				(font
-					(size 1.524 1.524)
+					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
-		(property "Value" "nice_nano"
-			(at 86.36 35.56 0)
+		(property "Value" "Conn_01x01"
+			(at 129.54 44.4499 0)
 			(effects
 				(font
-					(size 1.524 1.524)
+					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
-		(property "Footprint" "nice_nano:nice_nano"
-			(at 113.03 120.65 90)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 113.03 120.65 90)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 86.36 57.15 0)
+		(property "Footprint" "Connector_Wire:SolderWire-0.1sqmm_1x01_D0.4mm_OD1mm"
+			(at 127 43.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2105,91 +2822,31 @@
 				(hide yes)
 			)
 		)
-		(pin "24"
-			(uuid "c2ea0b78-e1a4-49d1-9802-246fb0f2600e")
+		(property "Datasheet" "~"
+			(at 127 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
 		)
-		(pin "21"
-			(uuid "ae217891-2653-4193-b98a-11bac42616c9")
-		)
-		(pin "13"
-			(uuid "a91abd8d-830c-4df4-a156-054422f63557")
-		)
-		(pin "12"
-			(uuid "797709f6-a65d-4efc-96c2-a5505e70211d")
-		)
-		(pin "33"
-			(uuid "83b320a5-387e-4332-964c-2f8cd32b8fd4")
-		)
-		(pin "31"
-			(uuid "bc893a43-b99a-4f84-b466-ad6b733df0ed")
-		)
-		(pin "11"
-			(uuid "cb7e6f47-7c0b-4da9-ab87-367c4b3c6b00")
-		)
-		(pin "15"
-			(uuid "4d626cbd-ef87-48fe-a81c-964836213a08")
-		)
-		(pin "20"
-			(uuid "d4d02b9d-2763-48ca-a21d-af423b6f0e2f")
-		)
-		(pin "9"
-			(uuid "cd1d2486-2095-44f8-9cd1-f8c8e9aebcaa")
-		)
-		(pin "10"
-			(uuid "3819ce5f-92e6-492a-9ca5-1400b4b44255")
-		)
-		(pin "8"
-			(uuid "314aec4a-26a9-46f1-a7a9-51215c053b5e")
-		)
-		(pin "3"
-			(uuid "eb3543fc-7f52-4f3b-921b-56d669d84275")
-		)
-		(pin "2"
-			(uuid "48e63740-66f7-4a2e-a6d4-479bd31caa60")
+		(property "Description" "Generic connector, single row, 01x01, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 127 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
 		)
 		(pin "1"
-			(uuid "09725921-52e3-40a2-84ec-22af1d26bb5d")
-		)
-		(pin "19"
-			(uuid "4ad2b2c7-f77d-4b9b-b276-8c5d8a892f3f")
-		)
-		(pin "17"
-			(uuid "df403ecd-d5a8-40ac-9946-beef8eef000c")
-		)
-		(pin "16"
-			(uuid "4fd78871-d327-48bc-9a8f-949d2f81ca95")
-		)
-		(pin "18"
-			(uuid "08794ed4-eb75-4a26-83c6-2ad92406ba36")
-		)
-		(pin "22"
-			(uuid "de015242-d76e-4988-a078-32ab1716fd32")
-		)
-		(pin "14"
-			(uuid "b8a39faa-9aec-4830-b2ae-9caf64a77d3a")
-		)
-		(pin "7"
-			(uuid "c6b4fef2-fec8-401b-b3de-963c1f84ceb2")
-		)
-		(pin "6"
-			(uuid "ffeb658c-f326-4255-860e-1af7fad73abc")
-		)
-		(pin "4"
-			(uuid "a5b2e16a-f5e0-4d1a-b6d4-455f0ff201ec")
-		)
-		(pin "5"
-			(uuid "51a9947c-95e2-442c-ae42-33cc8701809e")
-		)
-		(pin "23"
-			(uuid "447b9d76-26ae-4376-9938-e0f029f8b424")
-		)
-		(pin "32"
-			(uuid "4444f632-fcbe-46cc-afcc-fe134a506282")
+			(uuid "67bf0fa3-26ce-4535-a92e-4b2828c40446")
 		)
 		(instances
-			(project ""
+			(project "kicad"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
-					(reference "U1")
+					(reference "BAT+1")
 					(unit 1)
 				)
 			)
