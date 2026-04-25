@@ -39,27 +39,18 @@ Connect the battery wires to B+ and B- pads on the PCB.
 
 ## 4. Flash
 
-### Install tools
+### Download the firmware
+
+Go to the [latest Actions run](https://github.com/evaEko/knife_whetting_level/actions/runs/) and download the `knife_level_firmware` artifact. Extract the zip — it contains everything you need.
+
+> **Want to change preset angles or tolerance?** Edit `src/angles.csv` or `src/config.py` before flashing. See [HOW_TO_FIRMWARE.md](HOW_TO_FIRMWARE.md) for the full manual build and flash instructions.
+
+### Install mpremote
 
 ```bash
-# Python 3 must be installed
 pip install mpremote --break-system-packages
 echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
 ```
-
-Opening the repo in **VS Code** is recommended — it makes editing `angles.csv` and `config.py` straightforward.
-
-### Customize before flashing
-
-Edit [`src/angles.csv`](../src/angles.csv) to add your knives:
-
-```
-my tanto,18
-japanese chef,15
-european chef,20
-```
-
-Adjust any thresholds in [`src/config.py`](../src/config.py) if needed.
 
 ### Flash MicroPython (one-time)
 
@@ -72,25 +63,13 @@ Adjust any thresholds in [`src/config.py`](../src/config.py) if needed.
 
 ### Flash the firmware
 
-Connect the MCU via USB, then run:
+Connect the MCU via USB, then run from the extracted folder:
 
 ```bash
-python build_flash.py /dev/ttyACM0
+python flash.py
 ```
 
-Expected output:
-
-```
-Found 14 files, flashing to /dev/ttyACM0...
-  mpremote connect /dev/ttyACM0 mkdir :drivers
-  mpremote connect /dev/ttyACM0 mkdir :states
-  mpremote connect /dev/ttyACM0 cp src/config.py :config.py
-  mpremote connect /dev/ttyACM0 cp src/ctx.py :ctx.py
-  mpremote connect /dev/ttyACM0 cp src/angles.csv :angles.csv
-  ...
-  mpremote connect /dev/ttyACM0 reset
-Done.
-```
+Select your port from the menu when prompted. The script will flash all files and reset the board.
 
 ### Level the board (first time only)
 
@@ -110,13 +89,13 @@ Done.
 3. **Calibrate** — place the device on your reference surface and short-press the low button; press again to lock it in. This sets the zero point. The display then shows angles relative to this reference.
 4. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives, confirm with the low button. The display will show the preset angle (e.g. 18°) when you are holding the knife at the correct sharpening angle.
 5. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
-6. **Reflash mode** — long-press the top button to drop to REPL so you can update the firmware or edit `angles.csv`.
+6. **Reflash mode** — long-press the top button to drop to REPL so you can update the firmware.
 
 ---
 
 ## 6. Reflashing
 
-When you want to update the firmware or change `angles.csv`:
+When you want to update the firmware:
 
 1. Connect to computer.
 2. **Hold the low button** until the display shows "Flash mode / ready..."
