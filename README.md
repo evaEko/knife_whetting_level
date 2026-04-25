@@ -1,5 +1,9 @@
 # Knife Level
 
+A small wearable device for knife sharpening. Measures blade pitch in real time using a 9-DOF IMU, displays the angle on an OLED, and alerts you when you drift from your target sharpening angle. Built on MicroPython running on an nRF52840 microcontroller with two buttons, a LiPo battery, and a custom PCB small enough to strap to your wrist or clamp to a whetstone stand.
+
+![Device on breadboard](docs/images/knife_whetting_level.jpg)
+
 Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for commercial use.
 
 > **Disclaimer:** This project is provided as-is, without warranty of any kind. The author is not liable for any damage, injury, or loss arising from the use, misuse, or inability to use this project or any hardware built from it.

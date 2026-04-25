@@ -10,6 +10,9 @@ If you have the PCB, solder in this order: display first, then the BNO085 module
 
 Consider socketing the MCU using mill-max or machined pin headers instead of soldering it directly. This lets you swap or replace the board without desoldering, and makes it easier to recover if something goes wrong during flashing.
 
+Refer to the images on [breadboarding](images/breadboard/)
+and on [PCB assembly](images/pcb_assembly/)
+
 ## Bill of Materials
 
 | Component | Part | Notes |
