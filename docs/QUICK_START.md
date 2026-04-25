@@ -97,9 +97,10 @@ Done.
 ## 5. Use
 
 1. **Power on** — battery percentage shows for 1.5 s, then the live pitch angle appears
-2. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives with the top button, confirm with the low button
-3. **Sharpen** — the display inverts when you drift more than 2° from your target angle (this can be adjusted in the config.py file)
-4. **Manual calibration** — hold the knife at your desired angle and short-press the low button; press again to lock it in
+2. **Calibrate** — place the device on your reference surface and short-press the low button; press again to lock it in. This sets the zero point. The display then shows angles relative to this reference.
+3. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives, confirm with the low button. The display will show the preset angle (e.g. 18°) when you are holding the knife at the correct sharpening angle.
+4. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
+5. **Reflash mode** — long-press the top button to drop to REPL so you can update the firmware or edit `angles.csv`.
 
 ---
 

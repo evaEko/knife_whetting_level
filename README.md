@@ -22,7 +22,8 @@ If impatient, go over [Quick Start](docs/QUICK_START.md).
 
 ## Features (v2.0)
 
-- **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on the device without manual calibration
+- **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on the device with the top button
+- **Calibration + presets are independent** — calibrate once to set your physical reference point (zero), then switch between knife presets freely; each preset angle is always displayed relative to the calibration, never compounding
 - **Two-button interface** — low button for calibration, top button to cycle and select presets
 - **Flash mode** — long-press the top button to drop to REPL for flashing without unplugging
 - **Physical power switch** — B+ latch switch replaces soft power off
