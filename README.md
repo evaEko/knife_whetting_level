@@ -32,6 +32,8 @@ If impatient, go over [Quick Start](docs/QUICK_START.md).
 
 Thanks to [jkorte-dev](https://github.com/jkorte-dev) for publishing the nRF52840 SuperMini/Nice!Nano MicroPython board definitions and UF2 builds used as a flashing base.
 
+Development was assisted by [Claude](https://claude.ai) (Anthropic).
+
 ## Features (v1.0)
 
 - Displays current pitch angle
