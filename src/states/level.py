@@ -1,4 +1,5 @@
 import time
+import machine
 import ctx
 
 
@@ -56,14 +57,15 @@ def level():
                     store_level_to_eeprom(0.0)
                     ctx.oled.fill(0)
                     ctx.oled.text("BL reset", 16, 4, 1)
-                    ctx.oled.text("Reboot!", 4, 20, 1)
+                    ctx.oled.text("Rebooting...", 4, 20, 1)
                     ctx.oled.show()
                 else:
                     store_level_to_eeprom(ctx.raw_angle)
                     ctx.oled.fill(0)
-                    ctx.oled.text("Reboot!", 16, 12, 1)
+                    ctx.oled.text("Saved!", 20, 8, 1)
+                    ctx.oled.text("Rebooting...", 4, 20, 1)
                     ctx.oled.show()
-                time.sleep_ms(2000)
-                return
+                time.sleep_ms(800)
+                machine.reset()
 
         time.sleep_ms(10)
