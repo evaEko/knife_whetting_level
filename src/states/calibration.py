@@ -4,10 +4,10 @@ from drivers.oled import display_angle
 
 
 def _show_calibration(angle):
-    display_angle(ctx.oled, angle, label="CAL")
+    display_angle(ctx.oled, angle)
     # 72px width is too tight for the full strings; use compact hints.
     ctx.oled.text("top=esc", 0, 0, 1)
-    ctx.oled.text("low=ok", 8, 24, 1)
+    ctx.oled.text("low=ok", 8, 32, 1)
     ctx.oled.show()
 
 
