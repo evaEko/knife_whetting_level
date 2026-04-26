@@ -1,7 +1,20 @@
 def display_angle(oled, angle, label=None, fmt="1d_half"):
     oled.fill(0)
     if fmt == "2d":
-        text = f"{angle:+.2f}"
+        if -10.0 < angle < 10.0:
+            text = f" {angle:+.2f}"
+        else:
+            text = f"{angle:+.2f}"
+        # Keep the larger look, but tighten horizontal advance for 6-char strings.
+        # With char_pitch=6 at scale=2, total width is 76 px; starting slightly left
+        # keeps all meaningful digits visible while preserving a fixed decimal position.
+        x = -2
+        y = 4 if label else 12
+        oled.large_text(text, x, y, scale=2, char_pitch=6)
+        if label:
+            oled.text(label, 0, 24, 1)
+        oled.show()
+        return
     elif fmt == "1d":
         angle = round(angle, 1)
         text = f"{angle:+.1f}"
