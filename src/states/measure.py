@@ -1,6 +1,6 @@
 import time
 import ctx
-from config import SMOOTHING, DEVIATION_THRESHOLD
+from config import SMOOTHING, DEVIATION_THRESHOLD, ANGLE_FORMAT
 from drivers.oled import display_angle
 
 IDLE_TIMEOUT       = 60_000
@@ -53,7 +53,7 @@ def measure():
             near_target = abs(ctx.smooth_angle - ctx.target_angle) <= DEVIATION_THRESHOLD
             near_mirror = abs(ctx.smooth_angle + ctx.target_angle) <= DEVIATION_THRESHOLD
             ctx.oled.invert(not (near_target or near_mirror))
-        display_angle(ctx.oled, ctx.smooth_angle)
+        display_angle(ctx.oled, ctx.smooth_angle, fmt=ANGLE_FORMAT)
 
     ev_low = ctx.btn_low.update() if ctx.btn_low else None
     ev_top = ctx.btn_top.update() if ctx.btn_top else None

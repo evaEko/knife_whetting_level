@@ -70,14 +70,18 @@ class SSD1306:
     def fill(self, c):   self.fb.fill(c)
     def text(self, s, x, y, c=1): self.fb.text(s, x, y, c)
 
-    def large_text(self, s, x, y, scale=3):
-        """Draw text scaled up by integer factor."""
-        # Use built-in 8x8 font, scale each pixel
+    def large_text(self, s, x, y, scale=3, char_pitch=8):
+        """Draw text scaled up by integer factor.
+        char_pitch: source-pixel advance per character (default 8).
+                    Use 7 to tighten horizontal spacing by one pixel column per char.
+        """
         temp = bytearray(len(s) * 8)
         tf = framebuf.FrameBuffer(temp, len(s) * 8, 8, framebuf.MONO_VLSB)
         tf.fill(0)
         tf.text(s, 0, 0, 1)
         for cy in range(8):
-            for cx in range(len(s) * 8):
-                if tf.pixel(cx, cy):
-                    self.fb.fill_rect(x + cx * scale, y + cy * scale, scale, scale, 1)
+            for ci in range(len(s)):
+                for col in range(8):
+                    if tf.pixel(ci * 8 + col, cy):
+                        self.fb.fill_rect(x + (ci * char_pitch + col) * scale,
+                                          y + cy * scale, scale, scale, 1)

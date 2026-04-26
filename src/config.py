@@ -21,3 +21,9 @@ LONG_PRESS_MS = 1000  # ms
 # 0.0 = raw/no smoothing, higher = smoother but slower to respond.
 # Keep below 0.5 to avoid excessive lag during fast movements.
 SMOOTHING = 0.15
+
+# Angle display format:
+#   "2d"      — two decimal places  (e.g. +12.34°)
+#   "1d"      — one decimal place   (e.g. +12.3°)
+#   "1d_half" — one decimal place, rounded to nearest 0.5  (e.g. +12.5°)
+ANGLE_FORMAT = "1d_half"

@@ -1,10 +1,21 @@
-def display_angle(oled, angle, label=None):
+def display_angle(oled, angle, label=None, fmt="1d_half"):
     oled.fill(0)
-    angle = round(angle * 2) / 2
-    text = f"{angle:+.1f}"
+    if fmt == "2d":
+        text = f"{angle:+.2f}"
+    elif fmt == "1d":
+        angle = round(angle, 1)
+        text = f"{angle:+.1f}"
+    else:  # "1d_half"
+        angle = round(angle * 2) / 2
+        text = f"{angle:+.1f}"
+    # pad single-digit angles so the decimal point stays at a fixed x position
+    if fmt != "2d" and -10.0 < angle < 10.0:
+        text = " " + text
     x = 0
     y = 4 if label else 12
-    oled.large_text(text, x, y, scale=2)
+    # char_pitch=7: each char advances 14px at scale=2 (vs 16px default)
+    # → 5 chars = 70px, fits the 72px-wide display without clipping
+    oled.large_text(text, x, y, scale=2, char_pitch=7)
     if label:
         oled.text(label, 0, 24, 1)
     oled.show()
