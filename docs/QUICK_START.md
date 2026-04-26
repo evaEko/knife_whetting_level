@@ -57,12 +57,12 @@ echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
 1. Short the **RST** and **GND** pins twice in quick succession — the board mounts as a drive called `NICENANO`
 2. Download the UF2 (from jkorte-dev):
    ```bash
-   curl -L -o micropython-NRF52840-supermini-v1.24.0-preview.uf2 \
-     https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.24.0-preview.uf2
+   curl -L -o micropython-NRF52840-supermini-v1.26.1.uf2 \
+     https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.26.1.uf2
    ```
 3. Copy the firmware to the bootloader drive:
    ```bash
-   cp micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
+   cp micropython-NRF52840-supermini-v1.26.1.uf2 /run/media/$USER/NICENANO/
    ```
 4. The drive unmounts automatically and the board reboots
 
@@ -89,13 +89,48 @@ Select your port from the menu when prompted. The script will flash all files an
 
 ## 5. Use
 
-1. **Power on** — battery percentage shows for 1.5 s, then the live pitch angle appears
-2. **Board levelling (first time only)** — if the sensor is not mounted perfectly flat, correct for it: long-press the low button, place the device on a flat surface, short-press the low button to save. Reboot. The correction is stored permanently.
-3. **Calibrate** — place the device on your reference surface and short-press the low button; press again to lock it in. This sets the zero point. The display then shows angles relative to this reference.
-4. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives, confirm with the low button. The display will show the preset angle (e.g. 18°) when you are holding the knife at the correct sharpening angle.
-5. **Choose angle display format** — long-press the top button to open the format menu; short-press top to cycle options (`2 decimals`, `1 decimal`, `0/5 steps`), short-press low to save. The setting is stored and the device reboots automatically to apply it.
-6. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
-7. **Reflash mode** — short-press both buttons at the same time to drop to REPL so you can update the firmware.
+**Power on** — battery percentage shows for 1.5 s, then the live pitch angle appears.
+
+### Step 1 — Level the board (first time only)
+
+The sensor may not sit perfectly parallel to the surface you attach the device to — this depends on how the PCB was soldered, what adapter you use (magnet, plate, etc.), and how it sits against the knife. Board levelling measures this offset and stores a permanent correction so all subsequent readings are accurate.
+
+You only need to do this once. The correction survives flashing and power cycles.
+
+1. Long-press the low button — display shows "Place on straight surface"
+2. Lay the device flat on a known level surface
+3. Short-press the low button — device reboots with the correction active
+
+### Step 2 — Calibrate for your session
+
+Calibration sets the zero point for this sharpening session. Your sharpening stone does not need to be level — the device measures relative to wherever it is. What matters is that the stone is in its working position before you calibrate.
+
+Do this at the start of every session, after you have positioned your stone.
+
+1. Place the device flat on your stone 
+2. Short-press the low button — display shows "Calibrating..."
+3. Short-press again to lock in the zero point
+
+The display now shows angles relative to your stone surface.
+
+### Step 3 — Set an angle and sharpen
+
+> **Optional.** You can sharpen using the live angle display without setting any target — just watch the number. Setting an angle only adds one thing: the display inverts when you drift more than 2° from it, giving you a visual alert.
+
+Short-press the top button to open the preset menu. Cycle through options with the top button, confirm with the low button.
+
+**To use a preset knife angle** — cycle to the knife name and press low. The display shows the live angle; it inverts when you drift more than 2° from the target.
+
+**To set a custom angle:**
+1. Cycle to **Custom angle** (first item in the menu) and press low
+2. Hold the knife at the angle you want — the display shows the live angle relative to your stone
+3. When you are happy with the angle shown, press low to lock it in
+
+**To choose angle display format** — long-press the top button to open the format menu; cycle with top, confirm with low. The device reboots to apply the change.
+
+### Step 4 — Happy sharpening
+
+The display inverts when you drift more than 2° from the target angle, or when you reach the mirror angle on the opposite side of the blade. Switching presets mid-session always stays relative to your calibration — no compounding.
 
 ---
 
@@ -110,7 +145,7 @@ Select your port from the menu when prompted. The script will flash all files an
 When you want to update the firmware:
 
 1. Connect to computer.
-2. **Short-press both buttons at the same time** — the display shows "Flash mode / ready..."
+2. **Short-press both buttons at the same time** — the display shows "Ready to flash..."
    - **Note:** once flash mode is active, the only way out is to reset (short RST to GND) or power off/on.
 3. Run `build_flash.py` immediately
 

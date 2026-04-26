@@ -1,5 +1,6 @@
 # knife_id, angle (degrees)
 # Edit this file before flashing to add your knives
+test, 68
 tanto,18
 tanto tip,25
 sashimi, 30

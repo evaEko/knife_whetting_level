@@ -10,6 +10,26 @@ Make sure Python 3 is installed:
 python --version
 ```
 
+### Install git
+
+**Linux (Debian/Ubuntu):**
+```bash
+sudo apt install git
+```
+
+**Linux (Fedora):**
+```bash
+sudo dnf install git
+```
+
+**macOS:**
+```bash
+brew install git
+```
+
+**Windows:** Download from [git-scm.com](https://git-scm.com/download/win) and run the installer.
+
+
 ### Flash MicroPython (one-time)
 
 MicroPython must be flashed to the board before deploying any code. Download the UF2 from the upstream board-definition repository.
@@ -17,12 +37,12 @@ MicroPython must be flashed to the board before deploying any code. Download the
 1. **Enter bootloader** — double-tap the reset button on the board. A drive called `NICENANO` will mount.
 2. **Download UF2**:
    ```bash
-   curl -L -o micropython-NRF52840-supermini-v1.24.0-preview.uf2 \
-     https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.24.0-preview.uf2
+   curl -L -o micropython-NRF52840-supermini-v1.26.1.uf2 \
+     https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.26.1.uf2
    ```
 3. **Flash**:
    ```bash
-   cp micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
+   cp micropython-NRF52840-supermini-v1.26.1.uf2 /run/media/$USER/NICENANO/
    ```
    The board reboots automatically when the copy completes.
 4. **Verify** — the `NICENANO` drive disappears and a serial port (`/dev/ttyACM0`) appears in `dmesg`.
@@ -42,6 +62,17 @@ echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
 ---
 
 ## Flashing
+
+### Prepare sources
+
+Clone the repository:
+
+```bash
+git clone https://github.com/evaEko/knife_whetting_level.git
+cd knife_whetting_level
+```
+
+Edit [`src/config.py`](../src/config.py) to set your pin assignments, angle deviation threshold, display smoothing, and default angle format before flashing. The file is commented — each setting explains itself.
 
 ### Connecting the MCU
 
@@ -65,7 +96,7 @@ mpremote needs the device to be at the MicroPython REPL prompt before it can tra
 
 **Option 1 — Short-press both buttons simultaneously (recommended)**
 
-Press both buttons at the same time (short press). The display will show "Flash mode / ready..." and the device drops to REPL. Run `build_flash.py` immediately after.
+Press both buttons at the same time (short press). The display will show "Ready to flash..." and the device drops to REPL. Run `build_flash.py` immediately after.
 
 Note: once flash mode is active, the only way out is to reset (short RST to GND) or power-cycle the device.
 
