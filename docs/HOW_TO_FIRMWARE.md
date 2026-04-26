@@ -12,15 +12,20 @@ python --version
 
 ### Flash MicroPython (one-time)
 
-MicroPython must be flashed to the board before deploying any code. The firmware is included in the repo under `assets/`.
+MicroPython must be flashed to the board before deploying any code. Download the UF2 from the upstream board-definition repository.
 
 1. **Enter bootloader** — double-tap the reset button on the board. A drive called `NICENANO` will mount.
-2. **Flash**:
+2. **Download UF2**:
    ```bash
-   cp assets/micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
+   curl -L -o micropython-NRF52840-supermini-v1.24.0-preview.uf2 \
+     https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.24.0-preview.uf2
+   ```
+3. **Flash**:
+   ```bash
+   cp micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
    ```
    The board reboots automatically when the copy completes.
-3. **Verify** — the `NICENANO` drive disappears and a serial port (`/dev/ttyACM0`) appears in `dmesg`.
+4. **Verify** — the `NICENANO` drive disappears and a serial port (`/dev/ttyACM0`) appears in `dmesg`.
 
 ### Install mpremote
 

@@ -55,11 +55,16 @@ echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
 ### Flash MicroPython (one-time)
 
 1. Short the **RST** and **GND** pins twice in quick succession — the board mounts as a drive called `NICENANO`
-2. Copy the firmware:
+2. Download the UF2 (from jkorte-dev):
    ```bash
-   cp assets/micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
+   curl -L -o micropython-NRF52840-supermini-v1.24.0-preview.uf2 \
+     https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.24.0-preview.uf2
    ```
-3. The drive unmounts automatically and the board reboots
+3. Copy the firmware to the bootloader drive:
+   ```bash
+   cp micropython-NRF52840-supermini-v1.24.0-preview.uf2 /run/media/$USER/NICENANO/
+   ```
+4. The drive unmounts automatically and the board reboots
 
 ### Flash the firmware
 

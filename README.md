@@ -7,7 +7,17 @@ A small digital level for knife sharpening. Measures blade pitch in real time us
 
 <img src="docs/images/knife_whetting_level.jpg" width="300"/>
 
-Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for commercial use.
+Commercial use and resale are not permitted.
+
+## License
+
+- Software code, documentation, images, and hardware design files: [CC BY-NC 4.0](LICENSE)
+- Third-party subcomponents may use their own license where noted (for example, `kicad/nice-nano-kicad/`)
+
+### Third-party notices
+
+- `kicad/nice-nano-kicad/` is a third-party nice!nano symbol/footprint library bundled with this project.
+- The bundled library declares `GNU GPLv3` in `kicad/nice-nano-kicad/README.md`; keep that notice and attribution when redistributing those files.
 
 > **Disclaimer:** This project is provided as-is, without warranty of any kind. The author is not liable for any damage, injury, or loss arising from the use, misuse, or inability to use this project or any hardware built from it.
 
@@ -17,6 +27,10 @@ Licensed under [CC BY-NC 4.0](LICENSE) — free to use and modify, not for comme
 2. [Flash the firmware](docs/HOW_TO_FIRMWARE.md)
 
 If impatient, go over [Quick Start](docs/QUICK_START.md).
+
+## Acknowledgements
+
+Thanks to [jkorte-dev](https://github.com/jkorte-dev) for publishing the nRF52840 SuperMini/Nice!Nano MicroPython board definitions and UF2 builds used as a flashing base.
 
 ## Features (v1.0)
 

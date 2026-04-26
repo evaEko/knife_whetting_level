@@ -5,13 +5,7 @@
 
 # Prepare for public:
 
-* MicroPython UF2 in the repo — the firmware binary from jkorte-dev's repo is included in assets/. MicroPython itself is MIT licensed, but you should check that specific build's repo for its license before redistributing the binary. If it's MIT, you're fine — just add attribution.
-
-CC BY-NC 4.0 for software — Creative Commons explicitly recommends against using CC licenses for software code. It works for hardware designs and documentation, but for the Python code, a standard software license (MIT, GPL) would be more appropriate and legally cleaner. You could keep CC BY-NC for the KiCad files and docs, and add MIT or GPL for the src/ code.
-
-nice-nano-kicad library — the files in kicad/nice-nano-kicad/ were from a third-party repo. Worth checking if that had a license that requires attribution.
-
-The drivers — bno085.py check imported modules.
+* [x] The drivers — bno085.py: only imports stdlib (struct, time, math). No third-party dependencies; no attribution required.
 
 ## Firmware
 
