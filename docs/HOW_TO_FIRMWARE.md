@@ -41,22 +41,43 @@ MicroPython must be flashed to the board before deploying any code. Download the
      https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.26.1.uf2
    ```
 3. **Flash**:
+
+   **Linux:**
    ```bash
    cp micropython-NRF52840-supermini-v1.26.1.uf2 /run/media/$USER/NICENANO/
    ```
+   **macOS:**
+   ```bash
+   cp micropython-NRF52840-supermini-v1.26.1.uf2 /Volumes/NICENANO/
+   ```
+   **Windows:** drag and drop the `.uf2` file onto the `NICENANO` drive in Explorer.
+
    The board reboots automatically when the copy completes.
-4. **Verify** — the `NICENANO` drive disappears and a serial port (`/dev/ttyACM0`) appears in `dmesg`.
+4. **Verify** — the `NICENANO` drive disappears and a serial port appears (`/dev/ttyACM0` on Linux, `/dev/tty.usbmodem*` on macOS, `COM*` on Windows).
 
 ### Install mpremote
 
+**Linux:**
 ```bash
 pip install mpremote --break-system-packages
 ```
-
 If `mpremote` is not found after installing, add `~/.local/bin` to your PATH:
-
 ```bash
 echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
+```
+
+**macOS:**
+```bash
+pip3 install mpremote
+```
+If `mpremote` is not found, add it to your PATH:
+```bash
+echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc && source ~/.zshrc
+```
+
+**Windows:** install [Python from python.org](https://www.python.org/downloads/) (check "Add to PATH" during install), then:
+```
+pip install mpremote
 ```
 
 ---
@@ -76,19 +97,17 @@ Edit [`src/config.py`](../src/config.py) to set your pin assignments, angle devi
 
 ### Connecting the MCU
 
-Run the following in one terminal before plugging in the device — you will see which tty is assigned:
+Plug in the device and find the assigned serial port:
 
-```bash
-dmesg -w
-```
-
-Look for a line like:
-
+**Linux:** run `dmesg -w` before plugging in and look for a line like:
 ```
 cdc_acm 3-2:1.0: ttyACM0: USB ACM device
 ```
+The port will be `/dev/ttyACM0` or similar.
 
-That `ttyACM0` (or similar) is the port you will use.
+**macOS:** run `ls /dev/tty.usbmodem*` after plugging in. The port will be something like `/dev/tty.usbmodem1101`.
+
+**Windows:** open Device Manager → Ports (COM & LPT) — the device will appear as `USB Serial Device (COM3)` or similar.
 
 ### Getting the device ready to flash
 

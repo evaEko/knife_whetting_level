@@ -5,6 +5,7 @@ Below is the simplest possible how-to recipe.
 ## 1. Order the PCB
 
 1. Install [KiCad 9](https://www.kicad.org/download/)
+2. Clone this repo or download the kicad files.
 2. Open [`kicad/kicad.kicad_sch`](../kicad/kicad.kicad_sch)
 3. Generate Gerbers: **File → Fabrication Outputs → Gerbers**
 4. Upload to a PCB manufacturer — [AISLER](https://aisler.net) is recommended (EU-based, good quality)
@@ -23,7 +24,7 @@ Below is the simplest possible how-to recipe.
 | LiPo battery | 3.7V ~100mAh, smallest that fits under Pro Micro footprint (~20×30mm) |
 
 
-**Note**: SuperMini clones sometimes need to have a resistor added to allow reading of battery voltage.
+**Note**: SuperMini clones sometimes need to have a resistor added to allow reading of battery voltage. IT is not a showstopper but the displayed battery status will be always 0%.
 
 ---
 
@@ -47,10 +48,15 @@ Go to the [latest Actions run](https://github.com/evaEko/knife_whetting_level/ac
 
 ### Install mpremote
 
-```bash
-pip install mpremote --break-system-packages
-echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
-```
+**Linux:** `pip install mpremote --break-system-packages`
+
+**macOS:** `pip3 install mpremote`
+
+**Windows:** install [Python from python.org](https://www.python.org/downloads/) (check "Add to PATH"), then `pip install mpremote`
+
+If `mpremote` is not found after installing on Linux/macOS, add it to your PATH:
+- Linux: `echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc`
+- macOS: `echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc && source ~/.zshrc`
 
 ### Flash MicroPython (one-time)
 
@@ -61,9 +67,13 @@ echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc
      https://raw.githubusercontent.com/jkorte-dev/micropython-board-NRF52840/main/firmware/micropython-NRF52840-supermini-v1.26.1.uf2
    ```
 3. Copy the firmware to the bootloader drive:
-   ```bash
-   cp micropython-NRF52840-supermini-v1.26.1.uf2 /run/media/$USER/NICENANO/
-   ```
+
+   **Linux:** `cp micropython-NRF52840-supermini-v1.26.1.uf2 /run/media/$USER/NICENANO/`
+
+   **macOS:** `cp micropython-NRF52840-supermini-v1.26.1.uf2 /Volumes/NICENANO/`
+
+   **Windows:** drag and drop the `.uf2` file onto the `NICENANO` drive in Explorer.
+
 4. The drive unmounts automatically and the board reboots
 
 ### Flash the firmware
@@ -115,7 +125,7 @@ The display now shows angles relative to your stone surface.
 
 ### Step 3 — Set an angle and sharpen
 
-> **Optional.** You can sharpen using the live angle display without setting any target — just watch the number. Setting an angle only adds one thing: the display inverts when you drift more than 2° from it, giving you a visual alert.
+> **Optional.** You can sharpen using the live angle display without setting any target — just watch the number. Setting an angle only adds one thing: the display inverts when you drift more than 2° (default, can be adjusted in config.py; However you will need to follow []()) from it, giving you a visual alert.
 
 Short-press the top button to open the preset menu. Cycle through options with the top button, confirm with the low button.
 

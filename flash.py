@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # Run this script from the directory where you extracted the firmware package.
 import glob
-import os
 import subprocess
 import sys
+from pathlib import Path
 
-EXPECTED_FILE = os.path.join("src", "main.py")
+EXPECTED_FILE = Path("src") / "main.py"
 
 
 def run(cmd, ignore_errors=False):
@@ -15,8 +15,17 @@ def run(cmd, ignore_errors=False):
         print(f"ERROR: {result.stderr.strip()}")
         sys.exit(1)
 
+
 def pick_tty():
-    candidates = sorted(glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*"))
+    if sys.platform == "darwin":
+        patterns = ["/dev/tty.usbmodem*", "/dev/cu.usbmodem*"]
+    elif sys.platform == "win32":
+        patterns = []
+    else:
+        patterns = ["/dev/ttyACM*", "/dev/ttyUSB*"]
+    candidates = sorted(p for pat in patterns for p in glob.glob(pat))
+    if sys.platform == "win32":
+        print("Windows: enter your COM port (e.g. COM3)")
     options = candidates + ["Enter manually"]
     print("Select a serial port:")
     for i, opt in enumerate(options):
@@ -28,17 +37,19 @@ def pick_tty():
             continue
         idx = int(choice)
         if idx == len(options) - 1:
-            return input("Enter tty path: ").strip()
+            return input("Enter port: ").strip()
         return options[idx]
 
+
 def find_files():
-    all_files = glob.glob("src/**/*.py", recursive=True) + glob.glob("src/**/*.csv", recursive=True)
-    src_files = [f for f in all_files if not f.startswith("src/tools/")]
-    dirs = sorted({os.path.dirname(f).replace("src/", "") for f in src_files if os.path.dirname(f) != "src"})
+    src = Path("src")
+    all_files = list(src.rglob("*.py")) + list(src.rglob("*.csv"))
+    src_files = [f for f in all_files if "tools" not in f.parts]
+    dirs = sorted({f.parent.relative_to(src).as_posix() for f in src_files if f.parent != src})
     return sorted(src_files), dirs
 
 
-if not os.path.exists(EXPECTED_FILE):
+if not EXPECTED_FILE.exists():
     print(f"Firmware files not found.")
     print(f"Make sure you extracted the full firmware package and are running this")
     print(f"script from the extracted folder. Expected to find: {EXPECTED_FILE}")
@@ -52,9 +63,9 @@ print(f"Found {len(src_files)} files, flashing to {tty}...")
 for d in dirs:
     run(["mpremote", "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
 
-for src in src_files:
-    dst = src.removeprefix("src/")
-    run(["mpremote", "connect", tty, "cp", src, f":{dst}"])
+for f in src_files:
+    dst = f.relative_to(Path("src")).as_posix()
+    run(["mpremote", "connect", tty, "cp", str(f), f":{dst}"])
 
 run(["mpremote", "connect", tty, "reset"])
 print("Done.")
