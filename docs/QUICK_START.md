@@ -35,8 +35,6 @@ Below is the simplest possible how-to recipe.
 
 Connect the battery wires to B+ and B- pads on the PCB.
 
-> **Important (known limitation):** while charging over USB, the latch power switch must be in the ON position. If the latch switch is OFF, the battery will not charge.
-
 ---
 
 ## 4. Flash
@@ -101,7 +99,13 @@ Select your port from the menu when prompted. The script will flash all files an
 
 ---
 
-## 6. Reflashing
+## 6. Charging
+
+> **Important (known limitation):** while charging over USB, the latch power switch must be in the ON position. If the latch switch is OFF, the battery will not charge.
+
+---
+
+## 7. Reflashing
 
 When you want to update the firmware:
 

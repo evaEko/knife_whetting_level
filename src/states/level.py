@@ -23,6 +23,18 @@ def store_level_to_eeprom(angle):
         print(f"Save error: {e}")
 
 
+def clear_calibration_settings():
+    """Reset persisted calibration/preset values after board-level changes."""
+    try:
+        ctx.calibrated_offset = 0.0
+        ctx.target_angle = 0.0
+        ctx.smooth_angle = 0.0
+        ctx.save_settings()
+        print("-> CAL/PRESET cleared")
+    except Exception as e:
+        print(f"Settings clear error: {e}")
+
+
 def level():
     if not ctx.oled:
         return
@@ -55,12 +67,14 @@ def level():
                 duration = time.ticks_diff(time.ticks_ms(), start)
                 if duration >= 800:
                     store_level_to_eeprom(0.0)
+                    clear_calibration_settings()
                     ctx.oled.fill(0)
                     ctx.oled.text("BL reset", 16, 4, 1)
                     ctx.oled.text("Rebooting...", 4, 20, 1)
                     ctx.oled.show()
                 else:
                     store_level_to_eeprom(ctx.raw_angle)
+                    clear_calibration_settings()
                     ctx.oled.fill(0)
                     ctx.oled.text("Saved!", 20, 8, 1)
                     ctx.oled.text("Rebooting...", 4, 20, 1)
