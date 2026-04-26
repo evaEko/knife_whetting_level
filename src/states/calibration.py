@@ -3,11 +3,42 @@ import ctx
 from drivers.oled import display_angle
 
 
+def _draw_calibration_angle(angle):
+    if ctx.angle_format == "2d":
+        if -10.0 < angle < 10.0:
+            text = f" {angle:+.2f}"
+        else:
+            text = f"{angle:+.2f}"
+        x = -2
+        y = 12
+        ctx.oled.large_text(text, x, y, scale=2, char_pitch=6)
+        return
+
+    if ctx.angle_format == "1d":
+        angle = round(angle, 1)
+        text = f"{angle:+.1f}"
+    else:
+        angle = round(angle * 2) / 2
+        text = f"{angle:+.1f}"
+
+    if -10.0 < angle < 10.0:
+        text = " " + text
+    ctx.oled.large_text(text, 0, 12, scale=2, char_pitch=7)
+
+
 def _show_calibration(angle):
-    display_angle(ctx.oled, angle)
+    ctx.oled.fill(0)
     # 72px width is too tight for the full strings; use compact hints.
     ctx.oled.text("top=esc", 0, 0, 1)
     ctx.oled.text("low=ok", 8, 32, 1)
+    _draw_calibration_angle(angle)
+    ctx.oled.show()
+
+
+def _update_calibration_angle(angle):
+    # Clear only the angle band so the static hints do not flicker.
+    ctx.oled.fb.fill_rect(0, 12, 72, 16, 0)
+    _draw_calibration_angle(angle)
     ctx.oled.show()
 
 
@@ -27,7 +58,7 @@ def calibrate():
             time.sleep_ms(5)
             continue
 
-        _show_calibration(ctx.smooth_angle)
+        _update_calibration_angle(ctx.smooth_angle)
 
         ev_low = ctx.btn_low.update() if ctx.btn_low else None
         ev_top = ctx.btn_top.update() if ctx.btn_top else None

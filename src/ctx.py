@@ -21,13 +21,14 @@ def save_settings():
         print(f"Settings save error: {e}")
 
 
-def load_settings():
+def load_settings(load_target_angle=True):
     import ctx
     try:
         with open('settings.txt') as f:
             lines = [ln.strip() for ln in f if ln.strip()]
-        if len(lines) >= 2:
+        if len(lines) >= 1:
             ctx.calibrated_offset = float(lines[0])
+        if load_target_angle and len(lines) >= 2:
             ctx.target_angle = float(lines[1])
         print("Settings loaded")
     except Exception:

@@ -5,12 +5,20 @@ def display_angle(oled, angle, label=None, fmt="1d_half"):
             text = f" {angle:+.2f}"
         else:
             text = f"{angle:+.2f}"
-        # Keep the larger look, but tighten horizontal advance for 6-char strings.
-        # With char_pitch=6 at scale=2, total width is 76 px; starting slightly left
-        # keeps all meaningful digits visible while preserving a fixed decimal position.
-        x = -2
+        # Keep a simple fixed layout that still fits on the 72px display.
+        # Digits/sign stay readable, while '.' is only slightly tighter.
+        advances = []
+        for ch in text:
+            if ch == ' ':
+                advances.append(5)
+            elif ch == '.':
+                advances.append(4)
+            else:
+                advances.append(6)
+        # Total width stays within 72px at scale=2 for both padded and unpadded forms.
+        x = 0
         y = 4 if label else 12
-        oled.large_text(text, x, y, scale=2, char_pitch=6)
+        oled.large_text_adv(text, x, y, scale=2, advances=advances)
         if label:
             oled.text(label, 0, 24, 1)
         oled.show()

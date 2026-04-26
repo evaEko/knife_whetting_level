@@ -43,10 +43,11 @@ Thanks to [jkorte-dev](https://github.com/jkorte-dev) for publishing the nRF5284
 
 ## Features (v2.0)
 
-- **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on the device with the top button
+- **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on-device with the top button, with optional restore of the last selected preset after reboot
 - **Calibration + presets are independent** — calibrate once to set your physical reference point (zero), then switch between knife presets freely; each preset angle is always displayed relative to the calibration, never compounding
-- **Two-button interface** — low button for calibration/confirm, top button for presets and format menu (short-press top = preset menu, long-press top = angle-format menu)
-- **Selectable angle display format** — choose `2 decimals`, `1 decimal`, or `0/5 steps` (nearest 0.5) directly on-device; setting is saved persistently and the device auto-reboots after change
+- **Expanded two-button controls** — short-press top = preset menu, long-press top = angle-format menu, short-press both = flash mode, long-press low = board levelling
+- **Selectable angle display format** — choose `2 decimals`, `1 decimal`, or `0/5 steps` (nearest 0.5) directly on-device; setting is stored in flash and restored on boot
+- **Automatic reboot after persistent changes** — board-levelling save/reset and angle-format changes reboot the MCU automatically so the new setting takes effect immediately
 - **Flash mode** — short-press both buttons simultaneously to drop to REPL for flashing without unplugging (to exit flash mode, reset via RST↔GND or power-cycle the device)
 - **Physical power switch** — B+ latch switch replaces soft power off
 - **Board levelling** — correct for sensor mounting angle once; stored in flash, applied automatically on every boot

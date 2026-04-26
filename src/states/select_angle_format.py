@@ -50,7 +50,7 @@ def select_angle_format():
                 ctx.oled.text(name[:16], 0, 16, 1)
                 ctx.oled.text("Rebooting...", 0, 28, 1)
                 ctx.oled.show()
-                time.sleep_ms(800)
+                time.sleep_ms(120)
                 machine.reset()
             else:
                 ctx.oled.fill(0)

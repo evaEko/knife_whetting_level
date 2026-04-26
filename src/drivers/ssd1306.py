@@ -85,3 +85,25 @@ class SSD1306:
                     if tf.pixel(ci * 8 + col, cy):
                         self.fb.fill_rect(x + (ci * char_pitch + col) * scale,
                                           y + cy * scale, scale, scale, 1)
+
+    def large_text_adv(self, s, x, y, scale=3, advances=None):
+        """Draw scaled text with per-character advances.
+        advances is a list of source-pixel advances, one per character.
+        The last character's advance is ignored for width; its full 8px bitmap is drawn.
+        """
+        if advances is None or len(advances) != len(s):
+            advances = [8] * len(s)
+
+        temp = bytearray(len(s) * 8)
+        tf = framebuf.FrameBuffer(temp, len(s) * 8, 8, framebuf.MONO_VLSB)
+        tf.fill(0)
+        tf.text(s, 0, 0, 1)
+
+        x_cursor = 0
+        for ci in range(len(s)):
+            for cy in range(8):
+                for col in range(8):
+                    if tf.pixel(ci * 8 + col, cy):
+                        self.fb.fill_rect(x + (x_cursor + col) * scale,
+                                          y + cy * scale, scale, scale, 1)
+            x_cursor += advances[ci]

@@ -35,6 +35,8 @@ Below is the simplest possible how-to recipe.
 
 Connect the battery wires to B+ and B- pads on the PCB.
 
+> **Important (known limitation):** while charging over USB, the latch power switch must be in the ON position. If the latch switch is OFF, the battery will not charge.
+
 ---
 
 ## 4. Flash
