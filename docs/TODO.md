@@ -1,10 +1,12 @@
 # TODO
 
 * tag v2.0 commit
-* reboot automatically after saving eeprom angle
+* implement angle format select: on top button long press display the option for the angle format as we display the preset angles, user confirms selection with the top button and lists with the upper button
+* store the angle display setting in eeprom as we store board level
 
 # Prepare for public:
 
+* [x] nice-nano-kicad library — checked: bundled files declare GNU GPLv3 in kicad/nice-nano-kicad/README.md; attribution and license note are included in README.
 * [x] The drivers — bno085.py: only imports stdlib (struct, time, math). No third-party dependencies; no attribution required.
 
 ## Firmware

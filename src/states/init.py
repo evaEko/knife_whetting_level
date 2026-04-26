@@ -1,7 +1,7 @@
 import time
 import ctx
 from machine import I2C, Pin
-from config import SDA_IMU, SCL_IMU, SDA_OLED, SCK_OLED, BTN_LOW, BTN_TOP, BNO085_ADDR, OLED_ADDR
+from config import SDA_IMU, SCL_IMU, SDA_OLED, SCK_OLED, BTN_LOW, BTN_TOP, BNO085_ADDR, OLED_ADDR, ANGLE_FORMAT
 from drivers.ssd1306 import SSD1306
 from drivers.bno085 import BNO085
 from drivers.button import Button
@@ -49,6 +49,7 @@ def init():
 
     ctx.board_offset = get_board_level()
     print(f"ctx.board_offset set to: {ctx.board_offset}")
+    ctx.load_settings(ANGLE_FORMAT)
 
     if ctx.oled:
         display_battery(ctx.oled, read_battery_pct())

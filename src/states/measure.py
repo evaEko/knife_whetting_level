@@ -1,6 +1,6 @@
 import time
 import ctx
-from config import SMOOTHING, DEVIATION_THRESHOLD, ANGLE_FORMAT
+from config import SMOOTHING, DEVIATION_THRESHOLD
 from drivers.oled import display_angle
 
 IDLE_TIMEOUT       = 60_000
@@ -11,10 +11,11 @@ _imu_idle       = False
 _last_movement  = 0
 _idle_ref_angle = 0.0
 _last_display   = 0
+_both_start     = None
 
 
 def measure():
-    global _imu_idle, _last_movement, _idle_ref_angle, _last_display
+    global _imu_idle, _last_movement, _idle_ref_angle, _last_display, _both_start
 
     imu_ok = False
     if ctx.imu is not None:
@@ -53,7 +54,24 @@ def measure():
             near_target = abs(ctx.smooth_angle - ctx.target_angle) <= DEVIATION_THRESHOLD
             near_mirror = abs(ctx.smooth_angle + ctx.target_angle) <= DEVIATION_THRESHOLD
             ctx.oled.invert(not (near_target or near_mirror))
-        display_angle(ctx.oled, ctx.smooth_angle, fmt=ANGLE_FORMAT)
+        display_angle(ctx.oled, ctx.smooth_angle, fmt=ctx.angle_format)
+
+    # Simultaneous both-button short press → flash mode
+    both_now = (ctx.btn_low and ctx.btn_low.is_pressed() and
+                ctx.btn_top and ctx.btn_top.is_pressed())
+    if both_now:
+        if _both_start is None:
+            _both_start = time.ticks_ms()
+        return None  # consume individual events while both held
+    elif _both_start is not None:
+        from config import LONG_PRESS_MS
+        duration = time.ticks_diff(time.ticks_ms(), _both_start)
+        _both_start = None
+        # drain any pending individual events so they don't fire after
+        if ctx.btn_low: ctx.btn_low.update()
+        if ctx.btn_top: ctx.btn_top.update()
+        if duration < LONG_PRESS_MS:
+            return ('short', 'both')
 
     ev_low = ctx.btn_low.update() if ctx.btn_low else None
     ev_top = ctx.btn_top.update() if ctx.btn_top else None

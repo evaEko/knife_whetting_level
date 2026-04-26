@@ -5,6 +5,7 @@ time.sleep_ms(1000)
 from states.measure import measure
 from states.calibration import calibrate
 from states.select_angle import select_angle
+from states.select_angle_format import select_angle_format
 from states.flash import flash
 from states.level import level
 
@@ -22,6 +23,8 @@ def main():
         elif event == ('short', 'top'):
             select_angle()
         elif event == ('long', 'top'):
+            select_angle_format()
+        elif event == ('short', 'both'):
             flash()
         elif event == ('long', 'low'):
             level()

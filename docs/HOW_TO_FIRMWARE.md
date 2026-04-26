@@ -63,9 +63,11 @@ That `ttyACM0` (or similar) is the port you will use.
 
 mpremote needs the device to be at the MicroPython REPL prompt before it can transfer files. There are two ways to get there:
 
-**Option 1 — Long-press the low button (recommended)**
+**Option 1 — Short-press both buttons simultaneously (recommended)**
 
-Hold the low button (P1.11) for 1 second. The display will show "Flash mode / ready..." and the device drops to REPL. Run `build_flash.py` immediately after.
+Press both buttons at the same time (short press). The display will show "Flash mode / ready..." and the device drops to REPL. Run `build_flash.py` immediately after.
+
+Note: once flash mode is active, the only way out is to reset (short RST to GND) or power-cycle the device.
 
 **Option 2 — Flash within 1 second of boot**
 
