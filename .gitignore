@@ -4,3 +4,4 @@ __pycache__/
 kicad/*.lck
 kicad/~*
 assets/*.*
+CLAUDE.bak
