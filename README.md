@@ -7,6 +7,8 @@ A small digital level for knife sharpening. Measures blade pitch in real time us
 
 <img src="docs/images/knife_whetting_level.jpg" width="300"/>
 
+Here is a [demo vid](https://imgur.com/a/nH8bTjk).
+
 Commercial use and resale are not permitted.
 
 ## License
