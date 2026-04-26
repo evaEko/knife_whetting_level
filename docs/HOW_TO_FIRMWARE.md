@@ -115,3 +115,9 @@ mpremote connect /dev/ttyACM0 repl
 ```
 
 Hit **Ctrl+C** to interrupt `main.py` and get the `>>>` prompt.
+
+## Runtime controls
+
+- Short-press top: open preset-angle selection menu
+- Long-press top: open angle-format menu (`2 decimals`, `1 decimal`, `0/5 steps`), short-press low to confirm; format is saved and the device auto-reboots
+- Short-press both buttons: enter flash mode

@@ -93,8 +93,9 @@ Select your port from the menu when prompted. The script will flash all files an
 2. **Board levelling (first time only)** — if the sensor is not mounted perfectly flat, correct for it: long-press the low button, place the device on a flat surface, short-press the low button to save. Reboot. The correction is stored permanently.
 3. **Calibrate** — place the device on your reference surface and short-press the low button; press again to lock it in. This sets the zero point. The display then shows angles relative to this reference.
 4. **Select a preset** — short-press the top button to open the preset menu, cycle through your knives, confirm with the low button. The display will show the preset angle (e.g. 18°) when you are holding the knife at the correct sharpening angle.
-5. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
-6. **Reflash mode** — short-press both buttons at the same time to drop to REPL so you can update the firmware.
+5. **Choose angle display format** — long-press the top button to open the format menu; short-press top to cycle options (`2 decimals`, `1 decimal`, `0/5 steps`), short-press low to save. The setting is stored and the device reboots automatically to apply it.
+6. **Sharpen** — the display inverts when you drift more than 2° from the preset angle. Switching presets always stays relative to your calibration — no compounding.
+7. **Reflash mode** — short-press both buttons at the same time to drop to REPL so you can update the firmware.
 
 ---
 

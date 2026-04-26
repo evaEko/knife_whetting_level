@@ -16,22 +16,41 @@ def save_settings():
     import ctx
     try:
         with open('settings.txt', 'w') as f:
-            f.write(f"{ctx.calibrated_offset}\n{ctx.target_angle}\n{ctx.angle_format}\n")
+            f.write(f"{ctx.calibrated_offset}\n{ctx.target_angle}\n")
     except Exception as e:
         print(f"Settings save error: {e}")
 
 
-def load_settings(default_angle_format):
+def load_settings():
     import ctx
-    ctx.angle_format = default_angle_format
     try:
         with open('settings.txt') as f:
             lines = [ln.strip() for ln in f if ln.strip()]
         if len(lines) >= 2:
             ctx.calibrated_offset = float(lines[0])
             ctx.target_angle = float(lines[1])
-        if len(lines) >= 3 and lines[2] in ("2d", "1d", "1d_half"):
-            ctx.angle_format = lines[2]
         print("Settings loaded")
     except Exception:
         print("No settings saved, using defaults")
+
+
+def get_angle_format(default_format):
+    try:
+        with open('angle_format.txt') as f:
+            fmt = f.read().strip()
+        if fmt in ("2d", "1d", "1d_half"):
+            print(f"Angle format loaded: {fmt}")
+            return fmt
+    except Exception:
+        pass
+    print(f"No angle format saved, using default: {default_format}")
+    return default_format
+
+
+def store_angle_format_to_eeprom(fmt):
+    try:
+        with open('angle_format.txt', 'w') as f:
+            f.write(fmt)
+        print(f"-> ANGLE FORMAT saved: {fmt}")
+    except Exception as e:
+        print(f"Angle format save error: {e}")

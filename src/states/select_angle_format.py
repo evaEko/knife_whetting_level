@@ -1,4 +1,5 @@
 import time
+import machine
 import ctx
 
 _index = 0
@@ -41,15 +42,21 @@ def select_angle_format():
 
         elif ev_low == 'short':
             name, key, sample = _OPTIONS[_index]
-            ctx.angle_format = key
-            ctx.save_settings()
-            print(f"-> ANGLE FORMAT {key}")
-            ctx.oled.fill(0)
-            ctx.oled.text("FORMAT SET", 0, 4, 1)
-            ctx.oled.text(name[:16], 0, 16, 1)
-            ctx.oled.text(sample, 0, 26, 1)
-            ctx.oled.show()
-            time.sleep_ms(700)
+            if key != ctx.angle_format:
+                ctx.angle_format = key
+                ctx.store_angle_format_to_eeprom(key)
+                ctx.oled.fill(0)
+                ctx.oled.text("FORMAT SET", 0, 4, 1)
+                ctx.oled.text(name[:16], 0, 16, 1)
+                ctx.oled.text("Rebooting...", 0, 28, 1)
+                ctx.oled.show()
+                time.sleep_ms(800)
+                machine.reset()
+            else:
+                ctx.oled.fill(0)
+                ctx.oled.text("No change", 8, 12, 1)
+                ctx.oled.show()
+                time.sleep_ms(500)
             return
 
         elif ev_low == 'long' or ev_top == 'long':
