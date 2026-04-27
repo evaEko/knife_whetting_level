@@ -42,7 +42,7 @@ Connect the battery wires to B+ and B- pads on the PCB.
 
 ### Download the firmware
 
-Go to the [latest Actions run](https://github.com/evaEko/knife_whetting_level/actions/runs/) and download the `knife_level_firmware` artifact. Extract the zip — it contains everything you need.
+Go to the [latest workflow run](https://github.com/evaEko/knife_whetting_level/actions/workflows/build.yml) and download the `knife_level_firmware` artifact. Extract the zip — it contains everything you need.
 
 > **Want to change preset angles or tolerance?** Edit `src/angles.csv` or `src/config.py` before flashing. See [HOW_TO_FIRMWARE.md](HOW_TO_FIRMWARE.md) for the full manual build and flash instructions.
 
@@ -86,14 +86,25 @@ python flash.py
 
 Select your port from the menu when prompted. The script will flash all files and reset the board.
 
+### Android app (optional)
+
+Go to the same [workflow run page](https://github.com/evaEko/knife_whetting_level/actions/workflows/build.yml) and download the `knife_level_android_apk` artifact.
+
+1. Extract the artifact zip on your Android device or computer
+2. Copy `app-debug.apk` to your phone if needed
+3. Open the APK on the phone and allow installation from unknown sources if Android asks
+4. Install the app and connect to the device over BLE
+
 ### Level the board (first time only)
 
 > **What this is for:** The sensor may not sit perfectly flat on the PCB due to soldering, sockets, or mechanical tolerances. Board levelling stores a correction angle so all subsequent readings are accurate regardless of mounting. It is needed only the first time: the setting survives flashing and when the position of the sensor changes.
 
-1. Long-press the low button — display shows "Place on straight surface"
-2. Place the device on a known flat surface
-3. Short-press the low button — display shows "Reboot!"
-4. Power cycle the device — the correction is now active
+1. Short-press the low button to open **Settings**
+2. Press the top button until **Level** is shown
+3. Short-press the low button to enter board levelling
+4. Place the device on a known flat surface
+5. Short-press the low button once, then keep the device still for about 1 second
+6. The device saves the board offset and reboots automatically
 
 ---
 
@@ -107,9 +118,11 @@ The sensor may not sit perfectly parallel to the surface you attach the device t
 
 You only need to do this once. The correction survives flashing and power cycles.
 
-1. Long-press the low button — display shows "Place on straight surface"
-2. Lay the device flat on a known level surface
-3. Short-press the low button — device reboots with the correction active
+1. Short-press the low button to open **Settings**
+2. Press the top button until **Level** is shown
+3. Short-press the low button to enter level mode
+4. Lay the device flat on a known level surface
+5. Short-press the low button — after a short settle delay, the device reboots with the correction active
 
 ### Step 2 — Calibrate for your session
 
@@ -118,14 +131,15 @@ Calibration sets the zero point for this sharpening session. Your sharpening sto
 Do this at the start of every session, after you have positioned your stone.
 
 1. Place the device flat on your stone 
-2. Short-press the low button — display shows "Calibrating..."
-3. Short-press again to lock in the zero point
+2. Short-press the low button to open **Settings**
+3. Leave **Calib** selected and short-press the low button again
+4. The current reading is stored as zero for this session
 
 The display now shows angles relative to your stone surface.
 
 ### Step 3 — Set an angle and sharpen
 
-> **Optional.** You can sharpen using the live angle display without setting any target — just watch the number. Setting an angle only adds one thing: the display inverts when you drift more than 2° (default, can be adjusted in config.py; However you will need to follow []()) from it, giving you a visual alert.
+> **Optional.** You can sharpen using the live angle display without setting any target — just watch the number. Setting an angle only adds one thing: the display inverts when you drift more than 2° by default, giving you a visual alert. This threshold can be adjusted in `config.py` or from the Android app settings.
 
 Short-press the top button to open the preset menu. Cycle through options with the top button, confirm with the low button.
 
@@ -172,5 +186,6 @@ When you want to update the firmware:
 1. Connect to computer.
 2. **Short-press both buttons at the same time** — the display shows "Ready to flash..."
    - **Note:** once flash mode is active, the only way out is to reset (short RST to GND) or power off/on.
-3. Run `build_flash.py` immediately
+3. If you are flashing from the downloaded firmware package, run `python flash.py`
+4. If you are flashing from this repository checkout, run `python build_flash.py`
 

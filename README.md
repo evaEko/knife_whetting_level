@@ -26,6 +26,7 @@ Commercial use and resale are not permitted.
 
 1. [Assemble the hardware](docs/HOW_TO_HARDWARE.md)
 2. [Flash the firmware](docs/HOW_TO_FIRMWARE.md)
+3. Optionally install the Android companion app from the `knife_level_android_apk` workflow artifact
 
 If impatient, go over [Quick Start](docs/QUICK_START.md).
 
@@ -35,23 +36,19 @@ Thanks to [jkorte-dev](https://github.com/jkorte-dev) for publishing the nRF5284
 
 Development was assisted by [Claude](https://claude.ai) (Anthropic).
 
-## Features (v1.0)
+## Features
 
-- Displays current pitch angle
-- **Calibration**: set your target sharpening angle with a single button press
-- **Visual alert**: display inverts when you drift more than 2° from the calibrated angle, or when you reach the mirror angle on the other side of the blade
-- **Idle mode**: IMU report rate drops automatically after 60 s of no movement to save power
-- **Battery display**: shows battery percentage on startup
-- **Power off**: long-press the button from any state; press again to wake
-
-## Features (v2.0)
-
+- **Live sharpening angle** — displays current blade pitch in real time on the OLED
+- **Session calibration** — set the current surface as zero from the on-device settings menu or the Android app
+- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle, or when you reach the mirror angle on the opposite side of the blade
+- **Battery display** — shows battery percentage on startup
 - **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on-device with the top button, with optional restore of the last selected preset after reboot
 - **Calibration + presets are independent** — calibrate once to set your physical reference point (zero), then switch between knife presets freely; each preset angle is always displayed relative to the calibration, never compounding
-- **Expanded two-button controls** — short-press top = preset menu, long-press top = angle-format menu, short-press both = flash mode, long-press low = board levelling
+- **Expanded two-button controls** — short-press low = settings menu (`Calib`, `Level`, `Bluetooth`), short-press top = preset menu, long-press top = angle-format menu, short-press both = flash mode
 - **Selectable angle display format** — choose `2 decimals`, `1 decimal`, or `0/5 steps` (nearest 0.5) directly on-device; setting is stored in flash and restored on boot
 - **Automatic reboot after persistent changes** — board-levelling save/reset and angle-format changes reboot the MCU automatically so the new setting takes effect immediately
 - **Flash mode** — short-press both buttons simultaneously to drop to REPL for flashing without unplugging (to exit flash mode, reset via RST↔GND or power-cycle the device)
 - **Physical power switch** — B+ latch switch replaces soft power off
 - **Board levelling** — correct for sensor mounting angle once; stored in flash, applied automatically on every boot
+- **Bluetooth companion app** — configure display/behavior settings over BLE, calibrate from the phone, manage preset angles with CRUD operations, and back up/restore presets plus app-exposed settings after reflashing
 
