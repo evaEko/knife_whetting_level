@@ -14,13 +14,12 @@ def init():
     i2c_oled = I2C(1, sda=Pin(SDA_OLED), scl=Pin(SCK_OLED), freq=400000)
     i2c_imu  = I2C(0, sda=Pin(SDA_IMU),  scl=Pin(SCL_IMU),  freq=400000)
 
-    try:
-        ctx.oled = SSD1306(i2c_oled, addr=OLED_ADDR)
-        ctx.oled.fill(0)
-        ctx.oled.show()
-        print("OLED OK")
-    except Exception as e:
-        print(f"OLED ERROR: {e}")
+    if ctx.oled is None:
+        try:
+            ctx.oled = SSD1306(i2c_oled, addr=OLED_ADDR)
+            print("OLED OK")
+        except Exception as e:
+            print(f"OLED ERROR: {e}")
 
     try:
         ctx.btn_low = Button(BTN_LOW)
@@ -33,15 +32,18 @@ def init():
         pct = read_battery_pct()
         display_battery(ctx.oled, pct)
         if pct is None:
+            _t = 0
             while True:
-                time.sleep_ms(500)
-                pct = read_battery_pct()
-                if pct is not None:
-                    display_battery(ctx.oled, pct)
+                time.sleep_ms(50)
+                if ctx.btn_low and ctx.btn_low.is_pressed():
                     break
-                if ((ctx.btn_low and ctx.btn_low.is_pressed()) or
-                        (ctx.btn_top and ctx.btn_top.is_pressed())):
-                    break
+                _t += 50
+                if _t >= 500:
+                    _t = 0
+                    pct = read_battery_pct()
+                    if pct is not None:
+                        display_battery(ctx.oled, pct)
+                        break
 
     try:
         ctx.imu = BNO085(i2c_imu, addr=BNO085_ADDR)

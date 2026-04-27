@@ -1,3 +1,21 @@
+def draw_boot_knife(oled):
+    oled.fill(0)
+    fb = oled.fb
+    # Handle (filled, with two rivet holes)
+    fb.fill_rect(2, 15, 14, 10, 1)
+    fb.fill_rect(4, 17, 3, 6, 0)
+    fb.fill_rect(10, 17, 3, 6, 0)
+    # Guard
+    fb.fill_rect(17, 11, 3, 18, 1)
+    # Blade: tapers from 7px tall at guard to 1px at near-tip, then single tip pixel
+    for x in range(20, 70):
+        spine_y = 16 + (x - 20) * 3 // 49
+        edge_y  = 22 - (x - 20) * 3 // 49
+        fb.vline(x, spine_y, edge_y - spine_y + 1, 1)
+    fb.pixel(70, 19, 1)
+    oled.show()
+
+
 def display_angle(oled, angle, label=None, fmt="1d_half"):
     oled.fill(0)
     if fmt == "2d":
@@ -54,7 +72,7 @@ def display_battery(oled, pct):
     if pct is None:
         oled.text("Turn on", 8, 0, 1)
         oled.text("to charge", 0, 10, 1)
-        oled.text("click=", 0, 22, 1)
+        oled.text("low=", 0, 22, 1)
         oled.text("bypass", 0, 32, 1)
     else:
         oled.text("BAT", (72 - 24) // 2, 2, 1)
