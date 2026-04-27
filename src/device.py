@@ -25,6 +25,7 @@ class Device:
     def init(self):
         self.display.init()
         self.display.show_knife()
+        time.sleep_ms(1000)  # Ctrl+C window for serial REPL access
 
         self.buttons.init()
         self._check_battery()
@@ -57,6 +58,13 @@ class Device:
         self.engine.calibrated_offset = s.calibrated_offset
         self.engine.target_angle      = s.target_angle
         self.engine.angle_format      = s.angle_format
+        if s.target_angle != 0.0:
+            name = "Custom"
+            for n, a in self.presets:
+                if a == s.target_angle:
+                    name = n
+                    break
+            self.engine.target_name = name
 
     def _check_battery(self):
         pct = read_battery_pct()

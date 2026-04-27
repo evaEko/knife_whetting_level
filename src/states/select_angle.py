@@ -57,7 +57,7 @@ class SelectAngleState(State):
             event = buttons.update()
             if event == ('short', 'low'):
                 angle = engine.smooth_angle
-                engine.set_target(angle)
+                engine.set_target(angle, name="Custom")
                 device.settings.target_angle = angle
                 device.settings.save_calibration()
                 print(f"-> CUSTOM {angle:.2f}°")
@@ -94,7 +94,7 @@ class SelectAngleState(State):
                 device.settings.target_angle = 0.0
                 device.settings.save_calibration()
                 print("-> PRESET cleared")
-                display.show_message("Cleared")
+                display.show_cleared()
                 self._done_at = time.ticks_add(time.ticks_ms(), 1000)
 
         elif event is not None:

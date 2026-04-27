@@ -176,6 +176,16 @@ class Display:
         oled.text("low=set", 0, 32, 1)
         oled.show()
 
+    def show_cleared(self):
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text("Preset", 0, 0, 1)
+        oled.large_text("CLEAR", 1, 12, scale=2, char_pitch=7)
+        oled.text("Cleared!", 0, 32, 1)
+        oled.show()
+
     def show_reboot_confirm(self, title, action):
         """Confirmation before reboot: title small top, action big middle, Rebooting bottom."""
         oled = self._oled
