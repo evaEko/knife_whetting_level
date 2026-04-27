@@ -56,12 +56,12 @@ class Device:
         s = self.settings
         self.engine.board_offset      = s.board_offset
         self.engine.calibrated_offset = s.calibrated_offset
-        self.engine.target_angle      = s.target_angle
+        self.engine.target_angle      = abs(s.target_angle)
         self.engine.angle_format      = s.angle_format
-        if s.target_angle != 0.0:
+        if self.engine.target_angle != 0.0:
             name = "Custom"
             for n, a in self.presets:
-                if a == s.target_angle:
+                if abs(abs(a) - self.engine.target_angle) < 1e-6:
                     name = n
                     break
             self.engine.target_name = name

@@ -29,7 +29,7 @@ class AngleEngine:
         self.smooth_angle = 0.0
 
     def set_target(self, angle, name=None):
-        self.target_angle = angle
+        self.target_angle = abs(angle)
         self.target_name  = name
         self.smooth_angle = 0.0
 
@@ -40,9 +40,8 @@ class AngleEngine:
 
     @property
     def on_target(self):
-        """True when no target is set, or blade is within threshold of target or mirror."""
-        if self.target_angle == 0.0:
+        """True when no target is set, or blade magnitude is within threshold of target."""
+        target = abs(self.target_angle)
+        if target == 0.0:
             return True
-        near = abs(self.smooth_angle - self.target_angle) <= DEVIATION_THRESHOLD
-        mirror = abs(self.smooth_angle + self.target_angle) <= DEVIATION_THRESHOLD
-        return near or mirror
+        return abs(abs(self.smooth_angle) - target) <= DEVIATION_THRESHOLD

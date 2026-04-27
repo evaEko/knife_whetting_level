@@ -56,7 +56,7 @@ class SelectAngleState(State):
                                    fmt=engine.angle_format)
             event = buttons.update()
             if event == ('short', 'low'):
-                angle = engine.smooth_angle
+                angle = abs(engine.smooth_angle)
                 engine.set_target(angle, name="Custom")
                 device.settings.target_angle = angle
                 device.settings.save_calibration()
@@ -83,6 +83,7 @@ class SelectAngleState(State):
                 display.invert(False)
             elif idx < self._clear:
                 name, angle = presets[idx - 1]
+                angle = abs(angle)
                 engine.set_target(angle, name=name)
                 device.settings.target_angle = angle
                 device.settings.save_calibration()

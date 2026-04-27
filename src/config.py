@@ -32,6 +32,13 @@ SMOOTHING = 0.7
 #   "1d_half" — one decimal place, rounded to nearest 0.5  (e.g. +12.5°)
 ANGLE_FORMAT = "1d_half"
 
+# IMU angle axis used for measurement:
+#   "pitch" — use when the sensor pin row is perpendicular to the knife blade
+#              direction (with the level placed on the blade)
+#   "roll"  — use when the sensor pin row is parallel to the knife blade
+#              direction (with the level placed on the blade)
+ANGLE_AXIS = "pitch"
+
 # Whether to restore the last selected preset angle from persisted settings
 # at boot. True keeps the current behavior; False starts with no preset selected.
 LOAD_TARGET_ANGLE_FROM_EEPROM = True
