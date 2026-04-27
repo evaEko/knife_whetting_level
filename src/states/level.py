@@ -1,85 +1,51 @@
 import time
 import machine
-import ctx
+from state import State
 
 
-def get_board_level():
-    try:
-        with open('board_offset.txt') as f:
-            value = float(f.read().strip())
-        print(f"Board level loaded: {value:+.2f}")
-        return value
-    except Exception:
-        print("No board level saved, using 0.0")
-        return 0.0
+class LevelState(State):
+    def update(self, device):
+        display = device.display
+        sensor  = device.sensor
+        buttons = device.buttons
+        engine  = device.engine
+        settings = device.settings
 
+        display.invert(False)
+        display.show_message("Place on", "straight", "surface")
 
-def store_level_to_eeprom(angle):
-    try:
-        with open('board_offset.txt', 'w') as f:
-            f.write(str(angle))
-        print(f"-> BOARD OFFSET saved: {angle:+.2f}")
-    except Exception as e:
-        print(f"Save error: {e}")
+        buttons.wait_release('low')
+        time.sleep_ms(50)
 
+        while True:
+            raw = sensor.update()
+            if raw is not None:
+                engine.raw_angle = raw
 
-def clear_calibration_settings():
-    """Reset persisted calibration/preset values after board-level changes."""
-    try:
-        ctx.calibrated_offset = 0.0
-        ctx.target_angle = 0.0
-        ctx.smooth_angle = 0.0
-        ctx.save_settings()
-        print("-> CAL/PRESET cleared")
-    except Exception as e:
-        print(f"Settings clear error: {e}")
+            if buttons.is_pressed('low'):
+                time.sleep_ms(50)
+                if buttons.is_pressed('low'):
+                    start = time.ticks_ms()
+                    while buttons.is_pressed('low'):
+                        time.sleep_ms(10)
+                    duration = time.ticks_diff(time.ticks_ms(), start)
 
+                    if duration >= 800:
+                        settings.reset_board_offset()
+                        settings.reset_calibration()
+                        engine.board_offset      = 0.0
+                        engine.calibrated_offset = 0.0
+                        engine.smooth_angle      = 0.0
+                        display.show_message("BL reset", "", "Rebooting...")
+                    else:
+                        settings.save_board_offset(engine.raw_angle)
+                        settings.reset_calibration()
+                        engine.board_offset      = engine.raw_angle
+                        engine.calibrated_offset = 0.0
+                        engine.smooth_angle      = 0.0
+                        display.show_message("Saved!", "", "Rebooting...")
 
-def level():
-    if not ctx.oled:
-        return
+                    time.sleep_ms(800)
+                    machine.reset()
 
-    ctx.oled.invert(False)
-    ctx.oled.fill(0)
-    ctx.oled.text("Place on", 12, 4, 1)
-    ctx.oled.text("straight", 12, 16, 1)
-    ctx.oled.text("surface", 12, 28, 1)
-    ctx.oled.show()
-
-    while ctx.btn_low and ctx.btn_low.is_pressed():
-        time.sleep_ms(10)
-    time.sleep_ms(50)
-
-    while True:
-        if ctx.imu:
-            try:
-                ctx.imu.update()
-                ctx.raw_angle = ctx.imu.get_pitch()
-            except OSError:
-                pass
-
-        if ctx.btn_low and ctx.btn_low.is_pressed():
-            time.sleep_ms(50)
-            if ctx.btn_low.is_pressed():
-                start = time.ticks_ms()
-                while ctx.btn_low.is_pressed():
-                    time.sleep_ms(10)
-                duration = time.ticks_diff(time.ticks_ms(), start)
-                if duration >= 800:
-                    store_level_to_eeprom(0.0)
-                    clear_calibration_settings()
-                    ctx.oled.fill(0)
-                    ctx.oled.text("BL reset", 16, 4, 1)
-                    ctx.oled.text("Rebooting...", 4, 20, 1)
-                    ctx.oled.show()
-                else:
-                    store_level_to_eeprom(ctx.raw_angle)
-                    clear_calibration_settings()
-                    ctx.oled.fill(0)
-                    ctx.oled.text("Saved!", 20, 8, 1)
-                    ctx.oled.text("Rebooting...", 4, 20, 1)
-                    ctx.oled.show()
-                time.sleep_ms(800)
-                machine.reset()
-
-        time.sleep_ms(10)
+            time.sleep_ms(10)

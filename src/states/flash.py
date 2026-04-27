@@ -1,13 +1,10 @@
 import sys
-import ctx
+from state import State
 
 
-def flash():
-    if ctx.oled:
-        ctx.oled.invert(False)
-        ctx.oled.fill(0)
-        ctx.oled.text("Ready to", 4, 8, 1)
-        ctx.oled.text("flash...", 16, 20, 1)
-        ctx.oled.show()
-    print("-> REPL")
-    sys.exit()
+class FlashState(State):
+    def update(self, device):
+        device.display.invert(False)
+        device.display.show_message("Ready to", "flash...")
+        print("-> REPL")
+        sys.exit()

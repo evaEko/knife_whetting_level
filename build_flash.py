@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+MPREMOTE = [sys.executable, "-m", "mpremote"]
+
 
 def run(cmd, ignore_errors=False):
     print(f"  {' '.join(cmd)}")
@@ -66,7 +68,7 @@ def clean_device(tty, src_files, dirs):
     top_files = [f.relative_to(Path("src")).as_posix()
                  for f in src_files if f.parent == Path("src")]
     rmrf += "\n" + "\n".join(f"_rm('{f}')" for f in top_files)
-    run(["mpremote", "connect", tty, "exec", rmrf])
+    run(MPREMOTE + [ "connect", tty, "exec", rmrf])
 
 
 tty = sys.argv[1] if len(sys.argv) == 2 else pick_tty()
@@ -77,11 +79,11 @@ print(f"Found {len(src_files)} files, flashing to {tty}...")
 clean_device(tty, src_files, dirs)
 
 for d in dirs:
-    run(["mpremote", "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
+    run(MPREMOTE + [ "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
 
 for f in src_files:
     dst = f.relative_to(Path("src")).as_posix()
-    run(["mpremote", "connect", tty, "cp", str(f), f":{dst}"])
+    run(MPREMOTE + [ "connect", tty, "cp", str(f), f":{dst}"])
 
-run(["mpremote", "connect", tty, "reset"])
+run(MPREMOTE + [ "connect", tty, "reset"])
 print("Done.")

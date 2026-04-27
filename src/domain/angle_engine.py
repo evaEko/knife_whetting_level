@@ -1,0 +1,45 @@
+from config import SMOOTHING, DEVIATION_THRESHOLD
+
+
+class AngleEngine:
+    def __init__(self, board_offset=0.0, calibrated_offset=0.0,
+                 target_angle=0.0, angle_format="1d_half"):
+        self.board_offset      = board_offset
+        self.calibrated_offset = calibrated_offset
+        self.target_angle      = target_angle
+        self.angle_format      = angle_format
+        self.raw_angle         = 0.0
+        self.smooth_angle      = 0.0
+
+    def update(self, raw):
+        """Apply offsets, wrap to ±180, and smooth. Call with every IMU reading."""
+        self.raw_angle = raw
+        angle = raw - self.board_offset - self.calibrated_offset
+        while angle >  180.0: angle -= 360.0
+        while angle < -180.0: angle += 360.0
+        if abs(angle - self.smooth_angle) > 180.0:
+            self.smooth_angle = angle
+        else:
+            self.smooth_angle = SMOOTHING * self.smooth_angle + (1.0 - SMOOTHING) * angle
+
+    def calibrate(self):
+        """Lock current raw reading as the zero reference."""
+        self.calibrated_offset = self.raw_angle - self.board_offset
+        self.smooth_angle = 0.0
+
+    def set_target(self, angle):
+        self.target_angle = angle
+        self.smooth_angle = 0.0
+
+    def clear_target(self):
+        self.target_angle = 0.0
+        self.smooth_angle = 0.0
+
+    @property
+    def on_target(self):
+        """True when no target is set, or blade is within threshold of target or mirror."""
+        if self.target_angle == 0.0:
+            return True
+        near = abs(self.smooth_angle - self.target_angle) <= DEVIATION_THRESHOLD
+        mirror = abs(self.smooth_angle + self.target_angle) <= DEVIATION_THRESHOLD
+        return near or mirror
