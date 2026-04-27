@@ -40,13 +40,40 @@ val NUS_RX_UUID      = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
 val CCCD_UUID        = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 val mainHandler      = Handler(Looper.getMainLooper())
+const val LIVE_RETRY_MS = 1_000L
 var activeGatt: BluetoothGatt? = null
+var awaitingLiveAngle = false
 
 // Commands are queued so we never have two concurrent GATT writes
 val commandQueue     = ArrayDeque<String>()
 var isSendingCommand = false
 var onQueueDrained: (() -> Unit)? = null
 var onDisconnected: (() -> Unit)? = null
+
+val liveStartRetry = object : Runnable {
+    override fun run() {
+        if (!awaitingLiveAngle || activeGatt == null) return
+        if (!commandQueue.contains("live_start")) {
+            enqueueCommand("live_start")
+        }
+        mainHandler.postDelayed(this, LIVE_RETRY_MS)
+    }
+}
+
+fun startLiveAngleRetry(gatt: BluetoothGatt) {
+    activeGatt = gatt
+    awaitingLiveAngle = true
+    mainHandler.removeCallbacks(liveStartRetry)
+    if (!commandQueue.contains("live_start")) {
+        enqueueCommand("live_start")
+    }
+    mainHandler.postDelayed(liveStartRetry, LIVE_RETRY_MS)
+}
+
+fun stopLiveAngleRetry() {
+    awaitingLiveAngle = false
+    mainHandler.removeCallbacks(liveStartRetry)
+}
 
 enum class Screen { CONNECT, LIVE, SETTINGS, CALIBRATE, PRESETS }
 
@@ -102,7 +129,10 @@ fun MainScreen(context: Context) {
 
     fun onMessage(msg: String) {
         when {
-            msg.startsWith("angle:")   -> angle = msg.removePrefix("angle:")
+            msg.startsWith("angle:")   -> {
+                angle = msg.removePrefix("angle:")
+                stopLiveAngleRetry()
+            }
             msg.startsWith("calibration:") -> calibrationAngle = msg.removePrefix("calibration:")
             msg.startsWith("preset:") -> {
                 val rest = msg.removePrefix("preset:")
@@ -397,6 +427,7 @@ fun disconnectGatt() {
     commandQueue.clear()
     isSendingCommand = false
     onQueueDrained = null
+    stopLiveAngleRetry()
     activeGatt?.disconnect()
     activeGatt?.close()
     activeGatt = null
@@ -467,6 +498,7 @@ fun makeGattCallback(onMessage: (String) -> Unit, onReady: (BluetoothGatt) -> Un
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
                 mainHandler.post {
+                    stopLiveAngleRetry()
                     onMessage("Disconnected")
                     onDisconnected?.invoke()
                     onDisconnected = null
@@ -498,9 +530,10 @@ fun makeGattCallback(onMessage: (String) -> Unit, onReady: (BluetoothGatt) -> Un
     }
 
     override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
-        val rx = gatt.getService(NUS_SERVICE_UUID)?.getCharacteristic(NUS_RX_UUID) ?: return
-        writeCharacteristic(gatt, rx, "live_start".toByteArray())
-        mainHandler.post { onReady(gatt) }
+        mainHandler.post {
+            startLiveAngleRetry(gatt)
+            onReady(gatt)
+        }
     }
 
     override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
