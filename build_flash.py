@@ -1,21 +1,63 @@
 #!/usr/bin/env python3
-# Usage: python build_flash.py [port]
-# Long-press the low button on the device first to drop to REPL, then run this.
+# Usage: python build_flash.py [-v] [port]
 import glob
+import itertools
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 MPREMOTE = [sys.executable, "-m", "mpremote"]
+VERBOSE  = '-v' in sys.argv or '--verbose' in sys.argv
+_args    = [a for a in sys.argv[1:] if a not in ('-v', '--verbose')]
 
 
-def run(cmd, ignore_errors=False):
-    print(f"  {' '.join(cmd)}")
+# --- output helpers ---
+
+def _ok():
+    sys.stdout.write(' \033[32m✓\033[0m\n')
+    sys.stdout.flush()
+
+def _fail(msg):
+    sys.stdout.write(' \033[31m✗\033[0m\n')
+    print(f"  ERROR: {msg}")
+    sys.exit(1)
+
+def _run(cmd, ignore_errors=False):
+    if VERBOSE:
+        print(f"  {' '.join(str(c) for c in cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0 and not ignore_errors:
-        print(f"ERROR: {result.stderr.strip()}")
-        sys.exit(1)
+        if VERBOSE:
+            print(f"ERROR: {result.stderr.strip()}")
+            sys.exit(1)
+        _fail(result.stderr.strip())
+    return result
 
+def _spin(label, cmd, ignore_errors=False):
+    """Run one command with a spinner; falls back to plain output in verbose mode."""
+    if VERBOSE:
+        print(label)
+        return _run(cmd, ignore_errors)
+
+    frames = itertools.cycle('|/-\\')
+    sys.stdout.write(f"  {label} ")
+    sys.stdout.flush()
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while proc.poll() is None:
+        sys.stdout.write(f"\r  {label} {next(frames)}")
+        sys.stdout.flush()
+        time.sleep(0.1)
+    sys.stdout.write(f"\r  {label}  ")
+    _, err = proc.communicate()
+
+    if proc.returncode != 0 and not ignore_errors:
+        _fail(err.decode().strip())
+    _ok()
+
+
+# --- device helpers ---
 
 def pick_tty():
     if sys.platform == "darwin":
@@ -46,13 +88,15 @@ def find_files():
     src = Path("src")
     all_files = list(src.rglob("*.py")) + list(src.rglob("*.csv"))
     src_files = [f for f in all_files if "tools" not in f.parts]
-    dirs = sorted({f.parent.relative_to(src).as_posix() for f in src_files if f.parent != src})
+    dirs = sorted({f.parent.relative_to(src).as_posix()
+                   for f in src_files if f.parent != src})
     return sorted(src_files), dirs
 
 
 def clean_device(tty, src_files, dirs):
-    print("Cleaning device...")
-    top_dirs = sorted({Path(d).parts[0] for d in dirs})
+    top_dirs  = sorted({Path(d).parts[0] for d in dirs})
+    top_files = [f.relative_to(Path("src")).as_posix()
+                 for f in src_files if f.parent == Path("src")]
     rmrf = (
         "import os\n"
         "def _rm(p):\n"
@@ -64,26 +108,60 @@ def clean_device(tty, src_files, dirs):
         "        except: pass\n"
     )
     rmrf += "\n".join(f"_rm('{d}')" for d in top_dirs)
-    # also remove top-level source files
-    top_files = [f.relative_to(Path("src")).as_posix()
-                 for f in src_files if f.parent == Path("src")]
     rmrf += "\n" + "\n".join(f"_rm('{f}')" for f in top_files)
-    run(MPREMOTE + [ "connect", tty, "exec", rmrf])
+    _spin("Cleaning device...", MPREMOTE + ["connect", tty, "exec", rmrf])
 
 
-tty = sys.argv[1] if len(sys.argv) == 2 else pick_tty()
+def make_dirs(tty, dirs):
+    if VERBOSE:
+        print("Creating directories...")
+    else:
+        sys.stdout.write("  Creating directories...")
+        sys.stdout.flush()
+    for d in dirs:
+        _run(MPREMOTE + ["connect", tty, "mkdir", f":{d}"], ignore_errors=True)
+    if not VERBOSE:
+        _ok()
+
+
+def upload_files(tty, src_files):
+    total = len(src_files)
+    if VERBOSE:
+        print(f"Uploading {total} files...")
+    bar_w = 24
+
+    for i, f in enumerate(src_files, 1):
+        dst = f.relative_to(Path("src")).as_posix()
+        if VERBOSE:
+            _run(MPREMOTE + ["connect", tty, "cp", str(f), f":{dst}"])
+        else:
+            filled = bar_w * i // total
+            bar    = '█' * filled + '░' * (bar_w - filled)
+            name   = f.name
+            sys.stdout.write(f"\r  Uploading [{bar}] {i}/{total}  {name:<28}")
+            sys.stdout.flush()
+            result = subprocess.run(
+                MPREMOTE + ["connect", tty, "cp", str(f), f":{dst}"],
+                capture_output=True, text=True
+            )
+            if result.returncode != 0:
+                sys.stdout.write('\n')
+                _fail(f"{dst}: {result.stderr.strip()}")
+
+    if not VERBOSE:
+        sys.stdout.write(f"\r  Uploading [{bar_w * '█'}] {total}/{total}  ")
+        _ok()
+
+
+# --- main ---
+
+tty = _args[0] if _args else pick_tty()
 
 src_files, dirs = find_files()
-print(f"Found {len(src_files)} files, flashing to {tty}...")
+print(f"Flashing {len(src_files)} files → {tty}  (use -v for verbose)")
 
 clean_device(tty, src_files, dirs)
-
-for d in dirs:
-    run(MPREMOTE + [ "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
-
-for f in src_files:
-    dst = f.relative_to(Path("src")).as_posix()
-    run(MPREMOTE + [ "connect", tty, "cp", str(f), f":{dst}"])
-
-run(MPREMOTE + [ "connect", tty, "reset"])
+make_dirs(tty, dirs)
+upload_files(tty, src_files)
+_spin("Resetting device...",  MPREMOTE + ["connect", tty, "reset"])
 print("Done.")

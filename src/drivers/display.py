@@ -54,10 +54,9 @@ class Display:
             return
         oled.fill(0)
         if pct is None:
-            oled.text("Turn on", 8, 0, 1)
-            oled.text("to charge", 0, 10, 1)
-            oled.text("low=", 0, 22, 1)
-            oled.text("bypass", 0, 32, 1)
+            oled.text("To charge", 0, 0, 1)
+            oled.large_text("PLUG", 8, 12, scale=2, char_pitch=7)
+            oled.text("low=pass", 0, 32, 1)
         else:
             oled.text("BAT", (72 - 24) // 2, 2, 1)
             pct_str = f"{pct}%"
@@ -71,6 +70,38 @@ class Display:
         oled.show()
 
     # --- angle ---
+
+    def show_measure(self, angle, fmt="1d_half", target=None, name=None):
+        """Measuring screen: optional name top, big angle middle, target bottom."""
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        if name:
+            oled.text(name[:9], 0, 0, 1)
+        self._draw_angle_band(angle, fmt, y=12)
+        if target is not None:
+            oled.text(self._fmt_target(target, fmt), 0, 32, 1)
+        oled.show()
+
+    def show_flash(self):
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text("Ready to", 0, 2, 1)
+        oled.large_text("FLASH", 1, 20, scale=2, char_pitch=7)
+        oled.show()
+
+    @staticmethod
+    def _fmt_target(angle, fmt):
+        if fmt == "2d":
+            return f"> {angle:+.2f}"
+        if fmt == "1d":
+            angle = round(angle, 1)
+        else:
+            angle = round(angle * 2) / 2
+        return f"> {angle:.1f}"
 
     def show_angle(self, angle, label=None, fmt="1d_half"):
         oled = self._oled
@@ -121,6 +152,60 @@ class Display:
         oled.text("top=esc", 0, 0, 1)
         oled.text("low=ok", 8, 32, 1)
         self._draw_angle_band(angle, fmt, y=12)
+        oled.show()
+
+    def show_set_confirmation(self, angle, fmt="1d_half", name=None):
+        """Confirmation after preset selection: Setting / big angle / name."""
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text("Setting", 0, 0, 1)
+        self._draw_angle_band(angle, fmt, y=12)
+        if name:
+            oled.text(name[:9], 0, 32, 1)
+        oled.show()
+
+    def show_custom(self):
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text("Custom", 0, 0, 1)
+        oled.large_text("angle", 1, 12, scale=2, char_pitch=7)
+        oled.text("low=set", 0, 32, 1)
+        oled.show()
+
+    def show_reboot_confirm(self, title, action):
+        """Confirmation before reboot: title small top, action big middle, Rebooting bottom."""
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text(title, 0, 0, 1)
+        oled.large_text(action, 1, 12, scale=2, char_pitch=7)
+        oled.text("Rebooting", 0, 32, 1)
+        oled.show()
+
+    def show_level_prompt(self):
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text("Place on", 0, 0, 1)
+        oled.large_text("LEVEL", 1, 12, scale=2, char_pitch=7)
+        oled.text("surface", 0, 32, 1)
+        oled.show()
+
+    def show_clear(self, current_angle, fmt="1d_half"):
+        """Clear preset item: current target top, CLEAR big middle, hint bottom."""
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text(self._fmt_target(current_angle, fmt), 0, 0, 1)
+        oled.large_text("CLEAR", 1, 12, scale=2, char_pitch=7)
+        oled.text("low=clear", 0, 32, 1)
         oled.show()
 
     def show_preset(self, name, angle):

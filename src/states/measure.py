@@ -1,5 +1,6 @@
 import time
 from state import State
+from config import SHOW_PRESET_NAME, SHOW_TARGET_ANGLE
 
 _DISPLAY_INTERVAL = 50
 
@@ -16,9 +17,15 @@ class MeasureState(State):
         now = time.ticks_ms()
         if time.ticks_diff(now, self._last_display) >= _DISPLAY_INTERVAL:
             self._last_display = now
-            device.display.invert(not device.engine.on_target)
-            device.display.show_angle(device.engine.smooth_angle,
-                                      fmt=device.engine.angle_format)
+            engine = device.engine
+            device.display.invert(not engine.on_target)
+            has_target = engine.target_angle != 0.0
+            target = engine.target_angle if (has_target and SHOW_TARGET_ANGLE) else None
+            name   = engine.target_name  if (has_target and SHOW_PRESET_NAME)  else None
+            device.display.show_measure(engine.smooth_angle,
+                                        fmt=engine.angle_format,
+                                        target=target,
+                                        name=name)
 
         event = device.buttons.update()
         if event == ('short', 'low'):

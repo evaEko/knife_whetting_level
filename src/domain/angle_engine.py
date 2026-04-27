@@ -7,6 +7,7 @@ class AngleEngine:
         self.board_offset      = board_offset
         self.calibrated_offset = calibrated_offset
         self.target_angle      = target_angle
+        self.target_name       = None
         self.angle_format      = angle_format
         self.raw_angle         = 0.0
         self.smooth_angle      = 0.0
@@ -27,12 +28,14 @@ class AngleEngine:
         self.calibrated_offset = self.raw_angle - self.board_offset
         self.smooth_angle = 0.0
 
-    def set_target(self, angle):
+    def set_target(self, angle, name=None):
         self.target_angle = angle
+        self.target_name  = name
         self.smooth_angle = 0.0
 
     def clear_target(self):
         self.target_angle = 0.0
+        self.target_name  = None
         self.smooth_angle = 0.0
 
     @property

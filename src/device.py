@@ -37,13 +37,16 @@ class Device:
 
         from states.measure import MeasureState
         self.state = MeasureState()
+        self.state.enter(self)
 
     def run(self):
         self.init()
         while True:
             next_state = self.state.update(self)
             if next_state is not None:
+                self.state.exit(self)
                 self.state = next_state
+                self.state.enter(self)
 
     # --- private ---
 

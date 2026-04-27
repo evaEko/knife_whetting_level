@@ -2,50 +2,73 @@ import time
 import machine
 from state import State
 
+_SETTLE_MS = 1000
+
 
 class LevelState(State):
+    def __init__(self):
+        self._phase       = 'wait_release'  # wait_release | measuring | timing | settling | feedback
+        self._press_start = None
+        self._done_at     = None
+        self._action      = None  # 'save' | 'reset'
+
+    def enter(self, device):
+        device.display.invert(False)
+        device.display.show_level_prompt()
+
     def update(self, device):
-        display = device.display
-        sensor  = device.sensor
-        buttons = device.buttons
-        engine  = device.engine
+        buttons  = device.buttons
+        sensor   = device.sensor
+        engine   = device.engine
         settings = device.settings
+        display  = device.display
 
-        display.invert(False)
-        display.show_message("Place on", "straight", "surface")
+        if self._phase == 'wait_release':
+            if not buttons.is_pressed('low'):
+                self._phase = 'measuring'
+            return None
 
-        buttons.wait_release('low')
-        time.sleep_ms(50)
+        if self._phase == 'feedback':
+            if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
+                machine.reset()
+            return None
 
-        while True:
-            raw = sensor.update()
-            if raw is not None:
-                engine.raw_angle = raw
+        raw = sensor.update()
+        if raw is not None:
+            engine.raw_angle = raw
 
+        if self._phase == 'measuring':
             if buttons.is_pressed('low'):
-                time.sleep_ms(50)
-                if buttons.is_pressed('low'):
-                    start = time.ticks_ms()
-                    while buttons.is_pressed('low'):
-                        time.sleep_ms(10)
-                    duration = time.ticks_diff(time.ticks_ms(), start)
+                self._press_start = time.ticks_ms()
+                self._phase = 'timing'
 
-                    if duration >= 800:
-                        settings.reset_board_offset()
-                        settings.reset_calibration()
-                        engine.board_offset      = 0.0
-                        engine.calibrated_offset = 0.0
-                        engine.smooth_angle      = 0.0
-                        display.show_message("BL reset", "", "Rebooting...")
-                    else:
-                        settings.save_board_offset(engine.raw_angle)
-                        settings.reset_calibration()
-                        engine.board_offset      = engine.raw_angle
-                        engine.calibrated_offset = 0.0
-                        engine.smooth_angle      = 0.0
-                        display.show_message("Saved!", "", "Rebooting...")
+        elif self._phase == 'timing':
+            if not buttons.is_pressed('low'):
+                duration = time.ticks_diff(time.ticks_ms(), self._press_start)
+                if duration >= 800:
+                    # Long press: reset to zero — no need to settle
+                    settings.reset_board_offset()
+                    settings.reset_calibration()
+                    engine.board_offset      = 0.0
+                    engine.calibrated_offset = 0.0
+                    engine.smooth_angle      = 0.0
+                    display.show_reboot_confirm("BL reset", "RESET")
+                    self._done_at = time.ticks_add(time.ticks_ms(), 800)
+                    self._phase   = 'feedback'
+                else:
+                    # Short press: wait 1s for device to settle, then capture
+                    self._done_at = time.ticks_add(time.ticks_ms(), _SETTLE_MS)
+                    self._phase   = 'settling'
 
-                    time.sleep_ms(800)
-                    machine.reset()
+        elif self._phase == 'settling':
+            if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
+                settings.save_board_offset(engine.raw_angle)
+                settings.reset_calibration()
+                engine.board_offset      = engine.raw_angle
+                engine.calibrated_offset = 0.0
+                engine.smooth_angle      = 0.0
+                display.show_reboot_confirm("Saved!", "DONE")
+                self._done_at = time.ticks_add(time.ticks_ms(), 800)
+                self._phase   = 'feedback'
 
-            time.sleep_ms(10)
+        return None

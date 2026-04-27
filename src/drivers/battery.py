@@ -27,11 +27,11 @@ def read_battery_pct():
         raw = max(0, struct.unpack('<h', buf[:2])[0])
         vddh = raw * 18.0 / 4096
         pct = (vddh - 3.2) / (4.2 - 3.2) * 100
-        # USB without battery: charger floats at 4.2V, indistinguishable from full.
-        # When battery is connected and below ~4.15V the charger enters CC mode
-        # and VDDH drops to actual battery voltage — detectable below 100%.
+        # USB without battery: raw USB voltage reaches ~4.46V (above the charger's
+        # 4.2V regulated maximum). Battery connected clamps VDDH to ≤4.2V.
+        # Threshold at 4.3V cleanly separates the two cases.
         vbus = machine.mem32[0x40000438] & 0x01
-        if vbus and pct >= 100:
+        if vbus and vddh > 4.3:
             return None
         return max(0, min(100, int(pct)))
     except Exception as e:

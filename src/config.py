@@ -30,4 +30,9 @@ ANGLE_FORMAT = "1d_half"
 
 # Whether to restore the last selected preset angle from persisted settings
 # at boot. True keeps the current behavior; False starts with no preset selected.
-LOAD_TARGET_ANGLE_FROM_EEPROM = True 
+LOAD_TARGET_ANGLE_FROM_EEPROM = True
+
+# Measuring screen overlays — show preset name (top) and target angle (bottom)
+# when a preset is active. Set either to False to hide that element.
+SHOW_PRESET_NAME   = True
+SHOW_TARGET_ANGLE  = False 
