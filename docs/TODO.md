@@ -1,27 +1,11 @@
 # TODO
 
-* tag v2.0 commit
-* implement angle format select: on top button long press display the option for the angle format as we display the preset angles, user confirms selection with the top button and lists with the upper button
-* store the angle display setting in eeprom as we store board level
-
-# Prepare for public:
-
-* [x] nice-nano-kicad library — checked: bundled files declare GNU GPLv3 in kicad/nice-nano-kicad/README.md; attribution and license note are included in README.
-* [x] The drivers — bno085.py: only imports stdlib (struct, time, math). No third-party dependencies; no attribution required.
-
-## Firmware
-
-- [ ] add return to presets menu 
+* implement correct detection of battery connected when on usb cable
 
 ## GitHub
 
-- [ ] Merge v2.0 into main
-- [ ] Set v2.0 (or main) as default branch in GitHub Settings → General → Default branch
-- [ ] Verify GitHub Actions workflow appears in Actions tab and run it manually
-- [ ] Update QUICK_START.md to link to the firmware artifact download
 
 ## PCB
-
 
 - [ ] Tidy up
 

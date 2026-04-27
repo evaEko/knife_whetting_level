@@ -59,17 +59,13 @@ class Device:
         pct = read_battery_pct()
         self.display.show_battery(pct)
         if pct is None:
-            _t = 0
             while True:
                 time.sleep_ms(50)
                 if self.buttons.is_pressed('low'):
                     break
-                _t += 50
-                if _t >= 500:
-                    _t = 0
-                    pct = read_battery_pct()
-                    if pct is not None:
-                        self.display.show_battery(pct)
-                        break
+                pct = read_battery_pct()
+                if pct is not None:
+                    self.display.show_battery(pct)
+                    break
         if pct is not None:
             time.sleep_ms(1500)
