@@ -1,10 +1,10 @@
-name: Build firmware package
+name: Build artifacts
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  firmware:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,4 +29,33 @@ jobs:
         with:
           name: knife_level_firmware
           path: knife_level_firmware.zip
+          retention-days: 90
+
+  android-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: App
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: knife_level_android_apk
+          path: App/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 90
