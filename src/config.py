@@ -50,3 +50,6 @@ SHOW_TARGET_ANGLE  = False
 
 # How often the measuring screen redraws (ms). Lower = more responsive, more I2C traffic.
 DISPLAY_INTERVAL_MS = 40
+
+# Enable Bluetooth Low Energy UART service on boot.
+BLE_ENABLED = True 

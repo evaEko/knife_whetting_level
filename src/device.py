@@ -1,5 +1,5 @@
 import time
-from config import ANGLE_FORMAT, LOAD_TARGET_ANGLE_FROM_EEPROM
+from config import ANGLE_FORMAT, LOAD_TARGET_ANGLE_FROM_EEPROM, BLE_ENABLED
 from drivers.display import Display
 from drivers.sensor import Sensor
 from drivers.buttons import Buttons
@@ -21,6 +21,7 @@ class Device:
             load_target_angle=LOAD_TARGET_ANGLE_FROM_EEPROM,
         )
         self.state = None
+        self.ble = None
 
     def init(self):
         self.display.init()
@@ -32,6 +33,11 @@ class Device:
 
         self.sensor.init()
         self.presets.load()
+
+        if BLE_ENABLED:
+            from drivers.ble import BleUart
+            self.ble = BleUart()
+            self.ble.enable()
 
         self.settings.load()
         self._apply_settings()
