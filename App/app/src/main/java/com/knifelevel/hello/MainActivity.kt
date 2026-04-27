@@ -133,7 +133,14 @@ fun MainScreen(context: Context) {
                 saveStatus = "Saving..."
                 rebootNeeded = false
                 onQueueDrained = {
-                    saveStatus = if (rebootNeeded) "Saved. Reboot device to apply." else "Saved."
+                    if (rebootNeeded) {
+                        enqueueCommand("reboot")
+                        onQueueDrained = {
+                            saveStatus = "Saved. Rebooting..."
+                        }
+                    } else {
+                        saveStatus = "Saved."
+                    }
                 }
                 draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
             },

@@ -1,5 +1,6 @@
 import ubluetooth
 import time
+import machine
 
 _IRQ_CENTRAL_CONNECT    = 1
 _IRQ_CENTRAL_DISCONNECT = 2
@@ -33,9 +34,9 @@ class BleUart:
         self._conn        = None
         self._tx_handle   = None
         self._rx_handle   = None
-        self._live        = False
-        self._last_send   = 0
-        self._pending_cmd = None  # commands queued from IRQ, processed in tick()
+        self._live         = False
+        self._last_send    = 0
+        self._cmd_queue    = []   # commands queued from IRQ, processed one per tick()
 
     def enable(self):
         self._ble.active(True)
@@ -49,13 +50,13 @@ class BleUart:
             ),
         )
         ((self._tx_handle, self._rx_handle),) = self._ble.gatts_register_services((NUS,))
+        self._ble.gatts_set_buffer(self._rx_handle, 512)
         self._advertise()
         print("BLE UART ready")
 
     def tick(self, device):
-        if self._pending_cmd is not None:
-            self._process_command(self._pending_cmd, device)
-            self._pending_cmd = None
+        if self._cmd_queue:
+            self._process_command(self._cmd_queue.pop(0), device)
 
         if self._live and self._conn is not None:
             now = time.ticks_ms()
@@ -65,7 +66,18 @@ class BleUart:
 
     def send(self, text):
         if self._conn is not None:
-            self._ble.gatts_notify(self._conn, self._tx_handle, text.encode())
+            try:
+                self._ble.gatts_notify(self._conn, self._tx_handle, text.encode())
+            except OSError as e:
+                if e.errno == 12:  # ENOMEM
+                    print(f"BLE send buffer full, waiting... ({repr(text[:30])}...)")
+                    time.sleep_ms(50)
+                    try:
+                        self._ble.gatts_notify(self._conn, self._tx_handle, text.encode())
+                    except Exception as e2:
+                        print(f"BLE send retry failed: {e2}")
+                else:
+                    print(f"BLE send error: {e}")
 
     @property
     def connected(self):
@@ -81,13 +93,17 @@ class BleUart:
         elif event == _IRQ_CENTRAL_DISCONNECT:
             self._conn = None
             self._live = False
-            self._pending_cmd = None
+            self._cmd_queue.clear()
             self._advertise()
             print("BLE disconnected, advertising")
         elif event == _IRQ_GATTS_WRITE:
-            self._pending_cmd = self._ble.gatts_read(self._rx_handle).decode().strip()
+            raw_bytes = self._ble.gatts_read(self._rx_handle)
+            cmd = raw_bytes.decode().strip()
+            print(f"BLE RX raw: {repr(raw_bytes)} → decoded: {repr(cmd)}")
+            self._cmd_queue.append(cmd)
 
     def _process_command(self, cmd, device):
+        print(f"_process_command: {repr(cmd)}")
         if cmd == "live_start":
             self._live = True
         elif cmd == "live_stop":
@@ -96,6 +112,11 @@ class BleUart:
             self._send_settings(device)
         elif cmd.startswith("set_setting:"):
             self._set_setting(cmd[12:], device)
+        elif cmd == "reboot":
+            print("Rebooting as requested")
+            self.send("ok")
+            time.sleep_ms(200)
+            machine.reset()
 
     def _send_settings(self, device):
         from drivers.config_rw import read_config
@@ -105,13 +126,16 @@ class BleUart:
                 if type_ == 'bool':
                     val = 'true' if val == 'True' else 'false'
                 self.send(f"setting:{key}:{val}")
+                time.sleep_ms(20)  # Give BLE stack time to process
         self.send(f"setting:angle_format:{device.settings.angle_format}")
+        time.sleep_ms(20)
         self.send("settings_done")
 
     def _set_setting(self, args, device):
         key, _, raw = args.partition(':')
         key = key.strip()
         raw = raw.strip()
+        print(f"_set_setting: key={key}, raw={raw}")
 
         if key == 'angle_format':
             if raw in ('2d', '1d', '1d_half'):
@@ -134,6 +158,7 @@ class BleUart:
             py_val = f'"{raw}"'
         else:
             py_val = raw
+        print(f"_set_setting: type={type_}, config_key={config_key}, py_val={py_val}")
 
         from drivers.config_rw import write_config
         if write_config(config_key, py_val):
