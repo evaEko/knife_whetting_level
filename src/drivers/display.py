@@ -71,7 +71,7 @@ class Display:
 
     # --- angle ---
 
-    def show_measure(self, angle, fmt="1d_half", target=None, name=None):
+    def show_measure(self, angle, fmt="1d_half", target=None, name=None, ble_on=False):
         """Measuring screen: optional name top, big angle middle, target bottom."""
         oled = self._oled
         if not oled:
@@ -82,6 +82,8 @@ class Display:
         self._draw_angle_band(angle, fmt, y=12)
         if target is not None:
             oled.text(self._fmt_target(target, fmt), 0, 32, 1)
+        if ble_on:
+            self._draw_ble_star(oled)
         oled.show()
 
     def show_flash(self):
@@ -239,6 +241,23 @@ class Display:
         oled.text("low=set top=next", 0, 32, 1)
         oled.show()
 
+    def show_settings_item(self, name, hint="low=select"):
+        """Settings menu item: big label + single action hint."""
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        text = name[:9]
+        if text.startswith("BL:"):
+            pitch = 7 if len(text) <= 5 else 5
+            oled.large_text(text, 0, 12, scale=2, char_pitch=pitch)
+        elif len(text) <= 5:
+            oled.large_text(text, 1, 12, scale=2, char_pitch=7)
+        else:
+            oled.large_text(text, 1, 12, scale=2, char_pitch=4)
+        oled.text(hint, 0, 32, 1)
+        oled.show()
+
     def _draw_angle_band(self, angle, fmt, y=12):
         """Render angle text at y without clearing — caller manages fill."""
         oled = self._oled
@@ -255,6 +274,26 @@ class Display:
             if -10.0 < angle < 10.0:
                 text = " " + text
             oled.large_text(text, 0, y, scale=2, char_pitch=7)
+
+    @staticmethod
+    def _draw_ble_star(oled):
+        """Draw a tiny BLE indicator in the lower-right corner."""
+        x = 68
+        y = 35
+        fb = oled.fb
+        fb.pixel(x, y, 1)
+        fb.pixel(x, y - 3, 1)
+        fb.pixel(x, y + 3, 1)
+        fb.pixel(x - 3, y, 1)
+        fb.pixel(x + 3, y, 1)
+        fb.pixel(x, y - 1, 1)
+        fb.pixel(x, y + 1, 1)
+        fb.pixel(x - 1, y, 1)
+        fb.pixel(x + 1, y, 1)
+        fb.pixel(x - 2, y - 2, 1)
+        fb.pixel(x + 2, y + 2, 1)
+        fb.pixel(x - 2, y + 2, 1)
+        fb.pixel(x + 2, y - 2, 1)
 
     def clear(self):
         if self._oled:

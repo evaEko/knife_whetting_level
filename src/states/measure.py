@@ -23,12 +23,13 @@ class MeasureState(State):
             device.display.show_measure(engine.smooth_angle,
                                         fmt=engine.angle_format,
                                         target=target,
-                                        name=name)
+                                        name=name,
+                                        ble_on=(device.ble is not None))
 
         event = device.buttons.update()
         if event == ('short', 'low'):
-            from states.calibrate import CalibrateState
-            return CalibrateState()
+            from states.settings_menu import SettingsMenuState
+            return SettingsMenuState()
         if event == ('short', 'top'):
             from states.select_angle import SelectAngleState
             return SelectAngleState()
@@ -38,7 +39,4 @@ class MeasureState(State):
         if event == ('short', 'both'):
             from states.flash import FlashState
             return FlashState()
-        if event == ('long', 'low'):
-            from states.level import LevelState
-            return LevelState()
         return None

@@ -1,6 +1,8 @@
 # TODO
 
 * implement correct detection of battery connected when on usb cable
+* when ble is on, there is a small star in the upper right corner in measurement 
+
 
 ## GitHub
 
@@ -15,7 +17,6 @@ The nRF52840 has built-in BLE. The plan is to expose a BLE GATT service from the
 
 ### Firmware (BLE)
 
-- [ ] Enable BLE on the nRF52840 via MicroPython
 - [ ] Expose a GATT characteristic to receive a target angle from the app
 - [ ] Expose a GATT characteristic to stream the current live angle back to the app
 - [ ] Merge BLE-received angle with the existing preset/calibration logic
