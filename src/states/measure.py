@@ -12,6 +12,9 @@ class MeasureState(State):
         if raw is not None:
             device.engine.update(raw)
 
+        if device.ble is not None:
+            device.ble.tick(device)
+
         now = time.ticks_ms()
         if time.ticks_diff(now, self._last_display) >= DISPLAY_INTERVAL_MS:
             self._last_display = now
