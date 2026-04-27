@@ -13,6 +13,7 @@ fun SettingsScreen(
     settings: Map<String, String>,
     settingsLoaded: Boolean,
     saveStatus: String,
+    waitingForReconnect: Boolean,
     onSave: (Map<String, String>) -> Unit,
     onBack: () -> Unit
 ) {
@@ -37,11 +38,11 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(onClick = onBack) { Text("← Back") }
+            TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
             Text("Settings", style = MaterialTheme.typography.titleLarge)
             Button(
                 onClick = { onSave(draft.toMap()) },
-                enabled = settingsLoaded && saveStatus != "Saving..."
+                enabled = settingsLoaded && saveStatus != "Saving..." && !waitingForReconnect
             ) { Text("Save") }
         }
 
@@ -62,6 +63,17 @@ fun SettingsScreen(
         if (!settingsLoaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
+            }
+            return@Column
+        }
+
+        if (waitingForReconnect) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Reconnecting to device...")
+                }
             }
             return@Column
         }

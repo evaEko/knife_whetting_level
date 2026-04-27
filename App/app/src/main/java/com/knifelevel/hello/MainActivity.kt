@@ -42,6 +42,7 @@ var activeGatt: BluetoothGatt? = null
 val commandQueue     = ArrayDeque<String>()
 var isSendingCommand = false
 var onQueueDrained: (() -> Unit)? = null
+var onDisconnected: (() -> Unit)? = null
 
 enum class Screen { CONNECT, LIVE, SETTINGS }
 
@@ -58,8 +59,8 @@ fun MainScreen(context: Context) {
     var angle            by remember { mutableStateOf("--") }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
-    var rebootNeeded     by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
+    var waitingForReconnect by remember { mutableStateOf(false) }
     val settings         = remember { mutableStateMapOf<String, String>() }
     var settingsLoaded   by remember { mutableStateOf(false) }
 
@@ -88,8 +89,8 @@ fun MainScreen(context: Context) {
                 if (idx > 0) settings[rest.substring(0, idx)] = rest.substring(idx + 1)
             }
             msg == "settings_done"      -> settingsLoaded = true
-            msg == "ok"                 -> { /* acknowledged, queue handles status */ }
-            msg.startsWith("ok:reboot") -> rebootNeeded = true
+            msg == "ok"                 -> { }
+            msg.startsWith("ok:")       -> { }
             msg.startsWith("err:")      -> saveStatus = msg
             else                        -> status = msg
         }
@@ -97,6 +98,7 @@ fun MainScreen(context: Context) {
 
     fun onReady(gatt: BluetoothGatt) {
         activeGatt = gatt
+        waitingForReconnect = false
         screen = Screen.LIVE
     }
 
@@ -111,7 +113,6 @@ fun MainScreen(context: Context) {
             onSettings = {
                 settings.clear()
                 settingsLoaded = false
-                rebootNeeded = false
                 saveStatus = ""
                 sendCommand("get_settings")
                 screen = Screen.SETTINGS
@@ -129,20 +130,24 @@ fun MainScreen(context: Context) {
             settings      = settings,
             settingsLoaded = settingsLoaded,
             saveStatus    = saveStatus,
+            waitingForReconnect = waitingForReconnect,
             onSave = { draft ->
                 saveStatus = "Saving..."
-                rebootNeeded = false
-                onQueueDrained = {
-                    if (rebootNeeded) {
-                        enqueueCommand("reboot")
-                        onQueueDrained = {
-                            saveStatus = "Saved. Rebooting..."
+                val needsReboot = draft.keys.any { it != "angle_format" }
+                if (needsReboot) {
+                    onQueueDrained = {
+                        saveStatus = "Rebooting..."
+                        waitingForReconnect = true
+                        onDisconnected = {
+                            connectToNano(context, ::onMessage, ::onReady)
                         }
-                    } else {
-                        saveStatus = "Saved."
                     }
+                    draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
+                    enqueueCommand("reboot")
+                } else {
+                    onQueueDrained = { saveStatus = "Saved." }
+                    draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
                 }
-                draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
             },
             onBack = { screen = Screen.LIVE }
         )
@@ -261,7 +266,11 @@ fun makeGattCallback(onMessage: (String) -> Unit, onReady: (BluetoothGatt) -> Un
                 gatt.requestMtu(512)
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
-                mainHandler.post { onMessage("Disconnected") }
+                mainHandler.post {
+                    onMessage("Disconnected")
+                    onDisconnected?.invoke()
+                    onDisconnected = null
+                }
                 gatt.close()
             }
         }
