@@ -12,7 +12,7 @@ OLED_ADDR   = 0x3C  # SSD1306 default address
 
 # Angle deviation threshold — how many degrees off your target before the
 # display inverts to warn you
-DEVIATION_THRESHOLD = 1.5   # degrees
+DEVIATION_THRESHOLD = 1   # degrees
 
 # How long the button must be held to count as a long press
 LONG_PRESS_MS = 1000  # ms

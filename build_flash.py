@@ -48,10 +48,33 @@ def find_files():
     return sorted(src_files), dirs
 
 
+def clean_device(tty, src_files, dirs):
+    print("Cleaning device...")
+    top_dirs = sorted({Path(d).parts[0] for d in dirs})
+    rmrf = (
+        "import os\n"
+        "def _rm(p):\n"
+        "    try:\n"
+        "        for e in os.listdir(p): _rm(p+'/'+e)\n"
+        "        os.rmdir(p)\n"
+        "    except OSError:\n"
+        "        try: os.remove(p)\n"
+        "        except: pass\n"
+    )
+    rmrf += "\n".join(f"_rm('{d}')" for d in top_dirs)
+    # also remove top-level source files
+    top_files = [f.relative_to(Path("src")).as_posix()
+                 for f in src_files if f.parent == Path("src")]
+    rmrf += "\n" + "\n".join(f"_rm('{f}')" for f in top_files)
+    run(["mpremote", "connect", tty, "exec", rmrf])
+
+
 tty = sys.argv[1] if len(sys.argv) == 2 else pick_tty()
 
 src_files, dirs = find_files()
 print(f"Found {len(src_files)} files, flashing to {tty}...")
+
+clean_device(tty, src_files, dirs)
 
 for d in dirs:
     run(["mpremote", "connect", tty, "mkdir", f":{d}"], ignore_errors=True)
