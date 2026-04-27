@@ -47,7 +47,7 @@ class SSD1306:
             SET_COM_OUT_DIR | 0x08,
             SET_DISP_OFFSET, 0x00,
             SET_COM_PIN_CFG, 0x12,              # alternative COM pin config for 40px
-            SET_DISP_CLK_DIV, 0x80,
+            SET_DISP_CLK_DIV, 0xF0,
             SET_PRECHARGE, 0xF1,
             SET_VCOM_DESEL, 0x30,
             SET_CONTRAST, 0xFF,
