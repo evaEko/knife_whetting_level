@@ -110,6 +110,12 @@ class BleUart:
             self._live = False
         elif cmd == "get_calibration":
             self._send_calibration(device)
+        elif cmd == "get_presets":
+            self._send_presets(device)
+        elif cmd == "clear_presets":
+            self._clear_presets(device)
+        elif cmd.startswith("add_preset:"):
+            self._add_preset(cmd[11:], device)
         elif cmd == "calibrate":
             self._calibrate(device)
         elif cmd == "get_settings":
@@ -137,6 +143,42 @@ class BleUart:
 
     def _send_calibration(self, device):
         self.send(f"calibration:{device.settings.calibrated_offset:.2f}")
+
+    def _send_presets(self, device):
+        for name, angle in device.presets:
+            self.send(f"preset:{name}:{abs(angle):.2f}")
+            time.sleep_ms(20)
+        self.send("presets_done")
+
+    def _clear_presets(self, device):
+        try:
+            device.presets.replace_all([])
+            self.send("ok")
+        except Exception:
+            self.send("err:preset clear failed")
+
+    def _add_preset(self, args, device):
+        name, _, raw_angle = args.partition(':')
+        name = name.strip()
+        raw_angle = raw_angle.strip()
+
+        if not name or ',' in name or ':' in name:
+            self.send("err:invalid preset name")
+            return
+
+        try:
+            angle = abs(float(raw_angle))
+        except Exception:
+            self.send("err:invalid preset angle")
+            return
+
+        presets = list(device.presets)
+        presets.append((name, angle))
+        try:
+            device.presets.replace_all(presets)
+            self.send("ok")
+        except Exception:
+            self.send("err:preset save failed")
 
     def _calibrate(self, device):
         device.engine.calibrate()

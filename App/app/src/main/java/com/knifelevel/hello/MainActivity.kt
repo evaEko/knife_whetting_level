@@ -28,6 +28,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.UUID
 
 val NUS_SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
@@ -44,7 +46,9 @@ var isSendingCommand = false
 var onQueueDrained: (() -> Unit)? = null
 var onDisconnected: (() -> Unit)? = null
 
-enum class Screen { CONNECT, LIVE, SETTINGS, CALIBRATE }
+enum class Screen { CONNECT, LIVE, SETTINGS, CALIBRATE, PRESETS }
+
+data class PresetEntry(val name: String, val angle: String)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,9 +65,13 @@ fun MainScreen(context: Context) {
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
+    var presetStatus     by remember { mutableStateOf("") }
     var waitingForReconnect by remember { mutableStateOf(false) }
     val settings         = remember { mutableStateMapOf<String, String>() }
+    val presets          = remember { mutableStateListOf<PresetEntry>() }
     var settingsLoaded   by remember { mutableStateOf(false) }
+    var presetsLoaded    by remember { mutableStateOf(false) }
+    var backupAvailable  by remember { mutableStateOf(hasPresetBackup(context)) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -85,16 +93,27 @@ fun MainScreen(context: Context) {
         when {
             msg.startsWith("angle:")   -> angle = msg.removePrefix("angle:")
             msg.startsWith("calibration:") -> calibrationAngle = msg.removePrefix("calibration:")
+            msg.startsWith("preset:") -> {
+                val rest = msg.removePrefix("preset:")
+                val idx = rest.lastIndexOf(':')
+                if (idx > 0) {
+                    presets.add(PresetEntry(rest.substring(0, idx), rest.substring(idx + 1)))
+                }
+            }
             msg.startsWith("setting:") -> {
                 val rest = msg.removePrefix("setting:")
                 val idx  = rest.indexOf(':')
                 if (idx > 0) settings[rest.substring(0, idx)] = rest.substring(idx + 1)
             }
             msg == "ok:calibrated"     -> saveStatus = "Calibration saved."
+            msg == "presets_done"      -> presetsLoaded = true
             msg == "settings_done"      -> settingsLoaded = true
             msg == "ok"                 -> { }
             msg.startsWith("ok:")       -> { }
-            msg.startsWith("err:")      -> saveStatus = msg
+            msg.startsWith("err:")      -> {
+                saveStatus = msg
+                presetStatus = msg
+            }
             else                        -> status = msg
         }
     }
@@ -120,7 +139,16 @@ fun MainScreen(context: Context) {
                 sendCommand("get_settings")
                 screen = Screen.SETTINGS
             },
-            onPresets   = { /* TODO */ },
+            onPresets   = {
+                presets.clear()
+                presetsLoaded = false
+                settings.clear()
+                settingsLoaded = false
+                presetStatus = ""
+                sendCommand("get_presets")
+                sendCommand("get_settings")
+                screen = Screen.PRESETS
+            },
             onCalibrate = {
                 saveStatus = ""
                 sendCommand("get_calibration")
@@ -168,6 +196,115 @@ fun MainScreen(context: Context) {
             },
             onBack = { screen = Screen.LIVE }
         )
+        Screen.PRESETS -> PresetScreen(
+            presets = presets,
+            presetsLoaded = presetsLoaded,
+            settingsLoaded = settingsLoaded,
+            status = presetStatus,
+            waitingForReconnect = waitingForReconnect,
+            backupAvailable = backupAvailable,
+            onAddPreset = { name, angle ->
+                presets.add(PresetEntry(name, angle))
+            },
+            onUpdatePreset = { index, name, angle ->
+                presets[index] = PresetEntry(name, angle)
+            },
+            onDeletePreset = { index ->
+                presets.removeAt(index)
+            },
+            onSaveToDevice = {
+                presetStatus = "Saving presets..."
+                onQueueDrained = { presetStatus = "Presets saved." }
+                enqueueCommand("clear_presets")
+                presets.forEach { preset ->
+                    enqueueCommand("add_preset:${preset.name}:${preset.angle}")
+                }
+            },
+            onSaveBackup = {
+                savePresetBackup(context, settings, presets)
+                backupAvailable = true
+                presetStatus = "Backup saved."
+            },
+            onRestoreBackup = {
+                val backup = loadPresetBackup(context)
+                if (backup == null) {
+                    presetStatus = "err:no backup found"
+                } else {
+                    presets.clear()
+                    presets.addAll(backup.presets)
+                    settings.clear()
+                    settings.putAll(backup.settings)
+                    presetStatus = "Restoring backup..."
+                    val needsReboot = backup.settings.keys.any { it != "angle_format" }
+                    if (needsReboot) {
+                        onQueueDrained = {
+                            presetStatus = "Rebooting..."
+                            waitingForReconnect = true
+                            onDisconnected = {
+                                connectToNano(context, ::onMessage, ::onReady)
+                            }
+                        }
+                    } else {
+                        onQueueDrained = { presetStatus = "Backup restored." }
+                    }
+                    enqueueCommand("clear_presets")
+                    backup.presets.forEach { preset ->
+                        enqueueCommand("add_preset:${preset.name}:${preset.angle}")
+                    }
+                    backup.settings.forEach { (key, value) ->
+                        enqueueCommand("set_setting:$key:$value")
+                    }
+                    if (needsReboot) {
+                        enqueueCommand("reboot")
+                    }
+                }
+            },
+            onBack = { screen = Screen.LIVE }
+        )
+    }
+}
+
+data class PresetBackup(val settings: Map<String, String>, val presets: List<PresetEntry>)
+
+fun hasPresetBackup(context: Context): Boolean {
+    val prefs = context.getSharedPreferences("knife_level", Context.MODE_PRIVATE)
+    return prefs.contains("preset_backup")
+}
+
+fun savePresetBackup(context: Context, settings: Map<String, String>, presets: List<PresetEntry>) {
+    val prefs = context.getSharedPreferences("knife_level", Context.MODE_PRIVATE)
+    val root = JSONObject()
+    val settingsJson = JSONObject()
+    settings.forEach { (key, value) -> settingsJson.put(key, value) }
+    val presetsJson = JSONArray()
+    presets.forEach { preset ->
+        val item = JSONObject()
+        item.put("name", preset.name)
+        item.put("angle", preset.angle)
+        presetsJson.put(item)
+    }
+    root.put("settings", settingsJson)
+    root.put("presets", presetsJson)
+    prefs.edit().putString("preset_backup", root.toString()).apply()
+}
+
+fun loadPresetBackup(context: Context): PresetBackup? {
+    val prefs = context.getSharedPreferences("knife_level", Context.MODE_PRIVATE)
+    val raw = prefs.getString("preset_backup", null) ?: return null
+    return try {
+        val root = JSONObject(raw)
+        val settingsJson = root.getJSONObject("settings")
+        val presetsJson = root.getJSONArray("presets")
+        val settings = mutableMapOf<String, String>()
+        settingsJson.keys().forEach { key -> settings[key] = settingsJson.getString(key) }
+        val presets = mutableListOf<PresetEntry>()
+        for (index in 0 until presetsJson.length()) {
+            val item = presetsJson.getJSONObject(index)
+            presets.add(PresetEntry(item.getString("name"), item.getString("angle")))
+        }
+        PresetBackup(settings, presets)
+    } catch (_: Exception) {
+        null
     }
 }
 
