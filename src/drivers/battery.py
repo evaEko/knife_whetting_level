@@ -7,6 +7,7 @@ import time
 def read_battery_pct():
     """Read battery % via nRF52840 internal VDDH/5 measurement (nice!nano v2)."""
     try:
+        vbus = machine.mem32[0x40000438] & 0x01  # POWER.USBREGSTATUS.VBUSDETECT
         S = 0x40007000
         machine.mem32[S+0x500] = 0
         machine.mem32[S+0x510] = 13      # VDDHDIV5
@@ -27,6 +28,10 @@ def read_battery_pct():
         raw = max(0, struct.unpack('<h', buf[:2])[0])
         vddh = raw * 18.0 / 4096
         pct = (vddh - 3.2) / (4.2 - 3.2) * 100
+        # USB connected with no battery: charger floats at ~4.2 V, reads as 100%.
+        # If VBUS is present but voltage is below that ceiling, battery is in circuit.
+        if vbus and pct >= 100:
+            return None
         return max(0, min(100, int(pct)))
     except Exception as e:
         print(f"BATT ERROR: {e}")

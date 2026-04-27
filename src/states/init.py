@@ -16,16 +16,11 @@ def init():
 
     try:
         ctx.oled = SSD1306(i2c_oled, addr=OLED_ADDR)
+        ctx.oled.fill(0)
+        ctx.oled.show()
         print("OLED OK")
     except Exception as e:
         print(f"OLED ERROR: {e}")
-
-    try:
-        ctx.imu = BNO085(i2c_imu, addr=BNO085_ADDR)
-        ctx.imu.enable_rotation_vector(interval_ms=10)
-        print("IMU OK")
-    except Exception as e:
-        print(f"IMU ERROR: {e}")
 
     try:
         ctx.btn_low = Button(BTN_LOW)
@@ -33,6 +28,27 @@ def init():
         print("BTN OK")
     except Exception as e:
         print(f"BTN ERROR: {e}")
+
+    if ctx.oled:
+        pct = read_battery_pct()
+        display_battery(ctx.oled, pct)
+        if pct is None:
+            while True:
+                time.sleep_ms(500)
+                pct = read_battery_pct()
+                if pct is not None:
+                    display_battery(ctx.oled, pct)
+                    break
+                if ((ctx.btn_low and ctx.btn_low.is_pressed()) or
+                        (ctx.btn_top and ctx.btn_top.is_pressed())):
+                    break
+
+    try:
+        ctx.imu = BNO085(i2c_imu, addr=BNO085_ADDR)
+        ctx.imu.enable_rotation_vector(interval_ms=10)
+        print("IMU OK")
+    except Exception as e:
+        print(f"IMU ERROR: {e}")
 
     try:
         with open('angles.csv') as f:
@@ -52,6 +68,5 @@ def init():
     ctx.load_settings(load_target_angle=LOAD_TARGET_ANGLE_FROM_EEPROM)
     ctx.angle_format = ctx.get_angle_format(ANGLE_FORMAT)
 
-    if ctx.oled:
-        display_battery(ctx.oled, read_battery_pct())
+    if ctx.oled and pct is not None:
         time.sleep_ms(1500)

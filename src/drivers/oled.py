@@ -51,10 +51,13 @@ def display_error(oled, msg):
 
 def display_battery(oled, pct):
     oled.fill(0)
-    oled.text("BAT", (72 - 24) // 2, 2, 1)
     if pct is None:
-        oled.text("--", (72 - 16) // 2, 16, 1)
+        oled.text("Turn on", 8, 0, 1)
+        oled.text("to charge", 0, 10, 1)
+        oled.text("click=", 0, 22, 1)
+        oled.text("bypass", 0, 32, 1)
     else:
+        oled.text("BAT", (72 - 24) // 2, 2, 1)
         pct_str = f"{pct}%"
         pw = len(pct_str) * 16  # scale=2 → 16px per char
         oled.large_text(pct_str, (72 - pw) // 2, 14, scale=2)
