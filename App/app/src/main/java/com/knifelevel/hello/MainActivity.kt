@@ -44,7 +44,7 @@ var isSendingCommand = false
 var onQueueDrained: (() -> Unit)? = null
 var onDisconnected: (() -> Unit)? = null
 
-enum class Screen { CONNECT, LIVE, SETTINGS }
+enum class Screen { CONNECT, LIVE, SETTINGS, CALIBRATE }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(context: Context) {
     var screen           by remember { mutableStateOf(Screen.CONNECT) }
     var angle            by remember { mutableStateOf("--") }
+    var calibrationAngle by remember { mutableStateOf("--") }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -83,11 +84,13 @@ fun MainScreen(context: Context) {
     fun onMessage(msg: String) {
         when {
             msg.startsWith("angle:")   -> angle = msg.removePrefix("angle:")
+            msg.startsWith("calibration:") -> calibrationAngle = msg.removePrefix("calibration:")
             msg.startsWith("setting:") -> {
                 val rest = msg.removePrefix("setting:")
                 val idx  = rest.indexOf(':')
                 if (idx > 0) settings[rest.substring(0, idx)] = rest.substring(idx + 1)
             }
+            msg == "ok:calibrated"     -> saveStatus = "Calibration saved."
             msg == "settings_done"      -> settingsLoaded = true
             msg == "ok"                 -> { }
             msg.startsWith("ok:")       -> { }
@@ -118,7 +121,11 @@ fun MainScreen(context: Context) {
                 screen = Screen.SETTINGS
             },
             onPresets   = { /* TODO */ },
-            onCalibrate = { /* TODO */ },
+            onCalibrate = {
+                saveStatus = ""
+                sendCommand("get_calibration")
+                screen = Screen.CALIBRATE
+            },
             onDisconnect = {
                 disconnectGatt()
                 angle = "--"
@@ -148,6 +155,16 @@ fun MainScreen(context: Context) {
                     onQueueDrained = { saveStatus = "Saved." }
                     draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
                 }
+            },
+            onBack = { screen = Screen.LIVE }
+        )
+        Screen.CALIBRATE -> CalibrationScreen(
+            currentAngle = angle,
+            calibrationAngle = calibrationAngle,
+            status = saveStatus,
+            onCalibrate = {
+                saveStatus = "Calibrating..."
+                sendCommand("calibrate")
             },
             onBack = { screen = Screen.LIVE }
         )
@@ -189,6 +206,41 @@ fun LiveScreen(
         Button(onClick = onCalibrate) { Text("Calibrate") }
         Spacer(modifier = Modifier.height(32.dp))
         TextButton(onClick = onDisconnect) { Text("Disconnect") }
+    }
+}
+
+@Composable
+fun CalibrationScreen(
+    currentAngle: String,
+    calibrationAngle: String,
+    status: String,
+    onCalibrate: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TextButton(onClick = onBack, modifier = Modifier.align(Alignment.Start)) { Text("← Back") }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(text = "Calibration", style = MaterialTheme.typography.titleLarge)
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(text = "$currentAngle°", style = MaterialTheme.typography.displayMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Current calibration: $calibrationAngle°")
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Place the level on the reference surface, then use the current reading as zero.")
+        if (status.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = status, color = if (status.startsWith("err")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(onClick = onCalibrate, enabled = status != "Calibrating...") {
+            Text("Use Current Reading")
+        }
     }
 }
 

@@ -108,6 +108,10 @@ class BleUart:
             self._live = True
         elif cmd == "live_stop":
             self._live = False
+        elif cmd == "get_calibration":
+            self._send_calibration(device)
+        elif cmd == "calibrate":
+            self._calibrate(device)
         elif cmd == "get_settings":
             self._send_settings(device)
         elif cmd.startswith("set_setting:"):
@@ -130,6 +134,16 @@ class BleUart:
         self.send(f"setting:angle_format:{device.settings.angle_format}")
         time.sleep_ms(20)
         self.send("settings_done")
+
+    def _send_calibration(self, device):
+        self.send(f"calibration:{device.settings.calibrated_offset:.2f}")
+
+    def _calibrate(self, device):
+        device.engine.calibrate()
+        device.settings.calibrated_offset = device.engine.calibrated_offset
+        device.settings.save_calibration()
+        self._send_calibration(device)
+        self.send("ok:calibrated")
 
     def _set_setting(self, args, device):
         key, _, raw = args.partition(':')
