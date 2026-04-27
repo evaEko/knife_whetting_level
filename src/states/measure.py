@@ -1,8 +1,6 @@
 import time
 from state import State
-from config import SHOW_PRESET_NAME, SHOW_TARGET_ANGLE
-
-_DISPLAY_INTERVAL = 50
+from config import SHOW_PRESET_NAME, SHOW_TARGET_ANGLE, DISPLAY_INTERVAL_MS
 
 
 class MeasureState(State):
@@ -15,7 +13,7 @@ class MeasureState(State):
             device.engine.update(raw)
 
         now = time.ticks_ms()
-        if time.ticks_diff(now, self._last_display) >= _DISPLAY_INTERVAL:
+        if time.ticks_diff(now, self._last_display) >= DISPLAY_INTERVAL_MS:
             self._last_display = now
             engine = device.engine
             device.display.invert(not engine.on_target)

@@ -144,13 +144,28 @@ The display inverts when you drift more than 2° from the target angle, or when 
 
 ---
 
-## 6. Charging
+## 6. Tuning for your skill level
+
+Open `src/config.py` before flashing and adjust `SMOOTHING` to match how consistently you hold an angle:
+
+| Value | Feel | Best for |
+|---|---|---|
+| `0.3` | Very reactive — every wobble visible | Learning, diagnosing technique |
+| `0.5` | Balanced | Casual sharpening |
+| `0.7` | Smooth, stable during strokes | Most users (default) |
+| `0.9` | Near-frozen display | Experienced sharpeners with consistent technique |
+
+Higher smoothing means the number barely moves during a steady stroke, which is easier to read. The trade-off is it responds more slowly when you intentionally change angle.
+
+---
+
+## 7. Charging
 
 > **Important (known limitation):** while charging over USB, the latch power switch must be in the ON position. If the latch switch is OFF, the battery will not charge.
 
 ---
 
-## 7. Reflashing
+## 8. Reflashing
 
 When you want to update the firmware:
 

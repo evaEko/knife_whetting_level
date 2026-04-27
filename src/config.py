@@ -18,9 +18,13 @@ DEVIATION_THRESHOLD = 1   # degrees
 LONG_PRESS_MS = 1000  # ms
 
 # Display smoothing — low-pass filter on the displayed angle.
-# 0.0 = raw/no smoothing, higher = smoother but slower to respond.
-# Keep below 0.5 to avoid excessive lag during fast movements.
-SMOOTHING = 0.15
+# Higher = smoother reading, slower to respond to angle changes.
+#   0.3 — very reactive, good for learning (see every wobble)
+#   0.5 — balanced
+#   0.7 — smooth, good default for most users
+#   0.9 — near-frozen display, suited to experienced sharpeners
+#          who hold a consistent angle and want a stable reading
+SMOOTHING = 0.7
 
 # Angle display format:
 #   "2d"      — two decimal places  (e.g. +12.34°)
@@ -35,4 +39,7 @@ LOAD_TARGET_ANGLE_FROM_EEPROM = True
 # Measuring screen overlays — show preset name (top) and target angle (bottom)
 # when a preset is active. Set either to False to hide that element.
 SHOW_PRESET_NAME   = True
-SHOW_TARGET_ANGLE  = False 
+SHOW_TARGET_ANGLE  = False
+
+# How often the measuring screen redraws (ms). Lower = more responsive, more I2C traffic.
+DISPLAY_INTERVAL_MS = 40
