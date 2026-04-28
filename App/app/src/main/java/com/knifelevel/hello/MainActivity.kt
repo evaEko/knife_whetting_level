@@ -19,6 +19,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.knifelevel.hello.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -76,9 +78,57 @@ fun stopLiveAngleRetry() {
     mainHandler.removeCallbacks(liveStartRetry)
 }
 
-enum class Screen { CONNECT, LIVE, SETTINGS, CALIBRATE, PRESETS }
+enum class Screen { CONNECT, LIVE, APP_SETTINGS, SETTINGS, CALIBRATE, PRESETS }
 
 data class PresetEntry(val name: String, val angle: String)
+
+enum class AppAngleFormat(val wireValue: String) {
+    TWO_DECIMALS("2d"),
+    ONE_DECIMAL("1d"),
+    HALF_DEGREE("0.5");
+
+    companion object {
+        fun fromWire(value: String?): AppAngleFormat {
+            return entries.firstOrNull { it.wireValue == value } ?: TWO_DECIMALS
+        }
+    }
+}
+
+data class AppUiSettings(
+    val angleFormat: AppAngleFormat,
+    val deviationBackgroundEnabled: Boolean,
+    val showTargetName: Boolean,
+)
+
+fun loadAppUiSettings(context: Context): AppUiSettings {
+    val prefs = context.getSharedPreferences("knife_level_app", Context.MODE_PRIVATE)
+    return AppUiSettings(
+        angleFormat = AppAngleFormat.fromWire(prefs.getString("angle_format", AppAngleFormat.TWO_DECIMALS.wireValue)),
+        deviationBackgroundEnabled = prefs.getBoolean("deviation_background_enabled", true),
+        showTargetName = prefs.getBoolean("show_target_name", true),
+    )
+}
+
+fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
+    val prefs = context.getSharedPreferences("knife_level_app", Context.MODE_PRIVATE)
+    prefs.edit()
+        .putString("angle_format", settings.angleFormat.wireValue)
+        .putBoolean("deviation_background_enabled", settings.deviationBackgroundEnabled)
+        .putBoolean("show_target_name", settings.showTargetName)
+        .apply()
+}
+
+fun formatAngleForDisplay(raw: String, format: AppAngleFormat): String {
+    val value = raw.toFloatOrNull() ?: return raw
+    return when (format) {
+        AppAngleFormat.TWO_DECIMALS -> "%.2f".format(value)
+        AppAngleFormat.ONE_DECIMAL -> "%.1f".format(value)
+        AppAngleFormat.HALF_DEGREE -> {
+            val rounded = kotlin.math.round(value * 2f) / 2f
+            "%.1f".format(rounded)
+        }
+    }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,6 +180,14 @@ fun MainScreen(context: Context) {
         ))
     }
 
+    LaunchedEffect(screen, waitingForReconnect, currentTargetAngle) {
+        if (screen == Screen.CONNECT || waitingForReconnect || currentTargetAngle.isNotBlank()) return@LaunchedEffect
+        while (activeGatt != null && currentTargetAngle.isBlank()) {
+            sendCommand("get_target_state")
+            delay(1_000)
+        }
+    }
+
     fun onMessage(msg: String) {
         when {
             msg.startsWith("angle:")   -> {
@@ -157,7 +215,18 @@ fun MainScreen(context: Context) {
                 if (idx > 0) settings[rest.substring(0, idx)] = rest.substring(idx + 1)
             }
             msg == "ok:calibrated"     -> saveStatus = "Calibration saved."
-            msg.startsWith("target:")   -> currentTargetAngle = msg.removePrefix("target:")
+            msg.startsWith("target_state:") -> {
+                val rest = msg.removePrefix("target_state:")
+                val idx = rest.indexOf(':')
+                if (idx >= 0) {
+                    currentTargetAngle = rest.substring(0, idx)
+                    currentTargetName = rest.substring(idx + 1)
+                }
+            }
+            msg.startsWith("target:")   -> {
+                currentTargetAngle = msg.removePrefix("target:")
+                currentTargetName = ""
+            }
             msg.startsWith("target_name:") -> currentTargetName = msg.removePrefix("target_name:")
             msg == "presets_done"      -> presetsLoaded = true
             msg == "settings_done"      -> settingsLoaded = true
@@ -177,6 +246,9 @@ fun MainScreen(context: Context) {
         settings.clear()
         presetsLoaded = false
         settingsLoaded = false
+        currentTargetAngle = ""
+        currentTargetName = ""
+        sendCommand("get_target_state")
         sendCommand("get_presets")
         sendCommand("get_settings")
     }
@@ -196,7 +268,9 @@ fun MainScreen(context: Context) {
         )
         Screen.LIVE -> LiveScreen(
             angle = angle,
+            targetAngle = currentTargetAngle,
             targetName = currentTargetName,
+            deviationThreshold = settings["deviation_threshold"]?.toFloatOrNull() ?: 1f,
             onSettings = {
                 settings.clear()
                 settingsLoaded = false
@@ -222,6 +296,7 @@ fun MainScreen(context: Context) {
             onDisconnect = {
                 disconnectGatt()
                 angle = "--"
+                currentTargetAngle = ""
                 currentTargetName = ""
                 status = ""
                 screen = Screen.CONNECT
@@ -415,15 +490,30 @@ fun ConnectScreen(status: String, enabled: Boolean, onConnect: () -> Unit) {
 @Composable
 fun LiveScreen(
     angle: String,
+    targetAngle: String,
     targetName: String,
+    deviationThreshold: Float,
     onSettings: () -> Unit,
     onPresets: () -> Unit,
     onCalibrate: () -> Unit,
     onDisconnect: () -> Unit
 ) {
+    val currentAbs = angle.toFloatOrNull()?.let { kotlin.math.abs(it) }
+    val targetAbs = targetAngle.toFloatOrNull()?.let { kotlin.math.abs(it) }
+    val hasTarget = targetAbs != null && targetAbs > 0f
+    val delta = if (hasTarget && currentAbs != null) kotlin.math.abs(currentAbs - targetAbs!!) else null
+    val isOffTarget = delta != null && delta > deviationThreshold
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(
+                if (isOffTarget) {
+                    MaterialTheme.colorScheme.errorContainer
+                } else {
+                    MaterialTheme.colorScheme.background
+                }
+            )
             .padding(24.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -445,8 +535,20 @@ fun LiveScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = targetName,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            if (hasTarget && delta != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = if (isOffTarget) {
+                        "Off target by ${"%.2f".format(delta)}° (limit ±${"%.2f".format(deviationThreshold)}°)"
+                    } else {
+                        "On target (Δ ${"%.2f".format(delta)}° / ±${"%.2f".format(deviationThreshold)}°)"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isOffTarget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
         }

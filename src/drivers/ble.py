@@ -16,6 +16,7 @@ _ADV_PAYLOAD = (
 )
 
 _LIVE_INTERVAL_MS = 40
+_TARGET_STATE_INTERVAL_MS = 1_000
 
 # Settings that live in config.py — changing them requires reboot
 _CONFIG_SETTINGS = {
@@ -36,6 +37,7 @@ class BleUart:
         self._rx_handle   = None
         self._live         = False
         self._last_send    = 0
+        self._last_target_send = 0
         self._cmd_queue    = []   # commands queued from IRQ, processed one per tick()
 
     def enable(self):
@@ -63,6 +65,9 @@ class BleUart:
             if time.ticks_diff(now, self._last_send) >= _LIVE_INTERVAL_MS:
                 self._last_send = now
                 self.send(f"angle:{device.engine.smooth_angle:.2f}")
+            if time.ticks_diff(now, self._last_target_send) >= _TARGET_STATE_INTERVAL_MS:
+                self._last_target_send = now
+                self.send_target_state(device)
 
     def send(self, text):
         if self._conn is not None:
@@ -80,8 +85,8 @@ class BleUart:
                     print(f"BLE send error: {e}")
 
     def send_target_state(self, device):
-        self.send(f"target:{device.engine.target_angle:.2f}")
-        self.send(f"target_name:{device.engine.target_name or ''}")
+        name = device.engine.target_name or ''
+        self.send(f"target_state:{device.engine.target_angle:.2f}:{name}")
 
     @property
     def connected(self):
@@ -110,6 +115,8 @@ class BleUart:
         print(f"_process_command: {repr(cmd)}")
         if cmd == "live_start":
             self._live = True
+            self._last_target_send = 0
+            self.send_target_state(device)
         elif cmd == "live_stop":
             self._live = False
         elif cmd == "get_calibration":
@@ -122,6 +129,8 @@ class BleUart:
             self._add_preset(cmd[11:], device)
         elif cmd.startswith("set_target_angle:"):
             self._set_target_angle(cmd[17:], device)
+        elif cmd == "get_target_state":
+            self.send_target_state(device)
         elif cmd == "calibrate":
             self._calibrate(device)
         elif cmd == "get_settings":
