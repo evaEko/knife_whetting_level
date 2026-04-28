@@ -15,7 +15,7 @@ fun SettingsScreen(
     saveStatus: String,
     waitingForReconnect: Boolean,
     onSave: (Map<String, String>) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     // Local draft — edits stay here until Save is pressed
     val draft = remember { mutableStateMapOf<String, String>() }
@@ -30,19 +30,19 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp),
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
             Text("Settings", style = MaterialTheme.typography.titleLarge)
             Button(
                 onClick = { onSave(draft.toMap()) },
-                enabled = settingsLoaded && saveStatus != "Saving..." && !waitingForReconnect
+                enabled = (settingsLoaded) && (saveStatus != "Saving...") && (!waitingForReconnect)
             ) { Text("Save") }
         }
 
@@ -82,43 +82,38 @@ fun SettingsScreen(
             item {
                 BoolSetting(
                     label = "Show Preset Name",
-                    value = draft["show_preset_name"] == "true",
-                    onChange = { draft["show_preset_name"] = it.toString() }
-                )
+                    value = draft["show_preset_name"] == "true"
+                ) { draft["show_preset_name"] = it.toString() }
                 HorizontalDivider()
             }
             item {
                 BoolSetting(
                     label = "Show Target Angle",
-                    value = draft["show_target_angle"] == "true",
-                    onChange = { draft["show_target_angle"] = it.toString() }
-                )
+                    value = draft["show_target_angle"] == "true"
+                ) { draft["show_target_angle"] = it.toString() }
                 HorizontalDivider()
             }
             item {
                 BoolSetting(
                     label = "Load Target Angle on Boot",
-                    value = draft["load_target_angle_from_eeprom"] == "true",
-                    onChange = { draft["load_target_angle_from_eeprom"] = it.toString() }
-                )
+                    value = draft["load_target_angle_from_eeprom"] == "true"
+                ) { draft["load_target_angle_from_eeprom"] = it.toString() }
                 HorizontalDivider()
             }
             item {
                 EnumSetting(
                     label = "Angle Axis",
                     value = draft["angle_axis"] ?: "pitch",
-                    options = listOf("pitch", "roll"),
-                    onChange = { draft["angle_axis"] = it }
-                )
+                    options = listOf("pitch", "roll")
+                ) { draft["angle_axis"] = it }
                 HorizontalDivider()
             }
             item {
                 EnumSetting(
                     label = "Angle Format",
                     value = draft["angle_format"] ?: "1d_half",
-                    options = listOf("2d", "1d", "1d_half"),
-                    onChange = { draft["angle_format"] = it }
-                )
+                    options = listOf("2d", "1d", "1d_half")
+                ) { draft["angle_format"] = it }
                 HorizontalDivider()
             }
             item {
@@ -127,9 +122,8 @@ fun SettingsScreen(
                     value = draft["smoothing"]?.toFloatOrNull() ?: 0.7f,
                     min = 0.3f,
                     max = 0.9f,
-                    steps = 5,
-                    onChange = { draft["smoothing"] = "%.1f".format(it) }
-                )
+                    steps = 5
+                ) { draft["smoothing"] = "%.1f".format(it) }
                 HorizontalDivider()
             }
             item {
@@ -137,9 +131,8 @@ fun SettingsScreen(
                     label = "Deviation Threshold (°)",
                     value = draft["deviation_threshold"]?.toIntOrNull() ?: 1,
                     min = 1,
-                    max = 10,
-                    onChange = { draft["deviation_threshold"] = it.toString() }
-                )
+                    max = 10
+                ) { draft["deviation_threshold"] = it.toString() }
             }
         }
     }
@@ -152,7 +145,7 @@ fun BoolSetting(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label)
         Switch(checked = value, onCheckedChange = onChange)
@@ -164,7 +157,7 @@ fun EnumSetting(label: String, value: String, options: List<String>, onChange: (
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .padding(vertical = 12.dp),
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(6.dp))
@@ -186,11 +179,11 @@ fun SliderSetting(label: String, value: Float, min: Float, max: Float, steps: In
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .padding(vertical = 12.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(label)
             Text("%.1f".format(current))
@@ -212,7 +205,7 @@ fun StepperSetting(label: String, value: Int, min: Int, max: Int, onChange: (Int
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label)
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -220,10 +213,10 @@ fun StepperSetting(label: String, value: Int, min: Int, max: Int, onChange: (Int
                 onClick = { if (value > min) onChange(value - 1) },
                 enabled = value > min,
                 modifier = Modifier.size(40.dp),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(0.dp),
             ) { Text("-") }
             Text(
-                "$value",
+                value.toString(),
                 modifier = Modifier.padding(horizontal = 12.dp),
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -231,7 +224,7 @@ fun StepperSetting(label: String, value: Int, min: Int, max: Int, onChange: (Int
                 onClick = { if (value < max) onChange(value + 1) },
                 enabled = value < max,
                 modifier = Modifier.size(40.dp),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(0.dp),
             ) { Text("+") }
         }
     }

@@ -42,27 +42,27 @@ fun PresetScreen(
     onAddPreset: (String, String) -> Unit,
     onUpdatePreset: (Int, String, String) -> Unit,
     onDeletePreset: (Int) -> Unit,
+    onSelectPreset: (String) -> Unit,
     onSaveToDevice: () -> Unit,
     onSaveBackup: () -> Unit,
     onRestoreBackup: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
-    var editorState by remember { mutableStateOf<PresetEditorState?>(null) }
+    val editorState = remember { mutableStateOf<PresetEditorState?>(null) }
 
-    if (editorState != null) {
+    if (editorState.value != null) {
         PresetEditorDialog(
-            state = editorState!!,
-            onDismiss = { editorState = null },
-            onConfirm = { name, angle ->
-                val index = editorState!!.index
-                if (index == null) {
-                    onAddPreset(name, angle)
-                } else {
-                    onUpdatePreset(index, name, angle)
-                }
-                editorState = null
+            state = editorState.value!!,
+            onDismiss = { editorState.value = null }
+        ) { name, angle ->
+            val index = editorState.value!!.index
+            if (index == null) {
+                onAddPreset(name, angle)
+            } else {
+                onUpdatePreset(index, name, angle)
             }
-        )
+            editorState.value = null
+        }
     }
 
     Column(
@@ -79,7 +79,7 @@ fun PresetScreen(
             TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
             Text("Preset Angles", style = MaterialTheme.typography.titleLarge)
             Button(
-                onClick = { editorState = PresetEditorState() },
+                onClick = { editorState.value = PresetEditorState() },
                 enabled = presetsLoaded && !waitingForReconnect
             ) { Text("Add") }
         }
@@ -163,8 +163,11 @@ fun PresetScreen(
                         Text("${preset.angle}°", style = MaterialTheme.typography.bodySmall)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { onSelectPreset(preset.angle) }) {
+                            Text("Select")
+                        }
                         TextButton(onClick = {
-                            editorState = PresetEditorState(index, preset.name, preset.angle)
+                            editorState.value = PresetEditorState(index, preset.name, preset.angle)
                         }) {
                             Text("Edit")
                         }
@@ -194,7 +197,7 @@ fun PresetEditorDialog(
     var name by remember(state) { mutableStateOf(state.name) }
     var angle by remember(state) { mutableStateOf(state.angle) }
     val validName = name.isNotBlank() && !name.contains(',') && !name.contains(':')
-    val valid = validName && angle.toFloatOrNull() != null
+    val valid = validName && (angle.toFloatOrNull() != null)
 
     AlertDialog(
         onDismissRequest = onDismiss,

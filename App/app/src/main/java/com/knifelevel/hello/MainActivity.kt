@@ -21,6 +21,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -253,6 +254,11 @@ fun MainScreen(context: Context) {
             onDeletePreset = { index ->
                 presets.removeAt(index)
             },
+            onSelectPreset = { angleValue ->
+                saveStatus = "Target angle set."
+                enqueueCommand("set_setting:target_angle:$angleValue")
+                screen = Screen.LIVE
+            },
             onSaveToDevice = {
                 presetStatus = "Saving presets..."
                 onQueueDrained = { presetStatus = "Presets saved." }
@@ -352,13 +358,33 @@ fun loadPresetBackup(context: Context): PresetBackup? {
 @Composable
 fun ConnectScreen(status: String, enabled: Boolean, onConnect: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = onConnect, enabled = enabled) { Text("Connect") }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = status)
+        Text(
+            text = "Knife Level",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(48.dp))
+        Button(
+            onClick = onConnect,
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("CONNECT TO DEVICE", style = MaterialTheme.typography.labelLarge)
+        }
+        if (status.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = status,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
     }
 }
 
@@ -371,19 +397,57 @@ fun LiveScreen(
     onDisconnect: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "$angle°", style = MaterialTheme.typography.displayLarge)
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onSettings)  { Text("Settings") }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onPresets)   { Text("Preset Angles") }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onCalibrate) { Text("Calibrate") }
-        Spacer(modifier = Modifier.height(32.dp))
-        TextButton(onClick = onDisconnect) { Text("Disconnect") }
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "CURRENT ANGLE",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Text(
+                text = "$angle°",
+                style = MaterialTheme.typography.displayLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 52.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onPresets,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("PRESET ANGLES")
+            }
+            OutlinedButton(
+                onClick = onSettings,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("SETTINGS")
+            }
+            OutlinedButton(
+                onClick = onCalibrate,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("CALIBRATE")
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            TextButton(
+                onClick = onDisconnect,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("DISCONNECT", color = MaterialTheme.colorScheme.error)
+            }
+        }
     }
 }
 
@@ -398,27 +462,63 @@ fun CalibrationScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TextButton(onClick = onBack, modifier = Modifier.align(Alignment.Start)) { Text("← Back") }
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(text = "Calibration", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(text = "$currentAngle°", style = MaterialTheme.typography.displayMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Current calibration: $calibrationAngle°")
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Place the level on the reference surface, then use the current reading as zero.")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onBack) { Text("← BACK") }
+            Spacer(modifier = Modifier.weight(1f))
+            Text(text = "CALIBRATION", style = MaterialTheme.typography.labelLarge)
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(64.dp)) // Offset back button
+        }
+        
+        Spacer(modifier = Modifier.height(64.dp))
+        
+        Text(
+            text = "TARGET ANGLE",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.secondary
+        )
+        Text(
+            text = "$calibrationAngle°",
+            style = MaterialTheme.typography.displayMedium,
+            color = MaterialTheme.colorScheme.tertiary
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = "CURRENT READING",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.secondary
+        )
+        Text(
+            text = "$currentAngle°",
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onCalibrate,
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("SET AS ZERO")
+        }
+        
         if (status.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = status, color = if (status.startsWith("err")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+            Text(
+                text = status,
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = onCalibrate, enabled = status != "Calibrating...") {
-            Text("Use Current Reading")
-        }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 

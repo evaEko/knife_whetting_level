@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.knifelevel.hello"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.knifelevel.hello"

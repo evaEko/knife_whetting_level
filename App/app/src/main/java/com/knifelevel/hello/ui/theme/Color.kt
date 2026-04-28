@@ -2,10 +2,23 @@ package com.knifelevel.hello.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Industrial / Professional Knife Level Palette
+val SharpTeal = Color(0xFF008080)
+val SharpTealLight = Color(0xFF4DB6AC)
+val SharpTealDark = Color(0xFF004D40)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val SteelGray = Color(0xFF607D8B)
+val SteelGrayLight = Color(0xFF90A4AE)
+val SteelGrayDark = Color(0xFF37474F)
+
+val AccentOrange = Color(0xFFFF9800)
+
+// Dark Mode Tones
+val DarkBackground = Color(0xFF121212)
+val DarkSurface = Color(0xFF1E1E1E)
+val DarkPrimary = Color(0xFF80CBC4)
+
+// Light Mode Tones
+val LightBackground = Color(0xFFF5F5F5)
+val LightSurface = Color(0xFFFFFFFF)
+val LightPrimary = Color(0xFF008080)
