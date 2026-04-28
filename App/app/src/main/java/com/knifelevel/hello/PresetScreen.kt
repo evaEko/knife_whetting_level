@@ -46,6 +46,7 @@ fun PresetScreen(
     onUpdatePreset: (Int, String, String) -> Unit,
     onDeletePreset: (Int) -> Unit,
     onSelectPreset: (String) -> Unit,
+    onClearTarget: () -> Unit,
     onSaveToDevice: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -157,7 +158,17 @@ fun PresetScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val hasActiveTarget = currentTargetAngle.toFloatOrNull()?.let { it > 0f } == true
+                if (hasActiveTarget) {
+                    TextButton(
+                        onClick = onClearTarget,
+                        enabled = !waitingForReconnect
+                    ) { Text("Clear", color = MaterialTheme.colorScheme.error) }
+                }
                 OutlinedButton(
                     onClick = { editorState.value = PresetEditorState() },
                     enabled = presetsLoaded && !waitingForReconnect

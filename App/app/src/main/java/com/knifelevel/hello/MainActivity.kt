@@ -112,6 +112,9 @@ data class AppUiSettings(
     val angleFormat: AppAngleFormat,
     val deviationBackgroundEnabled: Boolean,
     val displayArrow: Boolean,
+    val soundAlert: Boolean,
+    val highToneFreq: Float,
+    val lowToneFreq: Float,
     val showTargetName: Boolean,
     val showTargetAngle: Boolean,
     val showDelta: Boolean,
@@ -123,6 +126,9 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         angleFormat = AppAngleFormat.fromWire(prefs.getString("angle_format", AppAngleFormat.TWO_DECIMALS.wireValue)),
         deviationBackgroundEnabled = prefs.getBoolean("deviation_background_enabled", true),
         displayArrow = prefs.getBoolean("display_arrow", true),
+        soundAlert = prefs.getBoolean("sound_alert", true),
+        highToneFreq = prefs.getFloat("high_tone_freq", defaultHighToneFreq()),
+        lowToneFreq = prefs.getFloat("low_tone_freq", defaultLowToneFreq()),
         showTargetName = prefs.getBoolean("show_target_name", true),
         showTargetAngle = prefs.getBoolean("show_target_angle", true),
         showDelta = prefs.getBoolean("show_delta", true),
@@ -135,6 +141,9 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putString("angle_format", settings.angleFormat.wireValue)
         .putBoolean("deviation_background_enabled", settings.deviationBackgroundEnabled)
         .putBoolean("display_arrow", settings.displayArrow)
+        .putBoolean("sound_alert", settings.soundAlert)
+        .putFloat("high_tone_freq", settings.highToneFreq)
+        .putFloat("low_tone_freq", settings.lowToneFreq)
         .putBoolean("show_target_name", settings.showTargetName)
         .putBoolean("show_target_angle", settings.showTargetAngle)
         .putBoolean("show_delta", settings.showDelta)
@@ -182,6 +191,9 @@ fun MainScreen(context: Context) {
     var appAngleFormat by remember { mutableStateOf(initialAppUi.angleFormat) }
     var appDeviationBackgroundEnabled by remember { mutableStateOf(initialAppUi.deviationBackgroundEnabled) }
     var appDisplayArrow by remember { mutableStateOf(initialAppUi.displayArrow) }
+    var appSoundAlert by remember { mutableStateOf(initialAppUi.soundAlert) }
+    var appHighToneFreq by remember { mutableStateOf(initialAppUi.highToneFreq) }
+    var appLowToneFreq by remember { mutableStateOf(initialAppUi.lowToneFreq) }
     var appShowTargetName by remember { mutableStateOf(initialAppUi.showTargetName) }
     var appShowTargetAngle by remember { mutableStateOf(initialAppUi.showTargetAngle) }
     var appShowDelta by remember { mutableStateOf(initialAppUi.showDelta) }
@@ -344,6 +356,9 @@ fun MainScreen(context: Context) {
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
             displayArrow = appDisplayArrow,
+            soundAlert = appSoundAlert,
+            highToneFreq = appHighToneFreq,
+            lowToneFreq = appLowToneFreq,
             showTargetName = appShowTargetName,
             showTargetAngle = appShowTargetAngle,
             showDelta = appShowDelta,
@@ -385,6 +400,9 @@ fun MainScreen(context: Context) {
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
             displayArrow = appDisplayArrow,
+            soundAlert = appSoundAlert,
+            highToneFreq = appHighToneFreq,
+            lowToneFreq = appLowToneFreq,
             showTargetName = appShowTargetName,
             showTargetAngle = appShowTargetAngle,
             showDelta = appShowDelta,
@@ -392,6 +410,9 @@ fun MainScreen(context: Context) {
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
                 appDisplayArrow = updated.displayArrow
+                appSoundAlert = updated.soundAlert
+                appHighToneFreq = updated.highToneFreq
+                appLowToneFreq = updated.lowToneFreq
                 appShowTargetName = updated.showTargetName
                 appShowTargetAngle = updated.showTargetAngle
                 appShowDelta = updated.showDelta
@@ -454,6 +475,12 @@ fun MainScreen(context: Context) {
                 presetStatus = ""
                 enqueueCommand("set_target_angle:$angleValue")
             },
+            onClearTarget = {
+                presetStatus = ""
+                currentTargetAngle = ""
+                currentTargetName = ""
+                enqueueCommand("set_target_angle:0")
+            },
             onSaveToDevice = {
                 presetStatus = "Saving presets..."
                 onQueueDrained = { presetStatus = "Presets saved." }
@@ -514,6 +541,9 @@ fun LiveScreen(
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
     displayArrow: Boolean,
+    soundAlert: Boolean,
+    highToneFreq: Float,
+    lowToneFreq: Float,
     showTargetName: Boolean,
     showTargetAngle: Boolean,
     showDelta: Boolean,
@@ -529,6 +559,18 @@ fun LiveScreen(
     val hasTarget = targetAbs != null && targetAbs > 0f
     val delta = if (hasTarget && currentAbs != null) kotlin.math.abs(currentAbs - targetAbs!!) else null
     val isOffTarget = delta != null && delta > deviationThreshold
+    val tooHigh = hasTarget && currentAbs != null && currentAbs > targetAbs!! + deviationThreshold
+    val tooLow  = hasTarget && currentAbs != null && currentAbs < targetAbs!! - deviationThreshold
+
+    val tonePlayer = remember { TonePlayer() }
+    DisposableEffect(Unit) { onDispose { tonePlayer.stop() } }
+    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, highToneFreq, lowToneFreq) {
+        when {
+            soundAlert && displayArrow && tooLow  -> tonePlayer.play(highToneFreq)
+            soundAlert && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq)
+            else                                  -> tonePlayer.stop()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -559,8 +601,6 @@ fun LiveScreen(
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (displayArrow && hasTarget && currentAbs != null) {
-                val tooHigh = currentAbs > targetAbs!! + deviationThreshold
-                val tooLow  = currentAbs < targetAbs!! - deviationThreshold
                 val dimColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(48.dp),
@@ -663,13 +703,16 @@ fun AppSettingsScreen(
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
     displayArrow: Boolean,
+    soundAlert: Boolean,
+    highToneFreq: Float,
+    lowToneFreq: Float,
     showTargetName: Boolean,
     showTargetAngle: Boolean,
     showDelta: Boolean,
     onSave: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, showTargetName, showTargetAngle, showDelta)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta)
 
     Column(
         modifier = Modifier
@@ -718,6 +761,26 @@ fun AppSettingsScreen(
             )
             HorizontalDivider()
             BoolSetting(
+                label = "Sound Alert",
+                value = soundAlert,
+                onChange = { onSave(current().copy(soundAlert = it)) }
+            )
+            if (soundAlert) {
+                TonePickerSetting(
+                    label = "↑ High Tone",
+                    options = HIGH_TONE_OPTIONS,
+                    selectedFreq = highToneFreq,
+                    onChange = { onSave(current().copy(highToneFreq = it)) }
+                )
+                TonePickerSetting(
+                    label = "↓ Low Tone",
+                    options = LOW_TONE_OPTIONS,
+                    selectedFreq = lowToneFreq,
+                    onChange = { onSave(current().copy(lowToneFreq = it)) }
+                )
+            }
+            HorizontalDivider()
+            BoolSetting(
                 label = "Show Target Name",
                 value = showTargetName,
                 onChange = { onSave(current().copy(showTargetName = it)) }
@@ -740,6 +803,27 @@ fun AppSettingsScreen(
             onClick = onBack,
             modifier = Modifier.align(Alignment.End).padding(bottom = 32.dp)
         ) { Text("Ok") }
+    }
+}
+
+@Composable
+fun TonePickerSetting(label: String, options: List<TonePreset>, selectedFreq: Float, onChange: (Float) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEach { preset ->
+                if (preset.freq == selectedFreq) {
+                    Button(onClick = {}) { Text(preset.label) }
+                } else {
+                    OutlinedButton(onClick = { onChange(preset.freq) }) { Text(preset.label) }
+                }
+            }
+        }
     }
 }
 
