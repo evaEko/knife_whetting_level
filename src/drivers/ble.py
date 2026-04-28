@@ -79,6 +79,10 @@ class BleUart:
                 else:
                     print(f"BLE send error: {e}")
 
+    def send_target_state(self, device):
+        self.send(f"target:{device.engine.target_angle:.2f}")
+        self.send(f"target_name:{device.engine.target_name or ''}")
+
     @property
     def connected(self):
         return self._conn is not None
@@ -197,7 +201,7 @@ class BleUart:
         device.settings.target_angle = angle
         device.settings.save_calibration()
         print(f"BLE set_target_angle: {angle:.2f}° ({name})")
-        self.send(f"target:{angle:.2f}")
+        self.send_target_state(device)
 
     def _calibrate(self, device):
         device.engine.calibrate()

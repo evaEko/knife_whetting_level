@@ -102,6 +102,7 @@ fun MainScreen(context: Context) {
     var angle            by remember { mutableStateOf("--") }
     var calibrationAngle by remember { mutableStateOf("--") }
     var currentTargetAngle by remember { mutableStateOf("") }
+    var currentTargetName by remember { mutableStateOf("") }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -140,7 +141,14 @@ fun MainScreen(context: Context) {
                 val rest = msg.removePrefix("preset:")
                 val idx = rest.lastIndexOf(':')
                 if (idx > 0) {
-                    presets.add(PresetEntry(rest.substring(0, idx), rest.substring(idx + 1)))
+                    val name = rest.substring(0, idx)
+                    val value = rest.substring(idx + 1)
+                    val existing = presets.indexOfFirst { it.name == name }
+                    if (existing >= 0) {
+                        presets[existing] = PresetEntry(name, value)
+                    } else {
+                        presets.add(PresetEntry(name, value))
+                    }
                 }
             }
             msg.startsWith("setting:") -> {
@@ -150,6 +158,7 @@ fun MainScreen(context: Context) {
             }
             msg == "ok:calibrated"     -> saveStatus = "Calibration saved."
             msg.startsWith("target:")   -> currentTargetAngle = msg.removePrefix("target:")
+            msg.startsWith("target_name:") -> currentTargetName = msg.removePrefix("target_name:")
             msg == "presets_done"      -> presetsLoaded = true
             msg == "settings_done"      -> settingsLoaded = true
             msg == "ok"                 -> { }
@@ -162,9 +171,20 @@ fun MainScreen(context: Context) {
         }
     }
 
+    fun refreshFromDevice() {
+        // Always rebuild local caches from MCU so removed entries disappear.
+        presets.clear()
+        settings.clear()
+        presetsLoaded = false
+        settingsLoaded = false
+        sendCommand("get_presets")
+        sendCommand("get_settings")
+    }
+
     fun onReady(gatt: BluetoothGatt) {
         activeGatt = gatt
         waitingForReconnect = false
+        refreshFromDevice()
         screen = Screen.LIVE
     }
 
@@ -176,6 +196,7 @@ fun MainScreen(context: Context) {
         )
         Screen.LIVE -> LiveScreen(
             angle = angle,
+            targetName = currentTargetName,
             onSettings = {
                 settings.clear()
                 settingsLoaded = false
@@ -201,6 +222,7 @@ fun MainScreen(context: Context) {
             onDisconnect = {
                 disconnectGatt()
                 angle = "--"
+                currentTargetName = ""
                 status = ""
                 screen = Screen.CONNECT
             }
@@ -393,6 +415,7 @@ fun ConnectScreen(status: String, enabled: Boolean, onConnect: () -> Unit) {
 @Composable
 fun LiveScreen(
     angle: String,
+    targetName: String,
     onSettings: () -> Unit,
     onPresets: () -> Unit,
     onCalibrate: () -> Unit,
@@ -418,6 +441,14 @@ fun LiveScreen(
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary
             )
+            if (targetName.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = targetName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
         }
 
         Column(

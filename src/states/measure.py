@@ -9,7 +9,7 @@ class MeasureState(State):
 
     def enter(self, device):
         if device.ble is not None and device.ble.connected:
-            device.ble.send(f"target:{device.engine.target_angle:.2f}")
+            device.ble.send_target_state(device)
 
     def update(self, device):
         raw = device.sensor.update()
