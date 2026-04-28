@@ -21,6 +21,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -33,9 +35,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.knifelevel.hello.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.delay
-import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
@@ -109,7 +111,10 @@ enum class AppAngleFormat(val wireValue: String) {
 data class AppUiSettings(
     val angleFormat: AppAngleFormat,
     val deviationBackgroundEnabled: Boolean,
+    val displayArrow: Boolean,
     val showTargetName: Boolean,
+    val showTargetAngle: Boolean,
+    val showDelta: Boolean,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -117,7 +122,10 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
     return AppUiSettings(
         angleFormat = AppAngleFormat.fromWire(prefs.getString("angle_format", AppAngleFormat.TWO_DECIMALS.wireValue)),
         deviationBackgroundEnabled = prefs.getBoolean("deviation_background_enabled", true),
+        displayArrow = prefs.getBoolean("display_arrow", true),
         showTargetName = prefs.getBoolean("show_target_name", true),
+        showTargetAngle = prefs.getBoolean("show_target_angle", true),
+        showDelta = prefs.getBoolean("show_delta", true),
     )
 }
 
@@ -126,7 +134,10 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
     prefs.edit()
         .putString("angle_format", settings.angleFormat.wireValue)
         .putBoolean("deviation_background_enabled", settings.deviationBackgroundEnabled)
+        .putBoolean("display_arrow", settings.displayArrow)
         .putBoolean("show_target_name", settings.showTargetName)
+        .putBoolean("show_target_angle", settings.showTargetAngle)
+        .putBoolean("show_delta", settings.showDelta)
         .apply()
 }
 
@@ -170,7 +181,10 @@ fun MainScreen(context: Context) {
     var measurementStale by remember { mutableStateOf(true) }
     var appAngleFormat by remember { mutableStateOf(initialAppUi.angleFormat) }
     var appDeviationBackgroundEnabled by remember { mutableStateOf(initialAppUi.deviationBackgroundEnabled) }
+    var appDisplayArrow by remember { mutableStateOf(initialAppUi.displayArrow) }
     var appShowTargetName by remember { mutableStateOf(initialAppUi.showTargetName) }
+    var appShowTargetAngle by remember { mutableStateOf(initialAppUi.showTargetAngle) }
+    var appShowDelta by remember { mutableStateOf(initialAppUi.showDelta) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -180,7 +194,6 @@ fun MainScreen(context: Context) {
     val presets          = remember { mutableStateListOf<PresetEntry>() }
     var settingsLoaded   by remember { mutableStateOf(false) }
     var presetsLoaded    by remember { mutableStateOf(false) }
-    var backupAvailable  by remember { mutableStateOf(hasPresetBackup(context)) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -319,6 +332,7 @@ fun MainScreen(context: Context) {
         Screen.CONNECT -> ConnectScreen(
             status = status,
             enabled = permissionsGranted,
+            onAppSettings = { screen = Screen.APP_SETTINGS },
             onConnect = { connectToNano(context, ::onMessage, ::onReady) }
         )
         Screen.LIVE -> LiveScreen(
@@ -329,7 +343,10 @@ fun MainScreen(context: Context) {
             measurementStale = measurementStale,
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
+            displayArrow = appDisplayArrow,
             showTargetName = appShowTargetName,
+            showTargetAngle = appShowTargetAngle,
+            showDelta = appShowDelta,
             onAppSettings = { screen = Screen.APP_SETTINGS },
             onSettings = {
                 settings.clear()
@@ -367,13 +384,18 @@ fun MainScreen(context: Context) {
         Screen.APP_SETTINGS -> AppSettingsScreen(
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
+            displayArrow = appDisplayArrow,
             showTargetName = appShowTargetName,
+            showTargetAngle = appShowTargetAngle,
+            showDelta = appShowDelta,
             onSave = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
+                appDisplayArrow = updated.displayArrow
                 appShowTargetName = updated.showTargetName
+                appShowTargetAngle = updated.showTargetAngle
+                appShowDelta = updated.showDelta
                 saveAppUiSettings(context, updated)
-                screen = Screen.LIVE
             },
             onBack = { screen = Screen.LIVE }
         )
@@ -419,7 +441,6 @@ fun MainScreen(context: Context) {
             status = presetStatus,
             currentTargetAngle = currentTargetAngle,
             waitingForReconnect = waitingForReconnect,
-            backupAvailable = backupAvailable,
             onAddPreset = { name, angle ->
                 presets.add(PresetEntry(name, angle))
             },
@@ -441,109 +462,29 @@ fun MainScreen(context: Context) {
                     enqueueCommand("add_preset:${preset.name}:${preset.angle}")
                 }
             },
-            onSaveBackup = {
-                savePresetBackup(context, settings, presets)
-                backupAvailable = true
-                presetStatus = "Backup saved."
-            },
-            onRestoreBackup = {
-                val backup = loadPresetBackup(context)
-                if (backup == null) {
-                    presetStatus = "err:no backup found"
-                } else {
-                    presets.clear()
-                    presets.addAll(backup.presets)
-                    settings.clear()
-                    settings.putAll(backup.settings)
-                    presetStatus = "Restoring backup..."
-                    val needsReboot = backup.settings.keys.any { it != "angle_format" }
-                    if (needsReboot) {
-                        onQueueDrained = {
-                            presetStatus = "Rebooting..."
-                            waitingForReconnect = true
-                            onDisconnected = {
-                                connectToNano(context, ::onMessage, ::onReady)
-                            }
-                        }
-                    } else {
-                        onQueueDrained = { presetStatus = "Backup restored." }
-                    }
-                    enqueueCommand("clear_presets")
-                    backup.presets.forEach { preset ->
-                        enqueueCommand("add_preset:${preset.name}:${preset.angle}")
-                    }
-                    backup.settings.forEach { (key, value) ->
-                        enqueueCommand("set_setting:$key:$value")
-                    }
-                    if (needsReboot) {
-                        enqueueCommand("reboot")
-                    }
-                }
-            },
             onBack = { screen = Screen.LIVE }
         )
     }
 }
 
-data class PresetBackup(val settings: Map<String, String>, val presets: List<PresetEntry>)
-
-fun hasPresetBackup(context: Context): Boolean {
-    val prefs = context.getSharedPreferences("knife_level", Context.MODE_PRIVATE)
-    return prefs.contains("preset_backup")
-}
-
-fun savePresetBackup(context: Context, settings: Map<String, String>, presets: List<PresetEntry>) {
-    val prefs = context.getSharedPreferences("knife_level", Context.MODE_PRIVATE)
-    val root = JSONObject()
-    val settingsJson = JSONObject()
-    settings.forEach { (key, value) -> settingsJson.put(key, value) }
-    val presetsJson = JSONArray()
-    presets.forEach { preset ->
-        val item = JSONObject()
-        item.put("name", preset.name)
-        item.put("angle", preset.angle)
-        presetsJson.put(item)
-    }
-    root.put("settings", settingsJson)
-    root.put("presets", presetsJson)
-    prefs.edit().putString("preset_backup", root.toString()).apply()
-}
-
-fun loadPresetBackup(context: Context): PresetBackup? {
-    val prefs = context.getSharedPreferences("knife_level", Context.MODE_PRIVATE)
-    val raw = prefs.getString("preset_backup", null) ?: return null
-    return try {
-        val root = JSONObject(raw)
-        val settingsJson = root.getJSONObject("settings")
-        val presetsJson = root.getJSONArray("presets")
-        val settings = mutableMapOf<String, String>()
-        settingsJson.keys().forEach { key -> settings[key] = settingsJson.getString(key) }
-        val presets = mutableListOf<PresetEntry>()
-        for (index in 0 until presetsJson.length()) {
-            val item = presetsJson.getJSONObject(index)
-            presets.add(PresetEntry(item.getString("name"), item.getString("angle")))
-        }
-        PresetBackup(settings, presets)
-    } catch (_: Exception) {
-        null
-    }
-}
-
 @Composable
-fun ConnectScreen(status: String, enabled: Boolean, onConnect: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Blunt",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(48.dp))
+fun ConnectScreen(status: String, enabled: Boolean, onAppSettings: () -> Unit, onConnect: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize().padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)) {
+        TextButton(
+            onClick = onAppSettings,
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) { Text("⚙", style = MaterialTheme.typography.headlineMedium) }
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Blunt",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(48.dp))
         Button(
             onClick = onConnect,
             enabled = enabled,
@@ -559,7 +500,8 @@ fun ConnectScreen(status: String, enabled: Boolean, onConnect: () -> Unit) {
                 color = MaterialTheme.colorScheme.secondary
             )
         }
-    }
+        }   // Column
+    }   // Box
 }
 
 @Composable
@@ -571,7 +513,10 @@ fun LiveScreen(
     measurementStale: Boolean,
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
+    displayArrow: Boolean,
     showTargetName: Boolean,
+    showTargetAngle: Boolean,
+    showDelta: Boolean,
     onAppSettings: () -> Unit,
     onSettings: () -> Unit,
     onPresets: () -> Unit,
@@ -595,7 +540,7 @@ fun LiveScreen(
                     MaterialTheme.colorScheme.background
                 }
             )
-            .padding(24.dp),
+            .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -609,10 +554,31 @@ fun LiveScreen(
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
-            TextButton(onClick = onAppSettings) { Text("⚙") }
+            TextButton(onClick = onAppSettings) { Text("⚙", style = MaterialTheme.typography.headlineMedium) }
         }
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            if (displayArrow && hasTarget && currentAbs != null) {
+                val tooHigh = currentAbs > targetAbs!! + deviationThreshold
+                val tooLow  = currentAbs < targetAbs!! - deviationThreshold
+                val dimColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "↑",
+                        fontSize = 72.sp,
+                        color = if (tooLow) MaterialTheme.colorScheme.error else dimColor,
+                    )
+                    Text(
+                        text = "↓",
+                        fontSize = 72.sp,
+                        color = if (tooHigh) MaterialTheme.colorScheme.error else dimColor,
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
             Text(
                 text = "CURRENT ANGLE",
                 style = MaterialTheme.typography.labelMedium,
@@ -623,23 +589,29 @@ fun LiveScreen(
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary
             )
-            if (showTargetName && targetName.isNotBlank()) {
+            if (hasTarget) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = targetName,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
+                if (showTargetName && targetName.isNotBlank()) {
+                    Text(
+                        text = targetName,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                if (showTargetAngle) {
+                    Text(
+                        text = "${"%.1f".format(targetAbs!!)}°",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            if (hasTarget && delta != null) {
-                Spacer(modifier = Modifier.height(8.dp))
+            if (hasTarget && currentAbs != null && showDelta) {
+                val signedDelta = currentAbs - targetAbs!!
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (isOffTarget) {
-                        "Off target by ${"%.2f".format(delta)}° (limit ±${"%.2f".format(deviationThreshold)}°)"
-                    } else {
-                        "On target (Δ ${"%.2f".format(delta)}° / ±${"%.2f".format(deviationThreshold)}°)"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Δ %+.1f°".format(signedDelta),
+                    style = MaterialTheme.typography.titleMedium,
                     color = if (isOffTarget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
@@ -690,67 +662,84 @@ fun LiveScreen(
 fun AppSettingsScreen(
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
+    displayArrow: Boolean,
     showTargetName: Boolean,
+    showTargetAngle: Boolean,
+    showDelta: Boolean,
     onSave: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
-    var localFormat by remember(angleFormat) { mutableStateOf(angleFormat) }
-    var localDeviationBg by remember(deviationBackgroundEnabled) { mutableStateOf(deviationBackgroundEnabled) }
-    var localShowTargetName by remember(showTargetName) { mutableStateOf(showTargetName) }
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, showTargetName, showTargetAngle, showDelta)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            TextButton(onClick = onBack) { Text("← Back") }
-            Text("App Settings", style = MaterialTheme.typography.titleLarge)
-            Button(
-                onClick = {
-                    onSave(
-                        AppUiSettings(
-                            angleFormat = localFormat,
-                            deviationBackgroundEnabled = localDeviationBg,
-                            showTargetName = localShowTargetName,
-                        )
-                    )
-                }
-            ) { Text("Save") }
-        }
+        Spacer(modifier = Modifier.height(48.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        EnumSetting(
-            label = "Angle Format (App Only)",
-            value = localFormat.wireValue,
-            options = listOf(
-                AppAngleFormat.TWO_DECIMALS.wireValue,
-                AppAngleFormat.ONE_DECIMAL.wireValue,
-                AppAngleFormat.HALF_DEGREE.wireValue,
+        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            Text(
+                text = "GENERIC",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
-        ) {
-            localFormat = AppAngleFormat.fromWire(it)
+            EnumSetting(
+                label = "Angle Format (App Only)",
+                value = angleFormat.wireValue,
+                options = listOf(
+                    AppAngleFormat.TWO_DECIMALS.wireValue,
+                    AppAngleFormat.ONE_DECIMAL.wireValue,
+                    AppAngleFormat.HALF_DEGREE.wireValue,
+                )
+            ) {
+                onSave(current().copy(angleFormat = AppAngleFormat.fromWire(it)))
+            }
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "MAIN PAGE",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+            BoolSetting(
+                label = "Deviation Background Highlight",
+                value = deviationBackgroundEnabled,
+                onChange = { onSave(current().copy(deviationBackgroundEnabled = it)) }
+            )
+            HorizontalDivider()
+            BoolSetting(
+                label = "Display Arrow",
+                value = displayArrow,
+                onChange = { onSave(current().copy(displayArrow = it)) }
+            )
+            HorizontalDivider()
+            BoolSetting(
+                label = "Show Target Name",
+                value = showTargetName,
+                onChange = { onSave(current().copy(showTargetName = it)) }
+            )
+            HorizontalDivider()
+            BoolSetting(
+                label = "Show Target Angle",
+                value = showTargetAngle,
+                onChange = { onSave(current().copy(showTargetAngle = it)) }
+            )
+            HorizontalDivider()
+            BoolSetting(
+                label = "Show Delta",
+                value = showDelta,
+                onChange = { onSave(current().copy(showDelta = it)) }
+            )
         }
-        HorizontalDivider()
 
-        BoolSetting(
-            label = "Deviation Background Highlight",
-            value = localDeviationBg,
-            onChange = { localDeviationBg = it }
-        )
-        HorizontalDivider()
-
-        BoolSetting(
-            label = "Show Target Name",
-            value = localShowTargetName,
-            onChange = { localShowTargetName = it }
-        )
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.End).padding(bottom = 32.dp)
+        ) { Text("Ok") }
     }
 }
 
@@ -765,24 +754,15 @@ fun CalibrationScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = onBack) { Text("← BACK") }
-            Spacer(modifier = Modifier.weight(1f))
-            Text(text = "CALIBRATION", style = MaterialTheme.typography.labelLarge)
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(64.dp)) // Offset back button
-        }
-        
+        Text(text = "CALIBRATION", style = MaterialTheme.typography.labelLarge)
+
         Spacer(modifier = Modifier.height(64.dp))
-        
+
         Text(
-            text = "TARGET ANGLE",
+            text = "LAST CALIBRATION ANGLE",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.secondary
         )
@@ -791,9 +771,9 @@ fun CalibrationScreen(
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.tertiary
         )
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         Text(
             text = "CURRENT READING",
             style = MaterialTheme.typography.labelMedium,
@@ -807,21 +787,22 @@ fun CalibrationScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Button(
-            onClick = onCalibrate,
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("SET AS ZERO")
-        }
-        
         if (status.isNotEmpty()) {
             Text(
                 text = status,
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.bodySmall
             )
         }
-        Spacer(modifier = Modifier.height(24.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack) { Text("← Back") }
+            Button(onClick = onCalibrate) { Text("Apply") }
+        }
     }
 }
 

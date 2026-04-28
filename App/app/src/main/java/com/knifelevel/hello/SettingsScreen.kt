@@ -32,33 +32,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
-            Text("Settings", style = MaterialTheme.typography.titleLarge)
-            Button(
-                onClick = { onSave(draft.toMap()) },
-                enabled = (settingsLoaded) && (saveStatus != "Saving...") && (!waitingForReconnect)
-            ) { Text("Save") }
-        }
-
-        if (saveStatus.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = saveStatus,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (saveStatus.startsWith("err") || saveStatus.startsWith("Err"))
-                    MaterialTheme.colorScheme.error
-                else
-                    MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
         if (!settingsLoaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -78,7 +52,10 @@ fun SettingsScreen(
             return@Column
         }
 
-        LazyColumn {
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            item {
+                SectionHeader("DISPLAYED DATA")
+            }
             item {
                 BoolSetting(
                     label = "Show Preset Name",
@@ -98,11 +75,15 @@ fun SettingsScreen(
                     label = "Load Target Angle on Boot",
                     value = draft["load_target_angle_from_eeprom"] == "true"
                 ) { draft["load_target_angle_from_eeprom"] = it.toString() }
-                HorizontalDivider()
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item {
+                SectionHeader("ANGLES")
             }
             item {
                 EnumSetting(
-                    label = "Angle Axis",
+                    label = "Axis",
                     value = draft["angle_axis"] ?: "pitch",
                     options = listOf("pitch", "roll")
                 ) { draft["angle_axis"] = it }
@@ -110,11 +91,15 @@ fun SettingsScreen(
             }
             item {
                 EnumSetting(
-                    label = "Angle Format",
+                    label = "Format",
                     value = draft["angle_format"] ?: "1d_half",
                     options = listOf("2d", "1d", "1d_half")
                 ) { draft["angle_format"] = it }
-                HorizontalDivider()
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item {
+                SectionHeader("MEASUREMENT")
             }
             item {
                 SliderSetting(
@@ -134,8 +119,44 @@ fun SettingsScreen(
                     max = 10
                 ) { draft["deviation_threshold"] = it.toString() }
             }
+        }   // LazyColumn
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        if (saveStatus.isNotEmpty()) {
+            Text(
+                text = saveStatus,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (saveStatus.startsWith("err") || saveStatus.startsWith("Err"))
+                    MaterialTheme.colorScheme.error
+                else
+                    MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
+            Button(
+                onClick = { onSave(draft.toMap()) },
+                enabled = settingsLoaded && saveStatus != "Saving..." && !waitingForReconnect
+            ) { Text("Apply") }
         }
     }
+}
+
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.secondary,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
 }
 
 @Composable

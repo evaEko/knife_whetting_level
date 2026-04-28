@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 import androidx.compose.ui.text.font.FontWeight
 @Composable
@@ -40,14 +42,11 @@ fun PresetScreen(
     status: String,
     currentTargetAngle: String,
     waitingForReconnect: Boolean,
-    backupAvailable: Boolean,
     onAddPreset: (String, String) -> Unit,
     onUpdatePreset: (Int, String, String) -> Unit,
     onDeletePreset: (Int) -> Unit,
     onSelectPreset: (String) -> Unit,
     onSaveToDevice: () -> Unit,
-    onSaveBackup: () -> Unit,
-    onRestoreBackup: () -> Unit,
     onBack: () -> Unit,
 ) {
     val editorState = remember { mutableStateOf<PresetEditorState?>(null) }
@@ -72,22 +71,9 @@ fun PresetScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
-            Text("Preset Angles", style = MaterialTheme.typography.titleLarge)
-            Button(
-                onClick = { editorState.value = PresetEditorState() },
-                enabled = presetsLoaded && !waitingForReconnect
-            ) { Text("Add") }
-        }
+        Spacer(modifier = Modifier.height(48.dp))
 
         if (status.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodySmall,
@@ -97,9 +83,8 @@ fun PresetScreen(
                     MaterialTheme.colorScheme.primary
                 }
             )
+            Spacer(modifier = Modifier.height(4.dp))
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         if (!presetsLoaded || !settingsLoaded) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -119,73 +104,68 @@ fun PresetScreen(
             return@Column
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = onSaveToDevice,
-                modifier = Modifier.weight(1f)
-            ) { Text("Save To Device") }
-            OutlinedButton(
-                onClick = onSaveBackup,
-                modifier = Modifier.weight(1f)
-            ) { Text("Save Backup") }
-        }
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedButton(
-            onClick = onRestoreBackup,
-            enabled = backupAvailable,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("Restore Backup") }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
         if (presets.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text("No preset angles yet.")
             }
-            return@Column
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                itemsIndexed(presets) { index, preset ->
+                    val isActive = currentTargetAngle.toFloatOrNull()?.let { target ->
+                        preset.angle.toFloatOrNull()?.let { pa -> kotlin.math.abs(pa - target) < 0.01f }
+                    } == true
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onSelectPreset(preset.angle) }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Text(
+                                preset.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isActive) FontWeight.Bold else null
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("${preset.angle}°", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = {
+                                editorState.value = PresetEditorState(index, preset.name, preset.angle)
+                            }) { Text("✏", fontSize = 20.sp) }
+                            TextButton(onClick = { onDeletePreset(index) }) {
+                                Text("🗑")
+                            }
+                        }
+                    }
+                    HorizontalDivider()
+                }
+            }
         }
 
-        LazyColumn {
-            itemsIndexed(presets) { index, preset ->
-                val isActive = currentTargetAngle.toFloatOrNull()?.let { target ->
-                    preset.angle.toFloatOrNull()?.let { pa -> kotlin.math.abs(pa - target) < 0.01f }
-                } == true
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            preset.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isActive) FontWeight.Bold else null
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text("${preset.angle}°", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { onSelectPreset(preset.angle) }) {
-                            Text("Select")
-                        }
-                        TextButton(onClick = {
-                            editorState.value = PresetEditorState(index, preset.name, preset.angle)
-                        }) {
-                            Text("Edit")
-                        }
-                        TextButton(onClick = { onDeletePreset(index) }) {
-                            Text("Delete")
-                        }
-                    }
-                }
-                HorizontalDivider()
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp, top = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { editorState.value = PresetEditorState() },
+                    enabled = presetsLoaded && !waitingForReconnect
+                ) { Text("+") }
+                Button(
+                    onClick = onSaveToDevice,
+                    enabled = presetsLoaded && !waitingForReconnect
+                ) { Text("Apply") }
             }
         }
     }
