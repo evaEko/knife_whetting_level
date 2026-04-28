@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -45,6 +46,7 @@ val CCCD_UUID        = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 val mainHandler      = Handler(Looper.getMainLooper())
 const val LIVE_RETRY_MS = 1_000L
+const val LIVE_STALE_MS = 1_500L
 var activeGatt: BluetoothGatt? = null
 var awaitingLiveAngle = false
 
@@ -53,6 +55,7 @@ val commandQueue     = ArrayDeque<String>()
 var isSendingCommand = false
 var onQueueDrained: (() -> Unit)? = null
 var onDisconnected: (() -> Unit)? = null
+var onUnexpectedGattDisconnect: (() -> Unit)? = null
 
 val liveStartRetry = object : Runnable {
     override fun run() {
@@ -77,6 +80,14 @@ fun startLiveAngleRetry(gatt: BluetoothGatt) {
 fun stopLiveAngleRetry() {
     awaitingLiveAngle = false
     mainHandler.removeCallbacks(liveStartRetry)
+}
+
+fun resetBleSession() {
+    commandQueue.clear()
+    isSendingCommand = false
+    onQueueDrained = null
+    activeGatt = null
+    stopLiveAngleRetry()
 }
 
 enum class Screen { CONNECT, LIVE, APP_SETTINGS, SETTINGS, CALIBRATE, PRESETS }
@@ -155,6 +166,8 @@ fun MainScreen(context: Context) {
     var calibrationAngle by remember { mutableStateOf("--") }
     var currentTargetAngle by remember { mutableStateOf("") }
     var currentTargetName by remember { mutableStateOf("") }
+    var lastAngleAt by remember { mutableStateOf(0L) }
+    var measurementStale by remember { mutableStateOf(true) }
     var appAngleFormat by remember { mutableStateOf(initialAppUi.angleFormat) }
     var appDeviationBackgroundEnabled by remember { mutableStateOf(initialAppUi.deviationBackgroundEnabled) }
     var appShowTargetName by remember { mutableStateOf(initialAppUi.showTargetName) }
@@ -193,10 +206,45 @@ fun MainScreen(context: Context) {
         }
     }
 
+    DisposableEffect(Unit) {
+        onUnexpectedGattDisconnect = {
+            waitingForReconnect = false
+            angle = "--"
+            currentTargetAngle = ""
+            currentTargetName = ""
+            lastAngleAt = 0L
+            measurementStale = true
+            status = "Disconnected"
+            screen = Screen.CONNECT
+        }
+        onDispose {
+            onUnexpectedGattDisconnect = null
+        }
+    }
+
+    LaunchedEffect(screen, waitingForReconnect) {
+        while (screen == Screen.LIVE && !waitingForReconnect) {
+            delay(500)
+            val gatt = activeGatt
+            if (gatt == null) {
+                measurementStale = true
+                continue
+            }
+            val isStale = lastAngleAt == 0L ||
+                SystemClock.elapsedRealtime() - lastAngleAt > LIVE_STALE_MS
+            measurementStale = isStale
+            if (isStale && !awaitingLiveAngle) {
+                startLiveAngleRetry(gatt)
+            }
+        }
+    }
+
     fun onMessage(msg: String) {
         when {
             msg.startsWith("angle:")   -> {
                 angle = msg.removePrefix("angle:")
+                lastAngleAt = SystemClock.elapsedRealtime()
+                measurementStale = false
                 stopLiveAngleRetry()
             }
             msg.startsWith("calibration:") -> calibrationAngle = msg.removePrefix("calibration:")
@@ -261,6 +309,8 @@ fun MainScreen(context: Context) {
     fun onReady(gatt: BluetoothGatt) {
         activeGatt = gatt
         waitingForReconnect = false
+        lastAngleAt = 0L
+        measurementStale = true
         refreshFromDevice()
         screen = Screen.LIVE
     }
@@ -276,6 +326,7 @@ fun MainScreen(context: Context) {
             targetAngle = currentTargetAngle,
             targetName = currentTargetName,
             deviationThreshold = settings["deviation_threshold"]?.toFloatOrNull() ?: 1f,
+            measurementStale = measurementStale,
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
             showTargetName = appShowTargetName,
@@ -307,6 +358,8 @@ fun MainScreen(context: Context) {
                 angle = "--"
                 currentTargetAngle = ""
                 currentTargetName = ""
+                lastAngleAt = 0L
+                measurementStale = true
                 status = ""
                 screen = Screen.CONNECT
             }
@@ -515,6 +568,7 @@ fun LiveScreen(
     targetAngle: String,
     targetName: String,
     deviationThreshold: Float,
+    measurementStale: Boolean,
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
     showTargetName: Boolean,
@@ -587,6 +641,14 @@ fun LiveScreen(
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isOffTarget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+            }
+            if (measurementStale) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Connected, waiting for measurements...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
         }
@@ -784,10 +846,7 @@ fun requestDeviceDisconnect() {
 
 @SuppressLint("MissingPermission")
 fun disconnectGatt() {
-    commandQueue.clear()
-    isSendingCommand = false
-    onQueueDrained = null
-    stopLiveAngleRetry()
+    resetBleSession()
     activeGatt?.disconnect()
     activeGatt?.close()
     activeGatt = null
@@ -858,10 +917,14 @@ fun makeGattCallback(onMessage: (String) -> Unit, onReady: (BluetoothGatt) -> Un
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
                 mainHandler.post {
-                    stopLiveAngleRetry()
-                    onMessage("Disconnected")
-                    onDisconnected?.invoke()
-                    onDisconnected = null
+                    resetBleSession()
+                    if (onDisconnected != null) {
+                        onMessage("Disconnected")
+                        onDisconnected?.invoke()
+                        onDisconnected = null
+                    } else {
+                        onUnexpectedGattDisconnect?.invoke()
+                    }
                 }
                 gatt.close()
             }
