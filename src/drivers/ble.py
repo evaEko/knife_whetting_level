@@ -131,6 +131,15 @@ class BleUart:
             self._set_target_angle(cmd[17:], device)
         elif cmd == "get_target_state":
             self.send_target_state(device)
+        elif cmd == "app_disconnect":
+            self._live = False
+            if self._conn is not None:
+                try:
+                    self._ble.gap_disconnect(self._conn)
+                except Exception as e:
+                    print(f"BLE app_disconnect failed: {e}")
+                    self._conn = None
+                    self._advertise()
         elif cmd == "calibrate":
             self._calibrate(device)
         elif cmd == "get_settings":

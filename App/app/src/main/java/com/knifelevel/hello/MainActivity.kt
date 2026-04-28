@@ -22,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -148,11 +149,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(context: Context) {
+    val initialAppUi = remember { loadAppUiSettings(context) }
     var screen           by remember { mutableStateOf(Screen.CONNECT) }
     var angle            by remember { mutableStateOf("--") }
     var calibrationAngle by remember { mutableStateOf("--") }
     var currentTargetAngle by remember { mutableStateOf("") }
     var currentTargetName by remember { mutableStateOf("") }
+    var appAngleFormat by remember { mutableStateOf(initialAppUi.angleFormat) }
+    var appDeviationBackgroundEnabled by remember { mutableStateOf(initialAppUi.deviationBackgroundEnabled) }
+    var appShowTargetName by remember { mutableStateOf(initialAppUi.showTargetName) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -271,6 +276,10 @@ fun MainScreen(context: Context) {
             targetAngle = currentTargetAngle,
             targetName = currentTargetName,
             deviationThreshold = settings["deviation_threshold"]?.toFloatOrNull() ?: 1f,
+            angleFormat = appAngleFormat,
+            deviationBackgroundEnabled = appDeviationBackgroundEnabled,
+            showTargetName = appShowTargetName,
+            onAppSettings = { screen = Screen.APP_SETTINGS },
             onSettings = {
                 settings.clear()
                 settingsLoaded = false
@@ -294,13 +303,26 @@ fun MainScreen(context: Context) {
                 screen = Screen.CALIBRATE
             },
             onDisconnect = {
-                disconnectGatt()
+                requestDeviceDisconnect()
                 angle = "--"
                 currentTargetAngle = ""
                 currentTargetName = ""
                 status = ""
                 screen = Screen.CONNECT
             }
+        )
+        Screen.APP_SETTINGS -> AppSettingsScreen(
+            angleFormat = appAngleFormat,
+            deviationBackgroundEnabled = appDeviationBackgroundEnabled,
+            showTargetName = appShowTargetName,
+            onSave = { updated ->
+                appAngleFormat = updated.angleFormat
+                appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
+                appShowTargetName = updated.showTargetName
+                saveAppUiSettings(context, updated)
+                screen = Screen.LIVE
+            },
+            onBack = { screen = Screen.LIVE }
         )
         Screen.SETTINGS -> SettingsScreen(
             settings      = settings,
@@ -493,11 +515,16 @@ fun LiveScreen(
     targetAngle: String,
     targetName: String,
     deviationThreshold: Float,
+    angleFormat: AppAngleFormat,
+    deviationBackgroundEnabled: Boolean,
+    showTargetName: Boolean,
+    onAppSettings: () -> Unit,
     onSettings: () -> Unit,
     onPresets: () -> Unit,
     onCalibrate: () -> Unit,
     onDisconnect: () -> Unit
 ) {
+    val displayAngle = formatAngleForDisplay(angle, angleFormat)
     val currentAbs = angle.toFloatOrNull()?.let { kotlin.math.abs(it) }
     val targetAbs = targetAngle.toFloatOrNull()?.let { kotlin.math.abs(it) }
     val hasTarget = targetAbs != null && targetAbs > 0f
@@ -508,7 +535,7 @@ fun LiveScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                if (isOffTarget) {
+                if (isOffTarget && deviationBackgroundEnabled) {
                     MaterialTheme.colorScheme.errorContainer
                 } else {
                     MaterialTheme.colorScheme.background
@@ -518,7 +545,9 @@ fun LiveScreen(
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onAppSettings) { Text("⚙") }
+        }
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
@@ -527,11 +556,11 @@ fun LiveScreen(
                 color = MaterialTheme.colorScheme.secondary
             )
             Text(
-                text = "$angle°",
+                text = if (displayAngle == "--") "--" else "$displayAngle°",
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary
             )
-            if (targetName.isNotBlank()) {
+            if (showTargetName && targetName.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = targetName,
@@ -567,7 +596,7 @@ fun LiveScreen(
                 onClick = onSettings,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("SETTINGS")
+                Text("DEVICE SETTINGS")
             }
             OutlinedButton(
                 onClick = onCalibrate,
@@ -583,6 +612,74 @@ fun LiveScreen(
                 Text("DISCONNECT", color = MaterialTheme.colorScheme.error)
             }
         }
+    }
+}
+
+@Composable
+fun AppSettingsScreen(
+    angleFormat: AppAngleFormat,
+    deviationBackgroundEnabled: Boolean,
+    showTargetName: Boolean,
+    onSave: (AppUiSettings) -> Unit,
+    onBack: () -> Unit,
+) {
+    var localFormat by remember(angleFormat) { mutableStateOf(angleFormat) }
+    var localDeviationBg by remember(deviationBackgroundEnabled) { mutableStateOf(deviationBackgroundEnabled) }
+    var localShowTargetName by remember(showTargetName) { mutableStateOf(showTargetName) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            TextButton(onClick = onBack) { Text("← Back") }
+            Text("App Settings", style = MaterialTheme.typography.titleLarge)
+            Button(
+                onClick = {
+                    onSave(
+                        AppUiSettings(
+                            angleFormat = localFormat,
+                            deviationBackgroundEnabled = localDeviationBg,
+                            showTargetName = localShowTargetName,
+                        )
+                    )
+                }
+            ) { Text("Save") }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        EnumSetting(
+            label = "Angle Format (App Only)",
+            value = localFormat.wireValue,
+            options = listOf(
+                AppAngleFormat.TWO_DECIMALS.wireValue,
+                AppAngleFormat.ONE_DECIMAL.wireValue,
+                AppAngleFormat.HALF_DEGREE.wireValue,
+            )
+        ) {
+            localFormat = AppAngleFormat.fromWire(it)
+        }
+        HorizontalDivider()
+
+        BoolSetting(
+            label = "Deviation Background Highlight",
+            value = localDeviationBg,
+            onChange = { localDeviationBg = it }
+        )
+        HorizontalDivider()
+
+        BoolSetting(
+            label = "Show Target Name",
+            value = localShowTargetName,
+            onChange = { localShowTargetName = it }
+        )
     }
 }
 
@@ -655,6 +752,25 @@ fun CalibrationScreen(
         }
         Spacer(modifier = Modifier.height(24.dp))
     }
+}
+
+@SuppressLint("MissingPermission")
+fun requestDeviceDisconnect() {
+    val gatt = activeGatt
+    if (gatt == null) {
+        disconnectGatt()
+        return
+    }
+
+    val rx = gatt.getService(NUS_SERVICE_UUID)?.getCharacteristic(NUS_RX_UUID)
+    if (rx == null) {
+        disconnectGatt()
+        return
+    }
+
+    writeCharacteristic(gatt, rx, "app_disconnect".toByteArray())
+    // Give the MCU a brief window to process app_disconnect before we close locally.
+    mainHandler.postDelayed({ disconnectGatt() }, 200)
 }
 
 @SuppressLint("MissingPermission")
