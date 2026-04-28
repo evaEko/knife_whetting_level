@@ -205,10 +205,22 @@ Hit **Ctrl+C** to interrupt `main.py` and get the `>>>` prompt.
 
 ### Android companion app
 
-The Android app can connect over BLE to:
+Install it from the `knife_level_android_apk` workflow artifact described above.
+
+The app is a BLE companion for setup, preset management, and easy usage.
+
+It can:
 
 - calibrate using the current live reading
-- change app-exposed settings (`show preset name`, threshold, smoothing, angle format, axis, etc.)
-- manage preset angles with create, edit, delete, save-to-device, and local backup/restore
+- change device settings exposed over BLE
+- manage preset angles
 
-Install it from the `knife_level_android_apk` workflow artifact described above.
+Compatibility:
+
+- Android only
+- installs as a standalone APK; it is not distributed through Google Play
+
+Known issues:
+
+- if the MCU is outside measurement mode, the app can stay connected while live angle updates pause
+- BLE reconnect behavior varies by phone vendor and Android version; if the device does not immediately reappear after disconnect, wait a moment and try again (turn the device off and on).

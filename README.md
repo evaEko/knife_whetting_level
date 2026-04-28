@@ -6,7 +6,9 @@ A small digital level for knife sharpening. Measures blade pitch in real time us
 
 <img src="docs/images/knife_whetting_level.jpg" width="300"/>
 
-Here is a [demo vid](https://imgur.com/a/BOzFHaE).
+Here is a [demo vid of the sensor responsiveness](https://imgur.com/a/BOzFHaE).
+Here is a [demo vid of the Android app](https://imgur.com/a/6ULBu0x).
+
 
 Commercial use and resale are not permitted.
 

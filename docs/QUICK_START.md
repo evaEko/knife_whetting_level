@@ -24,6 +24,8 @@ Below is the simplest possible how-to recipe.
 | LiPo battery | 3.7V ~100mAh, smallest that fits under Pro Micro footprint (~20×30mm) |
 
 
+**Battery life estimate**: with the recommended ~100mAh cell, expect about 4 to 6 hours of continuous use with the display on and BLE enabled. If the device sits still for long periods, runtime can stretch a bit further, but plan around roughly 5 hours.
+
 **Note**: SuperMini clones sometimes need to have a resistor added to allow reading of battery voltage. IT is not a showstopper but the displayed battery status will be always 0%.
 
 ---
@@ -93,7 +95,25 @@ Go to the same [workflow run page](https://github.com/evaEko/knife_whetting_leve
 1. Extract the artifact zip on your Android device or computer
 2. Copy `app-debug.apk` to your phone if needed
 3. Open the APK on the phone and allow installation from unknown sources if Android asks
-4. Install the app and connect to the device over BLE
+4. Install the app
+
+**Compatibility**
+
+- Android only
+- Requires a firmware build with BLE enabled (`BLE_ENABLED = True` in `src/config.py`)
+- The app connects directly to the device over BLE; no account, pairing, or cloud service is involved
+
+**What the app is for**
+
+- Calibrate from the phone
+- Change device settings exposed over BLE
+- Manage preset angles
+
+**Known issues**
+
+- If the MCU is not in measurement mode, the app may stay connected but live angle updates pause until the MCU returns to measuring
+- BLE reconnect behavior can vary by phone vendor and Android version; if discovery fails after a disconnect, wait a moment and try again
+- The app is distributed as an APK artifact, not through Google Play, so Android may show the standard warning about installing from unknown sources
 
 ### Level the board (first time only)
 
@@ -176,6 +196,8 @@ Higher smoothing means the number barely moves during a steady stroke, which is 
 ## 7. Charging
 
 > **Important (known limitation):** while charging over USB, the latch power switch must be in the ON position. If the latch switch is OFF, the battery will not charge.
+
+With the recommended ~100mAh battery, a full charge is usually enough for one sharpening session, but not for all-day continuous use. If you want markedly longer runtime, use the largest cell that still fits your mechanical layout.
 
 ---
 
