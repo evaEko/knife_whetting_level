@@ -26,12 +26,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -517,7 +523,7 @@ fun ConnectScreen(status: String, enabled: Boolean, onAppSettings: () -> Unit, o
             enabled = enabled,
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Text("CONNECT TO DEVICE", style = MaterialTheme.typography.labelLarge)
+            Text("CONNECT TO LEVEL", style = MaterialTheme.typography.labelLarge)
         }
         if (status.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
@@ -563,11 +569,12 @@ fun LiveScreen(
     val tooLow  = hasTarget && currentAbs != null && currentAbs < targetAbs!! - deviationThreshold
 
     val tonePlayer = remember { TonePlayer() }
+    var muted by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { tonePlayer.stop() } }
-    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, highToneFreq, lowToneFreq) {
+    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, muted, highToneFreq, lowToneFreq) {
         when {
-            soundAlert && displayArrow && tooLow  -> tonePlayer.play(highToneFreq)
-            soundAlert && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq)
+            soundAlert && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq)
+            soundAlert && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq)
             else                                  -> tonePlayer.stop()
         }
     }
@@ -596,7 +603,19 @@ fun LiveScreen(
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.secondary
             )
-            TextButton(onClick = onAppSettings) { Text("⚙", style = MaterialTheme.typography.headlineMedium) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (soundAlert) {
+                    TextButton(onClick = { muted = !muted }) {
+                        Icon(
+                            imageVector = if (muted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
+                            contentDescription = if (muted) "Unmute" else "Mute",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                }
+                TextButton(onClick = onAppSettings) { Text("⚙", style = MaterialTheme.typography.headlineMedium) }
+            }
         }
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -673,19 +692,19 @@ fun LiveScreen(
                 onClick = onPresets,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("PRESET ANGLES")
+                Text("ANGLE LIBRARY")
             }
             OutlinedButton(
                 onClick = onSettings,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("DEVICE SETTINGS")
+                Text("SETTINGS")
             }
             OutlinedButton(
                 onClick = onCalibrate,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("CALIBRATE")
+                Text("CALIBRATION")
             }
             Spacer(modifier = Modifier.height(12.dp))
             TextButton(
@@ -713,6 +732,17 @@ fun AppSettingsScreen(
     onBack: () -> Unit,
 ) {
     fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta)
+
+    val previewPlayer = remember { TonePlayer() }
+    DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
+    val scope = rememberCoroutineScope()
+    fun previewTone(freq: Float) {
+        scope.launch {
+            previewPlayer.play(freq)
+            kotlinx.coroutines.delay(2_000)
+            previewPlayer.stop()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -767,16 +797,16 @@ fun AppSettingsScreen(
             )
             if (soundAlert) {
                 TonePickerSetting(
-                    label = "↑ High Tone",
+                    label = "↑",
                     options = HIGH_TONE_OPTIONS,
                     selectedFreq = highToneFreq,
-                    onChange = { onSave(current().copy(highToneFreq = it)) }
+                    onChange = { onSave(current().copy(highToneFreq = it)); previewTone(it) }
                 )
                 TonePickerSetting(
-                    label = "↓ Low Tone",
+                    label = "↓",
                     options = LOW_TONE_OPTIONS,
                     selectedFreq = lowToneFreq,
-                    onChange = { onSave(current().copy(lowToneFreq = it)) }
+                    onChange = { onSave(current().copy(lowToneFreq = it)); previewTone(it) }
                 )
             }
             HorizontalDivider()
