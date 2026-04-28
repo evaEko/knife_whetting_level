@@ -841,17 +841,22 @@ fun TonePickerSetting(label: String, options: List<TonePreset>, selectedFreq: Fl
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+            .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            options.forEach { preset ->
-                if (preset.freq == selectedFreq) {
-                    Button(onClick = {}) { Text(preset.label) }
-                } else {
-                    OutlinedButton(onClick = { onChange(preset.freq) }) { Text(preset.label) }
-                }
+        options.forEach { preset ->
+            val isSelected = preset.freq == selectedFreq
+            TextButton(
+                onClick = { onChange(preset.freq) },
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(start = 16.dp, top = 2.dp, bottom = 2.dp, end = 8.dp),
+            ) {
+                Text(
+                    text = preset.label,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
