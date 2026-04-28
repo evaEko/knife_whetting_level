@@ -197,7 +197,7 @@ class BleUart:
         device.settings.target_angle = angle
         device.settings.save_calibration()
         print(f"BLE set_target_angle: {angle:.2f}° ({name})")
-        self.send("ok:target_set")
+        self.send(f"target:{angle:.2f}")
 
     def _calibrate(self, device):
         device.engine.calibrate()

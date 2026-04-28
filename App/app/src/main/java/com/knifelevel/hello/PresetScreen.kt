@@ -31,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun PresetScreen(
     presets: List<PresetEntry>,
     presetsLoaded: Boolean,
     settingsLoaded: Boolean,
     status: String,
+    currentTargetAngle: String,
     waitingForReconnect: Boolean,
     backupAvailable: Boolean,
     onAddPreset: (String, String) -> Unit,
@@ -150,6 +152,9 @@ fun PresetScreen(
 
         LazyColumn {
             itemsIndexed(presets) { index, preset ->
+                val isActive = currentTargetAngle.toFloatOrNull()?.let { target ->
+                    preset.angle.toFloatOrNull()?.let { pa -> kotlin.math.abs(pa - target) < 0.01f }
+                } == true
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -158,7 +163,11 @@ fun PresetScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(preset.name, style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            preset.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isActive) FontWeight.Bold else null
+                        )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text("${preset.angle}°", style = MaterialTheme.typography.bodySmall)
                     }

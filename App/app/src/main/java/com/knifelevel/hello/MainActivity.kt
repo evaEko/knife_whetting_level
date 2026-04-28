@@ -101,6 +101,7 @@ fun MainScreen(context: Context) {
     var screen           by remember { mutableStateOf(Screen.CONNECT) }
     var angle            by remember { mutableStateOf("--") }
     var calibrationAngle by remember { mutableStateOf("--") }
+    var currentTargetAngle by remember { mutableStateOf("") }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -148,6 +149,7 @@ fun MainScreen(context: Context) {
                 if (idx > 0) settings[rest.substring(0, idx)] = rest.substring(idx + 1)
             }
             msg == "ok:calibrated"     -> saveStatus = "Calibration saved."
+            msg.startsWith("target:")   -> currentTargetAngle = msg.removePrefix("target:")
             msg == "presets_done"      -> presetsLoaded = true
             msg == "settings_done"      -> settingsLoaded = true
             msg == "ok"                 -> { }
@@ -243,6 +245,7 @@ fun MainScreen(context: Context) {
             presetsLoaded = presetsLoaded,
             settingsLoaded = settingsLoaded,
             status = presetStatus,
+            currentTargetAngle = currentTargetAngle,
             waitingForReconnect = waitingForReconnect,
             backupAvailable = backupAvailable,
             onAddPreset = { name, angle ->
@@ -255,9 +258,8 @@ fun MainScreen(context: Context) {
                 presets.removeAt(index)
             },
             onSelectPreset = { angleValue ->
-                saveStatus = "Target angle set."
-                enqueueCommand("set_setting:target_angle:$angleValue")
-                screen = Screen.LIVE
+                presetStatus = ""
+                enqueueCommand("set_target_angle:$angleValue")
             },
             onSaveToDevice = {
                 presetStatus = "Saving presets..."

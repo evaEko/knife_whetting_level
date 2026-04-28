@@ -61,6 +61,8 @@ class SelectAngleState(State):
                 device.settings.target_angle = angle
                 device.settings.save_calibration()
                 print(f"-> CUSTOM {angle:.2f}°")
+                if device.ble is not None and device.ble.connected:
+                    device.ble.send(f"target:{angle:.2f}")
                 display.show_set_confirmation(angle, engine.angle_format)
                 self._capturing = False
                 self._done_at = time.ticks_add(time.ticks_ms(), 1000)
@@ -88,6 +90,8 @@ class SelectAngleState(State):
                 device.settings.target_angle = angle
                 device.settings.save_calibration()
                 print(f"-> PRESET '{name}' {angle}°")
+                if device.ble is not None and device.ble.connected:
+                    device.ble.send(f"target:{angle:.2f}")
                 display.show_set_confirmation(angle, engine.angle_format, name=name)
                 self._done_at = time.ticks_add(time.ticks_ms(), 1000)
             else:
@@ -95,6 +99,8 @@ class SelectAngleState(State):
                 device.settings.target_angle = 0.0
                 device.settings.save_calibration()
                 print("-> PRESET cleared")
+                if device.ble is not None and device.ble.connected:
+                    device.ble.send("target:0.00")
                 display.show_cleared()
                 self._done_at = time.ticks_add(time.ticks_ms(), 1000)
 
