@@ -1,10 +1,13 @@
 package com.knifelevel.hello
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,7 +71,8 @@ fun AppSettingsContent(
                 EnumSetting(
                     label = "Arrow Size",
                     value = arrowSize.label,
-                    options = ArrowSize.entries.map { it.label }
+                    options = ArrowSize.entries.map { it.label },
+                    compact = true
                 ) { onSave(current().copy(arrowSize = ArrowSize.fromLabel(it))) }
             }
             if (deviationBackgroundEnabled) {
@@ -90,17 +94,17 @@ fun AppSettingsContent(
         ExpandableSection("Sound Alert") {
             BoolSetting("Enable", soundAlert) { onSave(current().copy(soundAlert = it)) }
             if (soundAlert) {
-                TonePickerSetting("Angle too high (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
+                TonePickerSetting("Angle too small (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
                     onSave(current().copy(highToneFreq = it)); previewTone(it)
                 }
-                TonePickerSetting("Angle too low (↓)", LOW_TONE_OPTIONS, lowToneFreq) {
+                TonePickerSetting("Angle too big (↓)", LOW_TONE_OPTIONS, lowToneFreq) {
                     onSave(current().copy(lowToneFreq = it)); previewTone(it)
                 }
             }
         }
 
         ExpandableSection("Custom Angle") {
-            StepperSetting("Countdown (s)", customAngleCountdownSec, 1, 15) {
+            StepperSetting("Measurement delay (s)", customAngleCountdownSec, 1, 15) {
                 onSave(current().copy(customAngleCountdownSec = it))
             }
         }
@@ -142,25 +146,23 @@ fun ExpandableSection(title: String, content: @Composable ColumnScope.() -> Unit
 
 @Composable
 fun AlertColorPickerSetting(label: String, options: List<AlertColorPreset>, selectedLabel: String, onChange: (AlertColorPreset) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.horizontalScroll(rememberScrollState())
-        ) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             options.forEach { preset ->
-                if (preset.label == selectedLabel) {
-                    Button(
-                        onClick = {},
-                        colors = ButtonDefaults.buttonColors(containerColor = preset.color, contentColor = Color.White)
-                    ) { Text(preset.label) }
-                } else {
-                    OutlinedButton(
-                        onClick = { onChange(preset) },
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = preset.color.copy(alpha = 0.25f), contentColor = MaterialTheme.colorScheme.onSurface)
-                    ) { Text(preset.label) }
-                }
+                val isSelected = preset.label == selectedLabel
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(preset.color)
+                        .then(
+                            if (isSelected) Modifier.border(3.dp, Color.White, RoundedCornerShape(8.dp))
+                            else Modifier
+                        )
+                        .clickable { if (!isSelected) onChange(preset) }
+                )
             }
         }
     }
@@ -171,12 +173,13 @@ fun TonePickerSetting(label: String, options: List<TonePreset>, selectedFreq: Fl
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            val pad = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
             options.forEach { preset ->
                 if (preset.freq == selectedFreq) {
-                    Button(onClick = {}) { Text(preset.label) }
+                    Button(onClick = {}, contentPadding = pad) { Text(preset.label, style = MaterialTheme.typography.labelSmall) }
                 } else {
-                    OutlinedButton(onClick = { onChange(preset.freq) }) { Text(preset.label) }
+                    OutlinedButton(onClick = { onChange(preset.freq) }, contentPadding = pad) { Text(preset.label, style = MaterialTheme.typography.labelSmall) }
                 }
             }
         }
