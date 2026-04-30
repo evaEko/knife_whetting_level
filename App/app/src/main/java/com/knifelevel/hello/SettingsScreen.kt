@@ -26,6 +26,7 @@ fun SettingsScreen(
     customAngleCountdownSec: Int,
     tooHighColorLabel: String,
     tooLowColorLabel: String,
+    arrowSize: ArrowSize,
     onSaveApp: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -74,6 +75,7 @@ fun SettingsScreen(
                 customAngleCountdownSec = customAngleCountdownSec,
                 tooHighColorLabel = tooHighColorLabel,
                 tooLowColorLabel = tooLowColorLabel,
+                arrowSize = arrowSize,
                 onSave = onSaveApp,
             )
             1 -> when {

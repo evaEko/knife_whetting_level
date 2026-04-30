@@ -28,9 +28,10 @@ fun AppSettingsContent(
     customAngleCountdownSec: Int,
     tooHighColorLabel: String,
     tooLowColorLabel: String,
+    arrowSize: ArrowSize,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -63,6 +64,13 @@ fun AppSettingsContent(
         ExpandableSection("Visual Alert") {
             BoolSetting("Enable", deviationBackgroundEnabled) { onSave(current().copy(deviationBackgroundEnabled = it)) }
             BoolSetting("Direction Arrows", displayArrow) { onSave(current().copy(displayArrow = it)) }
+            if (displayArrow) {
+                EnumSetting(
+                    label = "Arrow Size",
+                    value = arrowSize.label,
+                    options = ArrowSize.entries.map { it.label }
+                ) { onSave(current().copy(arrowSize = ArrowSize.fromLabel(it))) }
+            }
             if (deviationBackgroundEnabled) {
                 AlertColorPickerSetting(
                     label = "Angle too high (↑)",

@@ -119,7 +119,8 @@ data class FoundDevice(val address: String, val rssi: Int) {
 enum class ArrowSize(val label: String, val sp: Float) {
     SMALL("Small", 36f),
     MEDIUM("Medium", 72f),
-    LARGE("Large", 120f);
+    LARGE("Large", 120f),
+    XL("XL", 180f);
 
     companion object {
         fun fromLabel(label: String?): ArrowSize = entries.firstOrNull { it.label == label } ?: MEDIUM
@@ -198,6 +199,7 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putInt("custom_angle_countdown_sec", settings.customAngleCountdownSec)
         .putString("too_high_color_label", settings.tooHighColorLabel)
         .putString("too_low_color_label",  settings.tooLowColorLabel)
+        .putString("arrow_size", settings.arrowSize.label)
         .apply()
 }
 
@@ -251,6 +253,7 @@ fun MainScreen(context: Context) {
     var appCustomAngleCountdownSec by remember { mutableStateOf(initialAppUi.customAngleCountdownSec) }
     var appTooHighColorLabel by remember { mutableStateOf(initialAppUi.tooHighColorLabel) }
     var appTooLowColorLabel  by remember { mutableStateOf(initialAppUi.tooLowColorLabel) }
+    var appArrowSize         by remember { mutableStateOf(initialAppUi.arrowSize) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -468,6 +471,7 @@ fun MainScreen(context: Context) {
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
             tooHighColor = ALERT_COLORS.firstOrNull { it.label == appTooHighColorLabel }?.color ?: ALERT_COLORS[0].color,
             tooLowColor  = ALERT_COLORS.firstOrNull { it.label == appTooLowColorLabel  }?.color ?: ALERT_COLORS[4].color,
+            arrowSize = appArrowSize,
             displayArrow = appDisplayArrow,
             soundAlert = appSoundAlert,
             highToneFreq = appHighToneFreq,
@@ -549,6 +553,7 @@ fun MainScreen(context: Context) {
             customAngleCountdownSec = appCustomAngleCountdownSec,
             tooHighColorLabel = appTooHighColorLabel,
             tooLowColorLabel  = appTooLowColorLabel,
+            arrowSize = appArrowSize,
             onSaveApp = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
@@ -562,6 +567,7 @@ fun MainScreen(context: Context) {
                 appCustomAngleCountdownSec = updated.customAngleCountdownSec
                 appTooHighColorLabel = updated.tooHighColorLabel
                 appTooLowColorLabel  = updated.tooLowColorLabel
+                appArrowSize = updated.arrowSize
                 saveAppUiSettings(context, updated)
             },
             onBack = { screen = if (activeGatt != null) Screen.LIVE else Screen.CONNECT }
@@ -724,6 +730,7 @@ fun LiveScreen(
     deviationBackgroundEnabled: Boolean,
     tooHighColor: Color,
     tooLowColor: Color,
+    arrowSize: ArrowSize,
     displayArrow: Boolean,
     soundAlert: Boolean,
     highToneFreq: Float,
@@ -799,22 +806,37 @@ fun LiveScreen(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (displayArrow && hasTarget && currentAbs != null) {
                 val dimColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f)
+                val arrowGap = when (arrowSize) {
+                    ArrowSize.XL     -> 8.dp
+                    ArrowSize.LARGE  -> 24.dp
+                    else             -> 48.dp
+                }
+                val arrowBottomSpacing = when (arrowSize) {
+                    ArrowSize.XL     -> 2.dp
+                    ArrowSize.LARGE  -> 8.dp
+                    else             -> 16.dp
+                }
+                val arrowOffsetX = when (arrowSize) {
+                    ArrowSize.XL    -> (-(arrowSize.sp / 2)).dp
+                    else            -> 0.dp
+                }
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    horizontalArrangement = Arrangement.spacedBy(arrowGap),
                     verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.offset(x = arrowOffsetX),
                 ) {
                     Text(
                         text = "↑",
-                        fontSize = 72.sp,
+                        fontSize = arrowSize.sp.sp,
                         color = if (tooLow) MaterialTheme.colorScheme.error else dimColor,
                     )
                     Text(
                         text = "↓",
-                        fontSize = 72.sp,
+                        fontSize = arrowSize.sp.sp,
                         color = if (tooHigh) MaterialTheme.colorScheme.error else dimColor,
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(arrowBottomSpacing))
             }
             Text(
                 text = "CURRENT ANGLE",
@@ -863,7 +885,7 @@ fun LiveScreen(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 52.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
