@@ -449,13 +449,6 @@ fun MainScreen(context: Context) {
                 if (activeGatt != null) sendCommand("get_settings")
                 screen = Screen.SETTINGS
             },
-            onSettings = {
-                settings.clear()
-                settingsLoaded = false
-                saveStatus = ""
-                sendCommand("get_settings")
-                screen = Screen.SETTINGS
-            },
             onPresets   = {
                 presets.clear()
                 presetsLoaded = false
@@ -708,7 +701,6 @@ fun LiveScreen(
     showTargetAngle: Boolean,
     showDelta: Boolean,
     onAppSettings: () -> Unit,
-    onSettings: () -> Unit,
     onPresets: () -> Unit,
     onCalibrate: () -> Unit,
     onCustomAngle: () -> Unit,
@@ -845,24 +837,17 @@ fun LiveScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
-                onClick = onPresets,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text("ANGLE LIBRARY")
-            }
-            OutlinedButton(
-                onClick = onSettings,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text("SETTINGS")
-            }
-            OutlinedButton(
                 onClick = onCalibrate,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 Text("CALIBRATION")
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onPresets,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("ANGLE LIBRARY")
+            }
             OutlinedButton(
                 onClick = onCustomAngle,
                 enabled = !measurementStale && angle != "--" && customAngleCountdown < 0,
@@ -870,7 +855,6 @@ fun LiveScreen(
             ) {
                 Text(if (customAngleCountdown > 0) "CUSTOM ANGLE ($customAngleCountdown)" else "CUSTOM ANGLE")
             }
-            Spacer(modifier = Modifier.height(12.dp))
             TextButton(
                 onClick = onDisconnect,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
