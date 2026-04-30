@@ -495,22 +495,14 @@ fun MainScreen(context: Context) {
             waitingForReconnect = waitingForReconnect,
             onSaveLevel = { draft ->
                 saveStatus = "Saving..."
-                val needsReboot = draft.keys.any { it != "angle_format" }
-                if (needsReboot) {
-                    val reconnectAddr = activeGatt?.device?.address
-                    onQueueDrained = {
-                        saveStatus = "Rebooting..."
-                        waitingForReconnect = true
-                        onDisconnected = {
-                            if (reconnectAddr != null) connectToNano(context, reconnectAddr, ::onMessage, ::onReady)
-                        }
-                    }
-                    draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
-                    enqueueCommand("reboot")
-                } else {
-                    onQueueDrained = { saveStatus = "Saved." }
-                    draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
+                onQueueDrained = {
+                    saveStatus = "Saved."
+                    settings.clear()
+                    settingsLoaded = false
+                    sendCommand("get_settings")
                 }
+                draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
+                enqueueCommand("reinit")
             },
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
@@ -731,11 +723,10 @@ fun LiveScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                if (isOffTarget && deviationBackgroundEnabled) {
-                    MaterialTheme.colorScheme.errorContainer
-                } else {
-                    MaterialTheme.colorScheme.background
-                }
+                if (!deviationBackgroundEnabled) MaterialTheme.colorScheme.background
+                else if (tooHigh) MaterialTheme.colorScheme.errorContainer
+                else if (tooLow) MaterialTheme.colorScheme.tertiaryContainer
+                else MaterialTheme.colorScheme.background
             )
             .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.SpaceBetween,

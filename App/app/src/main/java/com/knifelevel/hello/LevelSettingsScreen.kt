@@ -14,65 +14,24 @@ fun LevelSettingsContent(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier) {
-        item { SectionHeader("DISPLAYED DATA") }
         item {
-            BoolSetting(
-                label = "Show Preset Name",
-                value = draft["show_preset_name"] == "true"
-            ) { draft["show_preset_name"] = it.toString() }
-            HorizontalDivider()
+            ExpandableSection("Displayed Data") {
+                BoolSetting("Preset Name", draft["show_preset_name"] == "true") { draft["show_preset_name"] = it.toString() }
+                BoolSetting("Target Angle", draft["show_target_angle"] == "true") { draft["show_target_angle"] = it.toString() }
+                BoolSetting("Load Target Angle on Boot", draft["load_target_angle_from_eeprom"] == "true") { draft["load_target_angle_from_eeprom"] = it.toString() }
+            }
         }
         item {
-            BoolSetting(
-                label = "Show Target Angle",
-                value = draft["show_target_angle"] == "true"
-            ) { draft["show_target_angle"] = it.toString() }
-            HorizontalDivider()
+            ExpandableSection("Angles") {
+                EnumSetting("Axis", draft["angle_axis"] ?: "pitch", listOf("pitch", "roll")) { draft["angle_axis"] = it }
+                EnumSetting("Format", draft["angle_format"] ?: "1d_half", listOf("2d", "1d", "1d_half")) { draft["angle_format"] = it }
+            }
         }
         item {
-            BoolSetting(
-                label = "Load Target Angle on Boot",
-                value = draft["load_target_angle_from_eeprom"] == "true"
-            ) { draft["load_target_angle_from_eeprom"] = it.toString() }
-        }
-
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-        item { SectionHeader("ANGLES") }
-        item {
-            EnumSetting(
-                label = "Axis",
-                value = draft["angle_axis"] ?: "pitch",
-                options = listOf("pitch", "roll")
-            ) { draft["angle_axis"] = it }
-            HorizontalDivider()
-        }
-        item {
-            EnumSetting(
-                label = "Format",
-                value = draft["angle_format"] ?: "1d_half",
-                options = listOf("2d", "1d", "1d_half")
-            ) { draft["angle_format"] = it }
-        }
-
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-        item { SectionHeader("MEASUREMENT") }
-        item {
-            SliderSetting(
-                label = "Smoothing",
-                value = draft["smoothing"]?.toFloatOrNull() ?: 0.7f,
-                min = 0.3f,
-                max = 0.9f,
-                steps = 5
-            ) { draft["smoothing"] = "%.1f".format(it) }
-            HorizontalDivider()
-        }
-        item {
-            StepperSetting(
-                label = "Deviation Threshold (°)",
-                value = draft["deviation_threshold"]?.toIntOrNull() ?: 1,
-                min = 1,
-                max = 10
-            ) { draft["deviation_threshold"] = it.toString() }
+            ExpandableSection("Measurement") {
+                SliderSetting("Smoothing", draft["smoothing"]?.toFloatOrNull() ?: 0.7f, 0.3f, 0.9f, 5) { draft["smoothing"] = "%.1f".format(it) }
+                StepperSetting("Deviation Threshold (°)", draft["deviation_threshold"]?.toIntOrNull() ?: 1, 1, 10) { draft["deviation_threshold"] = it.toString() }
+            }
         }
     }
 }

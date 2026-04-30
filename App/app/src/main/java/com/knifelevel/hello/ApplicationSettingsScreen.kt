@@ -40,7 +40,7 @@ fun AppSettingsContent(
     }
 
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        ExpandableSection("Displayed Data") {
+        ExpandableSection("Measurement Data") {
             EnumSetting(
                 label = "Angle Format",
                 value = angleFormat.wireValue,
@@ -50,15 +50,19 @@ fun AppSettingsContent(
                     AppAngleFormat.HALF_DEGREE.wireValue,
                 )
             ) { onSave(current().copy(angleFormat = AppAngleFormat.fromWire(it))) }
-            BoolSetting("Direction Arrows", displayArrow) { onSave(current().copy(displayArrow = it)) }
-            BoolSetting("Off-target Highlight", deviationBackgroundEnabled) { onSave(current().copy(deviationBackgroundEnabled = it)) }
+
             BoolSetting("Target Name", showTargetName) { onSave(current().copy(showTargetName = it)) }
             BoolSetting("Target Angle", showTargetAngle) { onSave(current().copy(showTargetAngle = it)) }
             BoolSetting("Delta", showDelta) { onSave(current().copy(showDelta = it)) }
         }
 
+        ExpandableSection("Visual Alert") {
+            BoolSetting("Enable", deviationBackgroundEnabled) { onSave(current().copy(deviationBackgroundEnabled = it)) }
+            BoolSetting("Direction Arrows", displayArrow) { onSave(current().copy(displayArrow = it)) }
+        }
+
         ExpandableSection("Sound Alert") {
-            BoolSetting("Alert", soundAlert) { onSave(current().copy(soundAlert = it)) }
+            BoolSetting("Enable", soundAlert) { onSave(current().copy(soundAlert = it)) }
             if (soundAlert) {
                 TonePickerSetting("Angle too high (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
                     onSave(current().copy(highToneFreq = it)); previewTone(it)

@@ -11,6 +11,8 @@ class AngleEngine:
         self.angle_format      = angle_format
         self.raw_angle         = 0.0
         self.smooth_angle      = 0.0
+        self.smoothing          = SMOOTHING
+        self.deviation_threshold = DEVIATION_THRESHOLD
 
     def update(self, raw):
         """Apply offsets, wrap to ±180, and smooth. Call with every IMU reading."""
@@ -21,7 +23,7 @@ class AngleEngine:
         if abs(angle - self.smooth_angle) > 180.0:
             self.smooth_angle = angle
         else:
-            self.smooth_angle = SMOOTHING * self.smooth_angle + (1.0 - SMOOTHING) * angle
+            self.smooth_angle = self.smoothing * self.smooth_angle + (1.0 - self.smoothing) * angle
 
     def calibrate(self):
         """Lock current raw reading as the zero reference."""
@@ -44,4 +46,4 @@ class AngleEngine:
         target = abs(self.target_angle)
         if target == 0.0:
             return True
-        return abs(abs(self.smooth_angle) - target) <= DEVIATION_THRESHOLD
+        return abs(abs(self.smooth_angle) - target) <= self.deviation_threshold

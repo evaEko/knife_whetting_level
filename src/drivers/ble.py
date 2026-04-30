@@ -148,6 +148,10 @@ class BleUart:
             self._send_settings(device)
         elif cmd.startswith("set_setting:"):
             self._set_setting(cmd[12:], device)
+        elif cmd == "reinit":
+            print("Reinitialising as requested")
+            device.reinit()
+            self.send("ok")
         elif cmd == "reboot":
             print("Rebooting as requested")
             self.send("ok")

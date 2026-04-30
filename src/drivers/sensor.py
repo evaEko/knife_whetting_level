@@ -36,6 +36,15 @@ class Sensor:
     def ready(self):
         return self._imu is not None
 
+    @property
+    def axis(self):
+        return self._axis
+
+    @axis.setter
+    def axis(self, value):
+        if value in ("pitch", "roll"):
+            self._axis = value
+
     def update(self):
         """Read latest configured axis from IMU, manage idle rate. Returns angle or None on error."""
         if not self._imu:

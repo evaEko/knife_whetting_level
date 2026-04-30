@@ -1,5 +1,5 @@
 import time
-from config import ANGLE_FORMAT, LOAD_TARGET_ANGLE_FROM_EEPROM, BLE_ENABLED
+from config import ANGLE_FORMAT, LOAD_TARGET_ANGLE_FROM_EEPROM, BLE_ENABLED, SHOW_TARGET_ANGLE, SHOW_PRESET_NAME
 from drivers.display import Display
 from drivers.sensor import Sensor
 from drivers.buttons import Buttons
@@ -22,6 +22,8 @@ class Device:
         )
         self.state = None
         self.ble = None
+        self.show_target_angle = SHOW_TARGET_ANGLE
+        self.show_preset_name  = SHOW_PRESET_NAME
 
     def init(self):
         self.display.init()
@@ -54,6 +56,33 @@ class Device:
                 self.state.exit(self)
                 self.state = next_state
                 self.state.enter(self)
+
+    def reinit(self):
+        from drivers.config_rw import read_config
+        smoothing = read_config('SMOOTHING')
+        if smoothing is not None:
+            try: self.engine.smoothing = float(smoothing)
+            except: pass
+        deviation = read_config('DEVIATION_THRESHOLD')
+        if deviation is not None:
+            try: self.engine.deviation_threshold = int(deviation)
+            except: pass
+        axis = read_config('ANGLE_AXIS')
+        if axis is not None:
+            self.sensor.axis = axis.strip('"\'')
+        val = read_config('SHOW_TARGET_ANGLE')
+        if val is not None:
+            self.show_target_angle = (val != 'False')
+        val = read_config('SHOW_PRESET_NAME')
+        if val is not None:
+            self.show_preset_name = (val != 'False')
+        self.settings.load()
+        self._apply_settings()
+        from states.measure import MeasureState
+        if self.state is not None:
+            self.state.exit(self)
+        self.state = MeasureState()
+        self.state.enter(self)
 
     # --- private ---
 

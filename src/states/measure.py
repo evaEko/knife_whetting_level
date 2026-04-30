@@ -1,6 +1,6 @@
 import time
 from state import State
-from config import SHOW_PRESET_NAME, SHOW_TARGET_ANGLE, DISPLAY_INTERVAL_MS
+from config import DISPLAY_INTERVAL_MS
 
 
 class MeasureState(State):
@@ -25,8 +25,8 @@ class MeasureState(State):
             engine = device.engine
             device.display.invert(not engine.on_target)
             has_target = engine.target_angle != 0.0
-            target = engine.target_angle if (has_target and SHOW_TARGET_ANGLE) else None
-            name   = engine.target_name  if (has_target and SHOW_PRESET_NAME)  else None
+            target = engine.target_angle if (has_target and device.show_target_angle) else None
+            name   = engine.target_name  if (has_target and device.show_preset_name)  else None
             device.display.show_measure(engine.smooth_angle,
                                         fmt=engine.angle_format,
                                         target=target,
