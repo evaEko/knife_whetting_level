@@ -8,12 +8,13 @@ class SelectAngleState(State):
     _index = 0  # class-level: persists across visits
 
     def __init__(self):
-        self._n         = 0
-        self._clear     = 0
-        self._total     = 0
-        self._capturing = False
-        self._last_draw = 0
-        self._done_at   = None
+        self._n          = 0
+        self._clear      = 0
+        self._total      = 0
+        self._capturing  = False
+        self._capture_at = None
+        self._last_draw  = 0
+        self._done_at    = None
 
     def enter(self, device):
         presets = device.presets
@@ -49,13 +50,16 @@ class SelectAngleState(State):
             if raw is not None:
                 engine.update(raw)
             now = time.ticks_ms()
+            remaining_ms = time.ticks_diff(self._capture_at, now)
+            auto_capture = remaining_ms <= 0
             if time.ticks_diff(now, self._last_draw) >= 50:
                 self._last_draw = now
+                secs = max(0, (remaining_ms + 999) // 1000)
                 display.show_angle(engine.smooth_angle,
-                                   label="low=set",
+                                   label=f"set:{secs}s" if not auto_capture else "set:0s",
                                    fmt=engine.angle_format)
             event = buttons.update()
-            if event == ('short', 'low'):
+            if auto_capture or event == ('short', 'low'):
                 angle = abs(engine.smooth_angle)
                 engine.set_target(angle, name="Custom")
                 device.settings.target_angle = angle
@@ -64,10 +68,12 @@ class SelectAngleState(State):
                 if device.ble is not None and device.ble.connected:
                     device.ble.send_target_state(device)
                 display.show_set_confirmation(angle, engine.angle_format)
-                self._capturing = False
+                self._capturing  = False
+                self._capture_at = None
                 self._done_at = time.ticks_add(time.ticks_ms(), 1000)
-            elif event is not None:
-                self._capturing = False
+            elif not auto_capture and event is not None:
+                self._capturing  = False
+                self._capture_at = None
                 from states.measure import MeasureState
                 return MeasureState()
             return None
@@ -80,8 +86,10 @@ class SelectAngleState(State):
         elif event == ('short', 'low'):
             idx = SelectAngleState._index
             if idx == _CUSTOM:
-                self._capturing = True
-                self._last_draw = 0
+                buttons.wait_release('low')
+                self._capturing  = True
+                self._capture_at = time.ticks_add(time.ticks_ms(), 5000)
+                self._last_draw  = 0
                 display.invert(False)
             elif idx < self._clear:
                 name, angle = presets[idx - 1]

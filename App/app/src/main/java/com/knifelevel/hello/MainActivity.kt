@@ -135,6 +135,7 @@ data class AppUiSettings(
     val showTargetName: Boolean,
     val showTargetAngle: Boolean,
     val showDelta: Boolean,
+    val customAngleCountdownSec: Int = 5,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -149,6 +150,7 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         showTargetName = prefs.getBoolean("show_target_name", true),
         showTargetAngle = prefs.getBoolean("show_target_angle", true),
         showDelta = prefs.getBoolean("show_delta", true),
+        customAngleCountdownSec = prefs.getInt("custom_angle_countdown_sec", 5),
     )
 }
 
@@ -160,10 +162,11 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putBoolean("display_arrow", settings.displayArrow)
         .putBoolean("sound_alert", settings.soundAlert)
         .putFloat("high_tone_freq", settings.highToneFreq)
-        .putFloat("low_tone_freq", settings.lowToneFreq)
+        .putFloat("lowTone_freq", settings.lowToneFreq)
         .putBoolean("show_target_name", settings.showTargetName)
         .putBoolean("show_target_angle", settings.showTargetAngle)
         .putBoolean("show_delta", settings.showDelta)
+        .putInt("custom_angle_countdown_sec", settings.customAngleCountdownSec)
         .apply()
 }
 
@@ -214,6 +217,7 @@ fun MainScreen(context: Context) {
     var appShowTargetName by remember { mutableStateOf(initialAppUi.showTargetName) }
     var appShowTargetAngle by remember { mutableStateOf(initialAppUi.showTargetAngle) }
     var appShowDelta by remember { mutableStateOf(initialAppUi.showDelta) }
+    var appCustomAngleCountdownSec by remember { mutableStateOf(initialAppUi.customAngleCountdownSec) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -436,7 +440,7 @@ fun MainScreen(context: Context) {
             onCustomAngle = {
                 if (customAngleCountdown < 0) {
                     mainScope.launch {
-                        for (s in 5 downTo 1) {
+                        for (s in appCustomAngleCountdownSec downTo 1) {
                             customAngleCountdown = s
                             delay(1_000)
                         }
@@ -467,6 +471,7 @@ fun MainScreen(context: Context) {
             showTargetName = appShowTargetName,
             showTargetAngle = appShowTargetAngle,
             showDelta = appShowDelta,
+            customAngleCountdownSec = appCustomAngleCountdownSec,
             onSave = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
@@ -477,6 +482,7 @@ fun MainScreen(context: Context) {
                 appShowTargetName = updated.showTargetName
                 appShowTargetAngle = updated.showTargetAngle
                 appShowDelta = updated.showDelta
+                appCustomAngleCountdownSec = updated.customAngleCountdownSec
                 saveAppUiSettings(context, updated)
             },
             onBack = { screen = Screen.LIVE }
@@ -855,10 +861,11 @@ fun AppSettingsScreen(
     showTargetName: Boolean,
     showTargetAngle: Boolean,
     showDelta: Boolean,
+    customAngleCountdownSec: Int,
     onSave: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -879,6 +886,13 @@ fun AppSettingsScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                        StepperSetting(
+                            label = "Custom Angle Countdown (s)",
+                            value = customAngleCountdownSec,
+                            min = 1,
+                            max = 15
+                        ) { onSave(current().copy(customAngleCountdownSec = it)) }
+                        HorizontalDivider()
             Text(
                 text = "GENERIC",
                 style = MaterialTheme.typography.labelSmall,
