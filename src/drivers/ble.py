@@ -129,6 +129,8 @@ class BleUart:
             self._add_preset(cmd[11:], device)
         elif cmd.startswith("set_target_angle:"):
             self._set_target_angle(cmd[17:], device)
+        elif cmd.startswith("set_custom_angle:"):
+            self._set_custom_angle(cmd[17:], device)
         elif cmd == "get_target_state":
             self.send_target_state(device)
         elif cmd == "app_disconnect":
@@ -219,6 +221,29 @@ class BleUart:
         device.settings.target_angle = angle
         device.settings.save_calibration()
         print(f"BLE set_target_angle: {angle:.2f}° ({name})")
+        self.send_target_state(device)
+
+    def _set_custom_angle(self, raw, device):
+        try:
+            angle = abs(float(raw.strip()))
+        except Exception:
+            self.send("err:invalid angle")
+            return
+        if angle == 0.0:
+            self.send("err:invalid angle")
+            return
+        # Replace existing Custom preset (if any) and add new one
+        presets = [(n, a) for n, a in device.presets if n != "Custom"]
+        presets.append(("Custom", angle))
+        try:
+            device.presets.replace_all(presets)
+        except Exception:
+            self.send("err:preset save failed")
+            return
+        device.engine.set_target(angle, name="Custom")
+        device.settings.target_angle = angle
+        device.settings.save_calibration()
+        print(f"BLE set_custom_angle: {angle:.2f}°")
         self.send_target_state(device)
 
     def _calibrate(self, device):

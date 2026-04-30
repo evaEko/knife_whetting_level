@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -101,6 +102,16 @@ fun resetBleSession() {
 enum class Screen { CONNECT, LIVE, APP_SETTINGS, SETTINGS, CALIBRATE, PRESETS }
 
 data class PresetEntry(val name: String, val angle: String)
+
+data class FoundDevice(val address: String, val rssi: Int) {
+    val shortId: String get() = address.takeLast(5)
+    val signalBars: String get() = when {
+        rssi >= -60 -> "▂▄▆█"
+        rssi >= -70 -> "▂▄▆·"
+        rssi >= -80 -> "▂▄··"
+        else        -> "▂···"
+    }
+}
 
 enum class AppAngleFormat(val wireValue: String) {
     TWO_DECIMALS("2d"),
@@ -208,10 +219,15 @@ fun MainScreen(context: Context) {
     var saveStatus       by remember { mutableStateOf("") }
     var presetStatus     by remember { mutableStateOf("") }
     var waitingForReconnect by remember { mutableStateOf(false) }
+    val foundDevices     = remember { mutableStateListOf<FoundDevice>() }
+    var isScanning       by remember { mutableStateOf(false) }
+    var hasScanned       by remember { mutableStateOf(false) }
     val settings         = remember { mutableStateMapOf<String, String>() }
     val presets          = remember { mutableStateListOf<PresetEntry>() }
     var settingsLoaded   by remember { mutableStateOf(false) }
     var presetsLoaded    by remember { mutableStateOf(false) }
+    var customAngleCountdown by remember { mutableStateOf(-1) }
+    val mainScope = rememberCoroutineScope()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -346,12 +362,38 @@ fun MainScreen(context: Context) {
         screen = Screen.LIVE
     }
 
+    fun connectToDevice(device: FoundDevice) {
+        connectToNano(context, device.address, ::onMessage, ::onReady)
+    }
+
+    fun doScan() {
+        foundDevices.clear()
+        isScanning = true
+        hasScanned = true
+        status = ""
+        startScan(
+            context,
+            onFound = { device ->
+                val idx = foundDevices.indexOfFirst { it.address == device.address }
+                if (idx < 0) foundDevices.add(device) else foundDevices[idx] = device
+            },
+            onDone = {
+                isScanning = false
+                if (foundDevices.size == 1) connectToDevice(foundDevices[0])
+            }
+        )
+    }
+
     when (screen) {
         Screen.CONNECT -> ConnectScreen(
             status = status,
             enabled = permissionsGranted,
+            isScanning = isScanning,
+            hasScanned = hasScanned,
+            foundDevices = foundDevices,
             onAppSettings = { screen = Screen.APP_SETTINGS },
-            onConnect = { connectToNano(context, ::onMessage, ::onReady) }
+            onScan = { doScan() },
+            onConnect = { connectToDevice(it) }
         )
         Screen.LIVE -> LiveScreen(
             angle = angle,
@@ -391,6 +433,19 @@ fun MainScreen(context: Context) {
                 sendCommand("get_calibration")
                 screen = Screen.CALIBRATE
             },
+            onCustomAngle = {
+                if (customAngleCountdown < 0) {
+                    mainScope.launch {
+                        for (s in 5 downTo 1) {
+                            customAngleCountdown = s
+                            delay(1_000)
+                        }
+                        customAngleCountdown = -1
+                        enqueueCommand("set_custom_angle:$angle")
+                    }
+                }
+            },
+            customAngleCountdown = customAngleCountdown,
             onDisconnect = {
                 requestDeviceDisconnect()
                 angle = "--"
@@ -435,11 +490,12 @@ fun MainScreen(context: Context) {
                 saveStatus = "Saving..."
                 val needsReboot = draft.keys.any { it != "angle_format" }
                 if (needsReboot) {
+                    val reconnectAddr = activeGatt?.device?.address
                     onQueueDrained = {
                         saveStatus = "Rebooting..."
                         waitingForReconnect = true
                         onDisconnected = {
-                            connectToNano(context, ::onMessage, ::onReady)
+                            if (reconnectAddr != null) connectToNano(context, reconnectAddr, ::onMessage, ::onReady)
                         }
                     }
                     draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
@@ -501,7 +557,16 @@ fun MainScreen(context: Context) {
 }
 
 @Composable
-fun ConnectScreen(status: String, enabled: Boolean, onAppSettings: () -> Unit, onConnect: () -> Unit) {
+fun ConnectScreen(
+    status: String,
+    enabled: Boolean,
+    isScanning: Boolean,
+    hasScanned: Boolean,
+    foundDevices: List<FoundDevice>,
+    onAppSettings: () -> Unit,
+    onScan: () -> Unit,
+    onConnect: (FoundDevice) -> Unit,
+) {
     Box(modifier = Modifier.fillMaxSize().padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)) {
         TextButton(
             onClick = onAppSettings,
@@ -509,32 +574,84 @@ fun ConnectScreen(status: String, enabled: Boolean, onAppSettings: () -> Unit, o
         ) { Text("⚙", style = MaterialTheme.typography.headlineMedium) }
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "Blunt",
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(48.dp))
-        Button(
-            onClick = onConnect,
-            enabled = enabled,
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("CONNECT TO LEVEL", style = MaterialTheme.typography.labelLarge)
+            Button(
+                onClick = onScan,
+                enabled = enabled && !isScanning,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("CONNECT TO LEVEL", style = MaterialTheme.typography.labelLarge)
+            }
+            if (status.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = status,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Device list area
+            if (isScanning || foundDevices.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (isScanning) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            Text("Scanning…", style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.secondary)
+                        }
+                    }
+                    foundDevices.forEach { device ->
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column {
+                                Text("Knife Level", style = MaterialTheme.typography.bodyLarge)
+                                Text(device.shortId, style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary)
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(device.signalBars, style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary)
+                                Button(onClick = { onConnect(device) }) { Text("Connect") }
+                            }
+                        }
+                    }
+                    if (!isScanning && foundDevices.isEmpty() && hasScanned) {
+                        HorizontalDivider()
+                        Text(
+                            "No devices found.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(32.dp))
         }
-        if (status.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = status,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
-        }
-        }   // Column
-    }   // Box
+    }
 }
 
 @Composable
@@ -557,7 +674,9 @@ fun LiveScreen(
     onSettings: () -> Unit,
     onPresets: () -> Unit,
     onCalibrate: () -> Unit,
-    onDisconnect: () -> Unit
+    onCustomAngle: () -> Unit,
+    onDisconnect: () -> Unit,
+    customAngleCountdown: Int = -1
 ) {
     val displayAngle = formatAngleForDisplay(angle, angleFormat)
     val currentAbs = angle.toFloatOrNull()?.let { kotlin.math.abs(it) }
@@ -705,6 +824,14 @@ fun LiveScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 Text("CALIBRATION")
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onCustomAngle,
+                enabled = !measurementStale && angle != "--" && customAngleCountdown < 0,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text(if (customAngleCountdown > 0) "CUSTOM ANGLE ($customAngleCountdown)" else "CUSTOM ANGLE")
             }
             Spacer(modifier = Modifier.height(12.dp))
             TextButton(
@@ -987,23 +1114,40 @@ fun writeCharacteristic(gatt: BluetoothGatt, characteristic: BluetoothGattCharac
 }
 
 @SuppressLint("MissingPermission")
-fun connectToNano(context: Context, onMessage: (String) -> Unit, onReady: (BluetoothGatt) -> Unit) {
-    val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    val scanner = bluetoothManager.adapter.bluetoothLeScanner
+fun startScan(
+    context: Context,
+    onFound: (FoundDevice) -> Unit,
+    onDone: () -> Unit,
+) {
+    val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    val scanner = manager.adapter.bluetoothLeScanner
+    val seen = mutableSetOf<String>()
 
-    mainHandler.post { onMessage("Scanning...") }
-
-    val scanCallback = object : ScanCallback() {
-        @SuppressLint("MissingPermission")
+    val callback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             if (result.device.name == "Knife_Level") {
-                scanner.stopScan(this)
-                mainHandler.post { onMessage("Found Knife_Level, connecting...") }
-                result.device.connectGatt(context, false, makeGattCallback(onMessage, onReady))
+                val addr = result.device.address
+                val device = FoundDevice(addr, result.rssi)
+                mainHandler.post {
+                    if (seen.add(addr)) onFound(device)
+                    else onFound(device)  // update RSSI even for known devices
+                }
             }
         }
     }
-    scanner.startScan(scanCallback)
+    scanner.startScan(callback)
+    mainHandler.postDelayed({
+        scanner.stopScan(callback)
+        mainHandler.post { onDone() }
+    }, 5_000)
+}
+
+@SuppressLint("MissingPermission")
+fun connectToNano(context: Context, address: String, onMessage: (String) -> Unit, onReady: (BluetoothGatt) -> Unit) {
+    val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    mainHandler.post { onMessage("Connecting...") }
+    manager.adapter.getRemoteDevice(address)
+        .connectGatt(context, false, makeGattCallback(onMessage, onReady))
 }
 
 @SuppressLint("MissingPermission")

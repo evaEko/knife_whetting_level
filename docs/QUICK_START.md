@@ -100,7 +100,6 @@ Go to the same [workflow run page](https://github.com/evaEko/knife_whetting_leve
 **Compatibility**
 
 - Android only
-- Requires a firmware build with BLE enabled (`BLE_ENABLED = True` in `src/config.py`)
 - The app connects directly to the device over BLE; no account, pairing, or cloud service is involved
 
 **What the app is for**

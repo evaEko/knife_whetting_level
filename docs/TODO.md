@@ -1,6 +1,8 @@
 # TODO
 
-* implement correct detection of battery connected when on usb cable
+# Firmware
+
+, * implement correct detection of battery connected when on usb cable
 * refactor ble protocol and related
 
 ## GitHub
