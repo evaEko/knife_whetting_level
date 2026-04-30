@@ -2,6 +2,7 @@ package com.knifelevel.hello
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.util.Log
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -240,13 +242,22 @@ fun MainScreen(context: Context) {
         if (!permissionsGranted) status = "Permissions denied"
     }
 
+    val requiredPermissions = arrayOf(
+        Manifest.permission.BLUETOOTH_SCAN,
+        Manifest.permission.BLUETOOTH_CONNECT,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(arrayOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ))
+        val allGranted = requiredPermissions.all {
+            context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        if (allGranted) {
+            permissionsGranted = true
+        } else {
+            permissionLauncher.launch(requiredPermissions)
+        }
     }
 
     LaunchedEffect(screen, waitingForReconnect, currentTargetAngle) {
@@ -257,8 +268,13 @@ fun MainScreen(context: Context) {
         }
     }
 
+    LaunchedEffect(screen) {
+        Log.d("KL_NAV", "screen = $screen")
+    }
+
     DisposableEffect(Unit) {
         onUnexpectedGattDisconnect = {
+            Log.w("KL_NAV", "onUnexpectedGattDisconnect fired on screen=$screen activeGatt=$activeGatt", Throwable("stack"))
             waitingForReconnect = false
             angle = "--"
             currentTargetAngle = ""
@@ -266,7 +282,9 @@ fun MainScreen(context: Context) {
             lastAngleAt = 0L
             measurementStale = true
             status = "Disconnected"
-            screen = Screen.CONNECT
+            if (screen != Screen.APP_SETTINGS && screen != Screen.CONNECT) {
+                screen = Screen.CONNECT
+            }
         }
         onDispose {
             onUnexpectedGattDisconnect = null
@@ -358,12 +376,16 @@ fun MainScreen(context: Context) {
     }
 
     fun onReady(gatt: BluetoothGatt) {
+        Log.d("KL_NAV", "onReady fired, screen=$screen waitingForReconnect=$waitingForReconnect")
         activeGatt = gatt
+        val wasReconnecting = waitingForReconnect
         waitingForReconnect = false
         lastAngleAt = 0L
         measurementStale = true
         refreshFromDevice()
-        screen = Screen.LIVE
+        if (screen == Screen.CONNECT || wasReconnecting) {
+            screen = Screen.LIVE
+        }
     }
 
     fun connectToDevice(device: FoundDevice) {
@@ -487,7 +509,7 @@ fun MainScreen(context: Context) {
             },
             onBack = { screen = Screen.LIVE }
         )
-        Screen.SETTINGS -> SettingsScreen(
+        Screen.SETTINGS -> LevelSettingsScreen(
             settings      = settings,
             settingsLoaded = settingsLoaded,
             saveStatus    = saveStatus,
@@ -594,7 +616,7 @@ fun ConnectScreen(
                 enabled = enabled && !isScanning,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("CONNECT TO LEVEL", style = MaterialTheme.typography.labelLarge)
+                Text("Scan for Levels", style = MaterialTheme.typography.labelLarge)
             }
             if (status.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -845,159 +867,6 @@ fun LiveScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text("DISCONNECT", color = MaterialTheme.colorScheme.error)
-            }
-        }
-    }
-}
-
-@Composable
-fun AppSettingsScreen(
-    angleFormat: AppAngleFormat,
-    deviationBackgroundEnabled: Boolean,
-    displayArrow: Boolean,
-    soundAlert: Boolean,
-    highToneFreq: Float,
-    lowToneFreq: Float,
-    showTargetName: Boolean,
-    showTargetAngle: Boolean,
-    showDelta: Boolean,
-    customAngleCountdownSec: Int,
-    onSave: (AppUiSettings) -> Unit,
-    onBack: () -> Unit,
-) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec)
-
-    val previewPlayer = remember { TonePlayer() }
-    DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
-    val scope = rememberCoroutineScope()
-    fun previewTone(freq: Float) {
-        scope.launch {
-            previewPlayer.play(freq)
-            kotlinx.coroutines.delay(2_000)
-            previewPlayer.stop()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-    ) {
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                        StepperSetting(
-                            label = "Custom Angle Countdown (s)",
-                            value = customAngleCountdownSec,
-                            min = 1,
-                            max = 15
-                        ) { onSave(current().copy(customAngleCountdownSec = it)) }
-                        HorizontalDivider()
-            Text(
-                text = "GENERIC",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-            EnumSetting(
-                label = "Angle Format (App Only)",
-                value = angleFormat.wireValue,
-                options = listOf(
-                    AppAngleFormat.TWO_DECIMALS.wireValue,
-                    AppAngleFormat.ONE_DECIMAL.wireValue,
-                    AppAngleFormat.HALF_DEGREE.wireValue,
-                )
-            ) {
-                onSave(current().copy(angleFormat = AppAngleFormat.fromWire(it)))
-            }
-            HorizontalDivider()
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "MAIN PAGE",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-            BoolSetting(
-                label = "Deviation Background Highlight",
-                value = deviationBackgroundEnabled,
-                onChange = { onSave(current().copy(deviationBackgroundEnabled = it)) }
-            )
-            HorizontalDivider()
-            BoolSetting(
-                label = "Display Arrow",
-                value = displayArrow,
-                onChange = { onSave(current().copy(displayArrow = it)) }
-            )
-            HorizontalDivider()
-            BoolSetting(
-                label = "Sound Alert",
-                value = soundAlert,
-                onChange = { onSave(current().copy(soundAlert = it)) }
-            )
-            if (soundAlert) {
-                TonePickerSetting(
-                    label = "↑",
-                    options = HIGH_TONE_OPTIONS,
-                    selectedFreq = highToneFreq,
-                    onChange = { onSave(current().copy(highToneFreq = it)); previewTone(it) }
-                )
-                TonePickerSetting(
-                    label = "↓",
-                    options = LOW_TONE_OPTIONS,
-                    selectedFreq = lowToneFreq,
-                    onChange = { onSave(current().copy(lowToneFreq = it)); previewTone(it) }
-                )
-            }
-            HorizontalDivider()
-            BoolSetting(
-                label = "Show Target Name",
-                value = showTargetName,
-                onChange = { onSave(current().copy(showTargetName = it)) }
-            )
-            HorizontalDivider()
-            BoolSetting(
-                label = "Show Target Angle",
-                value = showTargetAngle,
-                onChange = { onSave(current().copy(showTargetAngle = it)) }
-            )
-            HorizontalDivider()
-            BoolSetting(
-                label = "Show Delta",
-                value = showDelta,
-                onChange = { onSave(current().copy(showDelta = it)) }
-            )
-        }
-
-        TextButton(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.End).padding(bottom = 32.dp)
-        ) { Text("Ok") }
-    }
-}
-
-@Composable
-fun TonePickerSetting(label: String, options: List<TonePreset>, selectedFreq: Float, onChange: (Float) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-        options.forEach { preset ->
-            val isSelected = preset.freq == selectedFreq
-            TextButton(
-                onClick = { onChange(preset.freq) },
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, top = 2.dp, bottom = 2.dp, end = 8.dp),
-            ) {
-                Text(
-                    text = preset.label,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
