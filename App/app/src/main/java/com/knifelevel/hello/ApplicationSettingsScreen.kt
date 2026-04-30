@@ -1,10 +1,12 @@
 package com.knifelevel.hello
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -38,110 +40,88 @@ fun AppSettingsContent(
     }
 
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        StepperSetting(
-            label = "Custom Angle Countdown (s)",
-            value = customAngleCountdownSec,
-            min = 1,
-            max = 15
-        ) { onSave(current().copy(customAngleCountdownSec = it)) }
-        HorizontalDivider()
-        Text(
-            text = "GENERIC",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-        EnumSetting(
-            label = "Angle Format (App Only)",
-            value = angleFormat.wireValue,
-            options = listOf(
-                AppAngleFormat.TWO_DECIMALS.wireValue,
-                AppAngleFormat.ONE_DECIMAL.wireValue,
-                AppAngleFormat.HALF_DEGREE.wireValue,
-            )
-        ) { onSave(current().copy(angleFormat = AppAngleFormat.fromWire(it))) }
-        HorizontalDivider()
+        ExpandableSection("Displayed Data") {
+            EnumSetting(
+                label = "Angle Format",
+                value = angleFormat.wireValue,
+                options = listOf(
+                    AppAngleFormat.TWO_DECIMALS.wireValue,
+                    AppAngleFormat.ONE_DECIMAL.wireValue,
+                    AppAngleFormat.HALF_DEGREE.wireValue,
+                )
+            ) { onSave(current().copy(angleFormat = AppAngleFormat.fromWire(it))) }
+            BoolSetting("Direction Arrows", displayArrow) { onSave(current().copy(displayArrow = it)) }
+            BoolSetting("Off-target Highlight", deviationBackgroundEnabled) { onSave(current().copy(deviationBackgroundEnabled = it)) }
+            BoolSetting("Target Name", showTargetName) { onSave(current().copy(showTargetName = it)) }
+            BoolSetting("Target Angle", showTargetAngle) { onSave(current().copy(showTargetAngle = it)) }
+            BoolSetting("Delta", showDelta) { onSave(current().copy(showDelta = it)) }
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "MAIN PAGE",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-        BoolSetting(
-            label = "Deviation Background Highlight",
-            value = deviationBackgroundEnabled,
-            onChange = { onSave(current().copy(deviationBackgroundEnabled = it)) }
-        )
-        HorizontalDivider()
-        BoolSetting(
-            label = "Display Arrow",
-            value = displayArrow,
-            onChange = { onSave(current().copy(displayArrow = it)) }
-        )
-        HorizontalDivider()
-        BoolSetting(
-            label = "Sound Alert",
-            value = soundAlert,
-            onChange = { onSave(current().copy(soundAlert = it)) }
-        )
-        if (soundAlert) {
-            TonePickerSetting(
-                label = "↑",
-                options = HIGH_TONE_OPTIONS,
-                selectedFreq = highToneFreq,
-                onChange = { onSave(current().copy(highToneFreq = it)); previewTone(it) }
+        ExpandableSection("Sound Alert") {
+            BoolSetting("Alert", soundAlert) { onSave(current().copy(soundAlert = it)) }
+            if (soundAlert) {
+                TonePickerSetting("Angle too high (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
+                    onSave(current().copy(highToneFreq = it)); previewTone(it)
+                }
+                TonePickerSetting("Angle too low (↓)", LOW_TONE_OPTIONS, lowToneFreq) {
+                    onSave(current().copy(lowToneFreq = it)); previewTone(it)
+                }
+            }
+        }
+
+        ExpandableSection("Custom Angle") {
+            StepperSetting("Countdown (s)", customAngleCountdownSec, 1, 15) {
+                onSave(current().copy(customAngleCountdownSec = it))
+            }
+        }
+    }
+}
+
+@Composable
+fun ExpandableSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            TonePickerSetting(
-                label = "↓",
-                options = LOW_TONE_OPTIONS,
-                selectedFreq = lowToneFreq,
-                onChange = { onSave(current().copy(lowToneFreq = it)); previewTone(it) }
+            Text(
+                text = if (expanded) "▲" else "▼",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
+        if (expanded) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                content()
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
         HorizontalDivider()
-        BoolSetting(
-            label = "Show Target Name",
-            value = showTargetName,
-            onChange = { onSave(current().copy(showTargetName = it)) }
-        )
-        HorizontalDivider()
-        BoolSetting(
-            label = "Show Target Angle",
-            value = showTargetAngle,
-            onChange = { onSave(current().copy(showTargetAngle = it)) }
-        )
-        HorizontalDivider()
-        BoolSetting(
-            label = "Show Delta",
-            value = showDelta,
-            onChange = { onSave(current().copy(showDelta = it)) }
-        )
     }
 }
 
 @Composable
 fun TonePickerSetting(label: String, options: List<TonePreset>, selectedFreq: Float, onChange: (Float) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
-        options.forEach { preset ->
-            val isSelected = preset.freq == selectedFreq
-            TextButton(
-                onClick = { onChange(preset.freq) },
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, top = 2.dp, bottom = 2.dp, end = 8.dp),
-            ) {
-                Text(
-                    text = preset.label,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEach { preset ->
+                if (preset.freq == selectedFreq) {
+                    Button(onClick = {}) { Text(preset.label) }
+                } else {
+                    OutlinedButton(onClick = { onChange(preset.freq) }) { Text(preset.label) }
+                }
             }
         }
     }

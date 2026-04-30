@@ -90,7 +90,7 @@ fun SectionHeader(title: String) {
 @Composable
 fun BoolSetting(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -101,7 +101,7 @@ fun BoolSetting(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
 
 @Composable
 fun EnumSetting(label: String, value: String, options: List<String>, onChange: (String) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -119,7 +119,7 @@ fun EnumSetting(label: String, value: String, options: List<String>, onChange: (
 @Composable
 fun SliderSetting(label: String, value: Float, min: Float, max: Float, steps: Int, onChange: (Float) -> Unit) {
     var current by remember(value) { mutableStateOf(value) }
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label)
             Text("%.1f".format(current))
@@ -137,7 +137,7 @@ fun SliderSetting(label: String, value: Float, min: Float, max: Float, steps: In
 @Composable
 fun StepperSetting(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

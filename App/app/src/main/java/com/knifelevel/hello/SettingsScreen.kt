@@ -48,12 +48,12 @@ fun SettingsScreen(
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text("Application") }
+                text = { Text("Application", style = MaterialTheme.typography.titleLarge) }
             )
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text("Level") }
+                text = { Text("Level", style = MaterialTheme.typography.titleLarge) }
             )
         }
 

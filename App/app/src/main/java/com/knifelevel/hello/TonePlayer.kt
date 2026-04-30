@@ -12,14 +12,12 @@ val HIGH_TONE_OPTIONS = listOf(
     TonePreset("Soft",  523f),   // C5
     TonePreset("Mid",   660f),   // E5  ← default
     TonePreset("High",  784f),   // G5
-    TonePreset("Sharp", 1047f),  // C6
 )
 
 val LOW_TONE_OPTIONS = listOf(
     TonePreset("Deep",  220f),   // A3
     TonePreset("Low",   330f),   // E4
     TonePreset("Warm",  440f),   // A4  ← default
-    TonePreset("Clear", 523f),   // C5
 )
 
 fun defaultHighToneFreq() = HIGH_TONE_OPTIONS[1].freq  // 660 Hz
