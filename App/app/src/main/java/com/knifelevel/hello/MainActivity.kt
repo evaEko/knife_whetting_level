@@ -43,6 +43,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.knifelevel.hello.ui.theme.MyApplicationTheme
@@ -115,6 +116,16 @@ data class FoundDevice(val address: String, val rssi: Int) {
     }
 }
 
+data class AlertColorPreset(val label: String, val color: Color)
+
+val ALERT_COLORS = listOf(
+    AlertColorPreset("Red",    Color(0xFFFFCDD2.toInt())),
+    AlertColorPreset("Orange", Color(0xFFFFE0B2.toInt())),
+    AlertColorPreset("Yellow", Color(0xFFFFF9C4.toInt())),
+    AlertColorPreset("Green",  Color(0xFFC8E6C9.toInt())),
+    AlertColorPreset("Blue",   Color(0xFFBBDEFB.toInt())),
+)
+
 enum class AppAngleFormat(val wireValue: String) {
     TWO_DECIMALS("2d"),
     ONE_DECIMAL("1d"),
@@ -138,6 +149,8 @@ data class AppUiSettings(
     val showTargetAngle: Boolean,
     val showDelta: Boolean,
     val customAngleCountdownSec: Int = 5,
+    val tooHighColorLabel: String = ALERT_COLORS[0].label,
+    val tooLowColorLabel:  String = ALERT_COLORS[4].label,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -153,6 +166,8 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         showTargetAngle = prefs.getBoolean("show_target_angle", true),
         showDelta = prefs.getBoolean("show_delta", true),
         customAngleCountdownSec = prefs.getInt("custom_angle_countdown_sec", 5),
+        tooHighColorLabel = prefs.getString("too_high_color_label", ALERT_COLORS[0].label) ?: ALERT_COLORS[0].label,
+        tooLowColorLabel  = prefs.getString("too_low_color_label",  ALERT_COLORS[4].label) ?: ALERT_COLORS[4].label,
     )
 }
 
@@ -169,6 +184,8 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putBoolean("show_target_angle", settings.showTargetAngle)
         .putBoolean("show_delta", settings.showDelta)
         .putInt("custom_angle_countdown_sec", settings.customAngleCountdownSec)
+        .putString("too_high_color_label", settings.tooHighColorLabel)
+        .putString("too_low_color_label",  settings.tooLowColorLabel)
         .apply()
 }
 
@@ -220,6 +237,8 @@ fun MainScreen(context: Context) {
     var appShowTargetAngle by remember { mutableStateOf(initialAppUi.showTargetAngle) }
     var appShowDelta by remember { mutableStateOf(initialAppUi.showDelta) }
     var appCustomAngleCountdownSec by remember { mutableStateOf(initialAppUi.customAngleCountdownSec) }
+    var appTooHighColorLabel by remember { mutableStateOf(initialAppUi.tooHighColorLabel) }
+    var appTooLowColorLabel  by remember { mutableStateOf(initialAppUi.tooLowColorLabel) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -435,6 +454,8 @@ fun MainScreen(context: Context) {
             measurementStale = measurementStale,
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
+            tooHighColor = ALERT_COLORS.firstOrNull { it.label == appTooHighColorLabel }?.color ?: ALERT_COLORS[0].color,
+            tooLowColor  = ALERT_COLORS.firstOrNull { it.label == appTooLowColorLabel  }?.color ?: ALERT_COLORS[4].color,
             displayArrow = appDisplayArrow,
             soundAlert = appSoundAlert,
             highToneFreq = appHighToneFreq,
@@ -514,6 +535,8 @@ fun MainScreen(context: Context) {
             showTargetAngle = appShowTargetAngle,
             showDelta = appShowDelta,
             customAngleCountdownSec = appCustomAngleCountdownSec,
+            tooHighColorLabel = appTooHighColorLabel,
+            tooLowColorLabel  = appTooLowColorLabel,
             onSaveApp = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
@@ -525,6 +548,8 @@ fun MainScreen(context: Context) {
                 appShowTargetAngle = updated.showTargetAngle
                 appShowDelta = updated.showDelta
                 appCustomAngleCountdownSec = updated.customAngleCountdownSec
+                appTooHighColorLabel = updated.tooHighColorLabel
+                appTooLowColorLabel  = updated.tooLowColorLabel
                 saveAppUiSettings(context, updated)
             },
             onBack = { screen = if (activeGatt != null) Screen.LIVE else Screen.CONNECT }
@@ -685,6 +710,8 @@ fun LiveScreen(
     measurementStale: Boolean,
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
+    tooHighColor: Color,
+    tooLowColor: Color,
     displayArrow: Boolean,
     soundAlert: Boolean,
     highToneFreq: Float,
@@ -724,8 +751,8 @@ fun LiveScreen(
             .fillMaxSize()
             .background(
                 if (!deviationBackgroundEnabled) MaterialTheme.colorScheme.background
-                else if (tooHigh) MaterialTheme.colorScheme.errorContainer
-                else if (tooLow) MaterialTheme.colorScheme.tertiaryContainer
+                else if (tooHigh) tooHighColor
+                else if (tooLow) tooLowColor
                 else MaterialTheme.colorScheme.background
             )
             .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),

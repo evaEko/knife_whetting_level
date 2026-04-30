@@ -1,6 +1,7 @@
 package com.knifelevel.hello
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -24,9 +26,11 @@ fun AppSettingsContent(
     showTargetAngle: Boolean,
     showDelta: Boolean,
     customAngleCountdownSec: Int,
+    tooHighColorLabel: String,
+    tooLowColorLabel: String,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -59,6 +63,20 @@ fun AppSettingsContent(
         ExpandableSection("Visual Alert") {
             BoolSetting("Enable", deviationBackgroundEnabled) { onSave(current().copy(deviationBackgroundEnabled = it)) }
             BoolSetting("Direction Arrows", displayArrow) { onSave(current().copy(displayArrow = it)) }
+            if (deviationBackgroundEnabled) {
+                AlertColorPickerSetting(
+                    label = "Angle too high (↑)",
+                    options = ALERT_COLORS,
+                    selectedLabel = tooHighColorLabel,
+                    onChange = { onSave(current().copy(tooHighColorLabel = it.label)) }
+                )
+                AlertColorPickerSetting(
+                    label = "Angle too low (↓)",
+                    options = ALERT_COLORS,
+                    selectedLabel = tooLowColorLabel,
+                    onChange = { onSave(current().copy(tooLowColorLabel = it.label)) }
+                )
+            }
         }
 
         ExpandableSection("Sound Alert") {
@@ -111,6 +129,32 @@ fun ExpandableSection(title: String, content: @Composable ColumnScope.() -> Unit
             Spacer(modifier = Modifier.height(8.dp))
         }
         HorizontalDivider()
+    }
+}
+
+@Composable
+fun AlertColorPickerSetting(label: String, options: List<AlertColorPreset>, selectedLabel: String, onChange: (AlertColorPreset) -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.horizontalScroll(rememberScrollState())
+        ) {
+            options.forEach { preset ->
+                if (preset.label == selectedLabel) {
+                    Button(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(containerColor = preset.color, contentColor = Color.Black)
+                    ) { Text(preset.label) }
+                } else {
+                    OutlinedButton(
+                        onClick = { onChange(preset) },
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = preset.color.copy(alpha = 0.4f))
+                    ) { Text(preset.label) }
+                }
+            }
+        }
     }
 }
 

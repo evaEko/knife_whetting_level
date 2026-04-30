@@ -24,6 +24,8 @@ fun SettingsScreen(
     showTargetAngle: Boolean,
     showDelta: Boolean,
     customAngleCountdownSec: Int,
+    tooHighColorLabel: String,
+    tooLowColorLabel: String,
     onSaveApp: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -70,6 +72,8 @@ fun SettingsScreen(
                 showTargetAngle = showTargetAngle,
                 showDelta = showDelta,
                 customAngleCountdownSec = customAngleCountdownSec,
+                tooHighColorLabel = tooHighColorLabel,
+                tooLowColorLabel = tooLowColorLabel,
                 onSave = onSaveApp,
             )
             1 -> when {
