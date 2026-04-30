@@ -101,7 +101,7 @@ fun resetBleSession() {
     stopLiveAngleRetry()
 }
 
-enum class Screen { CONNECT, LIVE, APP_SETTINGS, SETTINGS, CALIBRATE, PRESETS }
+enum class Screen { CONNECT, LIVE, SETTINGS, CALIBRATE, PRESETS }
 
 data class PresetEntry(val name: String, val angle: String)
 
@@ -282,7 +282,7 @@ fun MainScreen(context: Context) {
             lastAngleAt = 0L
             measurementStale = true
             status = "Disconnected"
-            if (screen != Screen.APP_SETTINGS && screen != Screen.CONNECT) {
+            if (screen != Screen.CONNECT && screen != Screen.SETTINGS) {
                 screen = Screen.CONNECT
             }
         }
@@ -417,7 +417,13 @@ fun MainScreen(context: Context) {
             isScanning = isScanning,
             hasScanned = hasScanned,
             foundDevices = foundDevices,
-            onAppSettings = { screen = Screen.APP_SETTINGS },
+            onAppSettings = {
+                settings.clear()
+                settingsLoaded = false
+                saveStatus = ""
+                if (activeGatt != null) sendCommand("get_settings")
+                screen = Screen.SETTINGS
+            },
             onScan = { doScan() },
             onConnect = { connectToDevice(it) }
         )
@@ -436,7 +442,13 @@ fun MainScreen(context: Context) {
             showTargetName = appShowTargetName,
             showTargetAngle = appShowTargetAngle,
             showDelta = appShowDelta,
-            onAppSettings = { screen = Screen.APP_SETTINGS },
+            onAppSettings = {
+                settings.clear()
+                settingsLoaded = false
+                saveStatus = ""
+                if (activeGatt != null) sendCommand("get_settings")
+                screen = Screen.SETTINGS
+            },
             onSettings = {
                 settings.clear()
                 settingsLoaded = false
@@ -483,38 +495,12 @@ fun MainScreen(context: Context) {
                 screen = Screen.CONNECT
             }
         )
-        Screen.APP_SETTINGS -> AppSettingsScreen(
-            angleFormat = appAngleFormat,
-            deviationBackgroundEnabled = appDeviationBackgroundEnabled,
-            displayArrow = appDisplayArrow,
-            soundAlert = appSoundAlert,
-            highToneFreq = appHighToneFreq,
-            lowToneFreq = appLowToneFreq,
-            showTargetName = appShowTargetName,
-            showTargetAngle = appShowTargetAngle,
-            showDelta = appShowDelta,
-            customAngleCountdownSec = appCustomAngleCountdownSec,
-            onSave = { updated ->
-                appAngleFormat = updated.angleFormat
-                appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
-                appDisplayArrow = updated.displayArrow
-                appSoundAlert = updated.soundAlert
-                appHighToneFreq = updated.highToneFreq
-                appLowToneFreq = updated.lowToneFreq
-                appShowTargetName = updated.showTargetName
-                appShowTargetAngle = updated.showTargetAngle
-                appShowDelta = updated.showDelta
-                appCustomAngleCountdownSec = updated.customAngleCountdownSec
-                saveAppUiSettings(context, updated)
-            },
-            onBack = { screen = Screen.LIVE }
-        )
-        Screen.SETTINGS -> LevelSettingsScreen(
-            settings      = settings,
+        Screen.SETTINGS -> SettingsScreen(
+            settings = settings,
             settingsLoaded = settingsLoaded,
-            saveStatus    = saveStatus,
+            saveStatus = saveStatus,
             waitingForReconnect = waitingForReconnect,
-            onSave = { draft ->
+            onSaveLevel = { draft ->
                 saveStatus = "Saving..."
                 val needsReboot = draft.keys.any { it != "angle_format" }
                 if (needsReboot) {
@@ -533,7 +519,30 @@ fun MainScreen(context: Context) {
                     draft.forEach { (key, value) -> enqueueCommand("set_setting:$key:$value") }
                 }
             },
-            onBack = { screen = Screen.LIVE }
+            angleFormat = appAngleFormat,
+            deviationBackgroundEnabled = appDeviationBackgroundEnabled,
+            displayArrow = appDisplayArrow,
+            soundAlert = appSoundAlert,
+            highToneFreq = appHighToneFreq,
+            lowToneFreq = appLowToneFreq,
+            showTargetName = appShowTargetName,
+            showTargetAngle = appShowTargetAngle,
+            showDelta = appShowDelta,
+            customAngleCountdownSec = appCustomAngleCountdownSec,
+            onSaveApp = { updated ->
+                appAngleFormat = updated.angleFormat
+                appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
+                appDisplayArrow = updated.displayArrow
+                appSoundAlert = updated.soundAlert
+                appHighToneFreq = updated.highToneFreq
+                appLowToneFreq = updated.lowToneFreq
+                appShowTargetName = updated.showTargetName
+                appShowTargetAngle = updated.showTargetAngle
+                appShowDelta = updated.showDelta
+                appCustomAngleCountdownSec = updated.customAngleCountdownSec
+                saveAppUiSettings(context, updated)
+            },
+            onBack = { screen = if (activeGatt != null) Screen.LIVE else Screen.CONNECT }
         )
         Screen.CALIBRATE -> CalibrationScreen(
             currentAngle = angle,
