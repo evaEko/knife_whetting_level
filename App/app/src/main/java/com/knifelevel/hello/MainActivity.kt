@@ -116,14 +116,24 @@ data class FoundDevice(val address: String, val rssi: Int) {
     }
 }
 
+enum class ArrowSize(val label: String, val sp: Float) {
+    SMALL("Small", 36f),
+    MEDIUM("Medium", 72f),
+    LARGE("Large", 120f);
+
+    companion object {
+        fun fromLabel(label: String?): ArrowSize = entries.firstOrNull { it.label == label } ?: MEDIUM
+    }
+}
+
 data class AlertColorPreset(val label: String, val color: Color)
 
 val ALERT_COLORS = listOf(
-    AlertColorPreset("Red",    Color(0xFFFFCDD2.toInt())),
-    AlertColorPreset("Orange", Color(0xFFFFE0B2.toInt())),
-    AlertColorPreset("Yellow", Color(0xFFFFF9C4.toInt())),
-    AlertColorPreset("Green",  Color(0xFFC8E6C9.toInt())),
-    AlertColorPreset("Blue",   Color(0xFFBBDEFB.toInt())),
+    AlertColorPreset("Red",    Color(0xFFF44336.toInt())),  // Red 500
+    AlertColorPreset("Orange", Color(0xFFFF5722.toInt())),  // Deep Orange 500
+    AlertColorPreset("Pink",   Color(0xFFE91E63.toInt())),  // Pink 500
+    AlertColorPreset("Teal",   Color(0xFF009688.toInt())),  // Teal 500
+    AlertColorPreset("Blue",   Color(0xFF2196F3.toInt())),  // Blue 500
 )
 
 enum class AppAngleFormat(val wireValue: String) {
@@ -151,6 +161,7 @@ data class AppUiSettings(
     val customAngleCountdownSec: Int = 5,
     val tooHighColorLabel: String = ALERT_COLORS[0].label,
     val tooLowColorLabel:  String = ALERT_COLORS[4].label,
+    val arrowSize: ArrowSize = ArrowSize.MEDIUM,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -168,6 +179,7 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         customAngleCountdownSec = prefs.getInt("custom_angle_countdown_sec", 5),
         tooHighColorLabel = prefs.getString("too_high_color_label", ALERT_COLORS[0].label) ?: ALERT_COLORS[0].label,
         tooLowColorLabel  = prefs.getString("too_low_color_label",  ALERT_COLORS[4].label) ?: ALERT_COLORS[4].label,
+        arrowSize = ArrowSize.fromLabel(prefs.getString("arrow_size", ArrowSize.MEDIUM.label)),
     )
 }
 

@@ -145,12 +145,12 @@ fun AlertColorPickerSetting(label: String, options: List<AlertColorPreset>, sele
                 if (preset.label == selectedLabel) {
                     Button(
                         onClick = {},
-                        colors = ButtonDefaults.buttonColors(containerColor = preset.color, contentColor = Color.Black)
+                        colors = ButtonDefaults.buttonColors(containerColor = preset.color, contentColor = Color.White)
                     ) { Text(preset.label) }
                 } else {
                     OutlinedButton(
                         onClick = { onChange(preset) },
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = preset.color.copy(alpha = 0.4f))
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = preset.color.copy(alpha = 0.25f), contentColor = MaterialTheme.colorScheme.onSurface)
                     ) { Text(preset.label) }
                 }
             }
