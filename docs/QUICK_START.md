@@ -1,3 +1,4 @@
+
 # Quick Start
 
 Below is the simplest possible how-to recipe.
@@ -36,7 +37,20 @@ Below is the simplest possible how-to recipe.
 2. **BNO085 module** — next
 3. **MCU** — last; make sure it sits high enough above the PCB for the battery to fit underneath. Consider using machined pin headers (sockets) so you can swap the MCU without desoldering.
 
-Connect the battery wires to B+ and B- pads on the PCB.
+
+
+# Android App
+
+The Blunt Android app is an optional companion for your Knife Level device. It lets you connect to your level via Bluetooth, view measurements, set target angles, and customize alerts. The app is not required, but it makes setup and use more convenient.
+
+**To use the app:**
+
+- Download the APK from the GitHub workflow artifact onto your phone, or build it yourself using Android Studio.
+- Install the APK (you may need to allow installation from unknown sources).
+- Open the app, grant Bluetooth and Location permissions.
+- Connect to your Knife Level device when it appears in the scan list.
+
+You can now view your level's data, set or select a target angle, and adjust alert settings as needed.
 
 ---
 

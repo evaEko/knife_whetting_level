@@ -157,7 +157,6 @@ fun PresetScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack, enabled = !waitingForReconnect) { Text("← Back") }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -174,9 +173,12 @@ fun PresetScreen(
                     enabled = presetsLoaded && !waitingForReconnect
                 ) { Text("+") }
                 Button(
-                    onClick = onSaveToDevice,
+                    onClick = {
+                        onSaveToDevice()
+                        onBack()
+                    },
                     enabled = presetsLoaded && !waitingForReconnect
-                ) { Text("Apply") }
+                ) { Text("OK") }
             }
         }
     }

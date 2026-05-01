@@ -6,6 +6,11 @@
 * refactor ble protocol and related
 * sometimes after disconnect, the level does not advetise bluetooth
 
+# Known Issues
+
+- When plugging in and the battery is full, the MCU incorrectly notifies that the power is cut off.
+- Occasionally, the Android app cannot detect the level; if this happens, turn the device off and on again and drop me a line with exact scenario.
+
 ## GitHub
 
 ## PCB
@@ -15,7 +20,6 @@
 ## Android App + Bluetooth
 
 * refactor the whole thing
-i still cannot see disconnect fully, but it looks like it is cover by some other element placed at the bottom of the screen (like footer): if you remove the element there will be plenty of space
 
 also, make the option buttons in application setting smaller: for the arrow and for the angle too high and too low
 
