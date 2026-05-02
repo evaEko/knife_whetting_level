@@ -1,6 +1,6 @@
 import time
 from machine import I2C, Pin
-from config import SDA_IMU, SCL_IMU, BNO085_ADDR, ANGLE_AXIS
+from config import SDA_IMU, SCL_IMU, BNO085_ADDR
 from drivers.bno085 import BNO085
 
 _IDLE_TIMEOUT       = 60_000
@@ -11,24 +11,20 @@ _INTERVAL_IDLE      = 1000
 
 class Sensor:
     def __init__(self):
-        self._imu          = None
-        self._idle         = False
-        self._last_move    = 0
-        self._idle_ref     = 0.0
-        self._axis         = ANGLE_AXIS
+        self._imu       = None
+        self._idle      = False
+        self._last_move = 0
+        self._idle_ref  = 0.0
 
     def init(self):
         try:
-            if self._axis not in ("pitch", "roll"):
-                print(f"Invalid ANGLE_AXIS '{self._axis}', using 'pitch'")
-                self._axis = "pitch"
             self._imu = BNO085(
                 I2C(0, sda=Pin(SDA_IMU), scl=Pin(SCL_IMU), freq=400000),
                 addr=BNO085_ADDR
             )
             self._imu.enable_rotation_vector(interval_ms=_INTERVAL_ACTIVE)
             self._last_move = time.ticks_ms()
-            print(f"IMU OK ({self._axis})")
+            print("IMU OK")
         except Exception as e:
             print(f"IMU ERROR: {e}")
 
@@ -36,25 +32,13 @@ class Sensor:
     def ready(self):
         return self._imu is not None
 
-    @property
-    def axis(self):
-        return self._axis
-
-    @axis.setter
-    def axis(self, value):
-        if value in ("pitch", "roll"):
-            self._axis = value
-
     def update(self):
-        """Read latest configured axis from IMU, manage idle rate. Returns angle or None on error."""
+        """Read surface inclination from IMU. Returns angle in degrees or None on error."""
         if not self._imu:
             return None
         try:
             self._imu.update()
-            if self._axis == "roll":
-                raw = self._imu.get_roll()
-            else:
-                raw = self._imu.get_pitch()
+            raw = self._imu.get_inclination()
             self._update_idle(raw)
             return raw
         except OSError:

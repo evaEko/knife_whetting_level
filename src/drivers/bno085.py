@@ -134,6 +134,13 @@ class BNO085:
         pitch = math.degrees(math.asin(max(-1.0, min(1.0, 2.0 * (w * y - z * x)))))
         return pitch
 
+    def get_inclination(self):
+        """Surface inclination in degrees [0, 90].
+        Uses the Z-axis component of gravity — invariant to sensor rotation on the surface."""
+        w, x, y, z = self._quat
+        gz = 2.0 * (x * x + y * y) - 1.0
+        return math.degrees(math.acos(max(-1.0, min(1.0, abs(gz)))))
+
     def set_report_interval(self, interval_ms):
         """Change rotation vector report interval. Use 1000+ for low-power idle."""
         interval_us = interval_ms * 1000

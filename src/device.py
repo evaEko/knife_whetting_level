@@ -15,7 +15,6 @@ _BLE_CONFIG_SETTINGS = {
     'show_preset_name':              ('bool',  'SHOW_PRESET_NAME'),
     'show_target_angle':             ('bool',  'SHOW_TARGET_ANGLE'),
     'load_target_angle_from_eeprom': ('bool',  'LOAD_TARGET_ANGLE_FROM_EEPROM'),
-    'angle_axis':                    ('str',   'ANGLE_AXIS'),
     'smoothing':                     ('float', 'SMOOTHING'),
     'deviation_threshold':           ('int',   'DEVIATION_THRESHOLD'),
 }
@@ -59,9 +58,6 @@ class Device:
         if val is not None:
             try: self.engine.deviation_threshold = int(val)
             except: pass
-        val = read_config('ANGLE_AXIS')
-        if val is not None:
-            self.sensor.axis = val.strip('"\'')
         val = read_config('SHOW_TARGET_ANGLE')
         if val is not None:
             self.show_target_angle = (val != 'False')
