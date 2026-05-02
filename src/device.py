@@ -16,7 +16,7 @@ _BLE_CONFIG_SETTINGS = {
     'show_target_angle':             ('bool',  'SHOW_TARGET_ANGLE'),
     'load_target_angle_from_eeprom': ('bool',  'LOAD_TARGET_ANGLE_FROM_EEPROM'),
     'smoothing':                     ('float', 'SMOOTHING'),
-    'deviation_threshold':           ('int',   'DEVIATION_THRESHOLD'),
+    'deviation_threshold':           ('float', 'DEVIATION_THRESHOLD'),
 }
 
 
@@ -56,7 +56,7 @@ class Device:
             except: pass
         val = read_config('DEVIATION_THRESHOLD')
         if val is not None:
-            try: self.engine.deviation_threshold = int(val)
+            try: self.engine.deviation_threshold = float(val)
             except: pass
         val = read_config('SHOW_TARGET_ANGLE')
         if val is not None:
@@ -130,6 +130,9 @@ class Device:
         if self.engine.target_angle != 0.0:
             name = self.presets.find_name(self.engine.target_angle)
             self.engine.target_name = name if name is not None else "Custom"
+        if self.settings.surface_normal is not None:
+            nx, ny, nz = self.settings.surface_normal
+            self.sensor.set_surface_normal(nx, ny, nz)
 
     # --- BLE command helpers ---
 

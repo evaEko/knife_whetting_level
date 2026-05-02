@@ -1,4 +1,5 @@
 import time
+import math
 from machine import I2C, Pin
 from config import SDA_IMU, SCL_IMU, BNO085_ADDR
 from drivers.bno085 import BNO085
@@ -11,10 +12,11 @@ _INTERVAL_IDLE      = 1000
 
 class Sensor:
     def __init__(self):
-        self._imu       = None
-        self._idle      = False
-        self._last_move = 0
-        self._idle_ref  = 0.0
+        self._imu            = None
+        self._idle           = False
+        self._last_move      = 0
+        self._idle_ref       = 0.0
+        self._surface_normal = None  # (nx, ny, nz) unit vector, captured during Level cal
 
     def init(self):
         try:
@@ -32,13 +34,31 @@ class Sensor:
     def ready(self):
         return self._imu is not None
 
+    def set_surface_normal(self, nx, ny, nz):
+        self._surface_normal = (nx, ny, nz)
+
+    def clear_surface_normal(self):
+        self._surface_normal = None
+
+    def get_gravity(self):
+        """Current gravity unit vector in sensor body frame, or None if not ready."""
+        if not self._imu:
+            return None
+        return self._imu.get_gravity()
+
     def update(self):
         """Read surface inclination from IMU. Returns angle in degrees or None on error."""
         if not self._imu:
             return None
         try:
             self._imu.update()
-            raw = self._imu.get_inclination()
+            if self._surface_normal is not None:
+                gx, gy, gz = self._imu.get_gravity()
+                nx, ny, nz = self._surface_normal
+                dot = max(-1.0, min(1.0, gx * nx + gy * ny + gz * nz))
+                raw = math.degrees(math.acos(dot))
+            else:
+                raw = self._imu.get_inclination()
             self._update_idle(raw)
             return raw
         except OSError:

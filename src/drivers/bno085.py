@@ -134,11 +134,19 @@ class BNO085:
         pitch = math.degrees(math.asin(max(-1.0, min(1.0, 2.0 * (w * y - z * x)))))
         return pitch
 
-    def get_inclination(self):
-        """Surface inclination in degrees [0, 90].
-        Uses the Z-axis component of gravity — invariant to sensor rotation on the surface."""
+    def get_gravity(self):
+        """Gravity unit vector in sensor body frame (gx, gy, gz), derived from quaternion."""
         w, x, y, z = self._quat
-        gz = 2.0 * (x * x + y * y) - 1.0
+        return (
+            2.0 * (w * y - x * z),
+            -2.0 * (y * z + x * w),
+            2.0 * (x * x + y * y) - 1.0,
+        )
+
+    def get_inclination(self):
+        """Surface inclination in degrees [0, 90] using Z axis only.
+        Fallback when no surface normal has been calibrated."""
+        _, _, gz = self.get_gravity()
         return math.degrees(math.acos(max(-1.0, min(1.0, abs(gz)))))
 
     def set_report_interval(self, interval_ms):

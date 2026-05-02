@@ -1,4 +1,5 @@
 import time
+import math
 import machine
 from state import State
 
@@ -46,9 +47,10 @@ class LevelState(State):
             if not buttons.is_pressed('low'):
                 duration = time.ticks_diff(time.ticks_ms(), self._press_start)
                 if duration >= 800:
-                    # Long press: reset to zero — no need to settle
+                    # Long press: full reset including surface normal
                     settings.reset_board_offset()
                     settings.reset_calibration()
+                    sensor.clear_surface_normal()
                     engine.board_offset      = 0.0
                     engine.calibrated_offset = 0.0
                     engine.smooth_angle      = 0.0
@@ -62,11 +64,22 @@ class LevelState(State):
 
         elif self._phase == 'settling':
             if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
-                settings.board_offset      = engine.raw_angle
+                # Capture the full gravity vector as the surface normal.
+                # arccos(dot(g, n)) then gives surface inclination invariant
+                # to sensor spinning on the blade, regardless of mounting orientation.
+                g = sensor.get_gravity()
+                if g is not None:
+                    mag = math.sqrt(g[0]*g[0] + g[1]*g[1] + g[2]*g[2])
+                    if mag > 0.5:
+                        nx, ny, nz = g[0]/mag, g[1]/mag, g[2]/mag
+                        sensor.set_surface_normal(nx, ny, nz)
+                        settings.surface_normal = (nx, ny, nz)
+                # board_offset is 0 by definition: arccos(dot(n, n)) = arccos(1) = 0°
+                settings.board_offset      = 0.0
                 settings.calibrated_offset = 0.0
                 settings.target_angle      = 0.0
                 settings.save()
-                engine.board_offset      = engine.raw_angle
+                engine.board_offset      = 0.0
                 engine.calibrated_offset = 0.0
                 engine.smooth_angle      = 0.0
                 display.show_reboot_confirm("Saved!", "DONE")
