@@ -444,6 +444,12 @@ fun MainScreen(context: Context) {
         )
     }
 
+    LaunchedEffect(screen) {
+        if (screen == Screen.CONNECT && hasScanned && permissionsGranted) {
+            doScan()
+        }
+    }
+
     when (screen) {
         Screen.CONNECT -> ConnectScreen(
             status = status,
