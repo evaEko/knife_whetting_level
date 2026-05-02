@@ -40,6 +40,13 @@ class AngleEngine:
         self.target_name  = None
         self.smooth_angle = 0.0
 
+    def apply(self, settings):
+        """Sync engine state from persisted settings."""
+        self.board_offset      = settings.board_offset
+        self.calibrated_offset = settings.calibrated_offset
+        self.target_angle      = abs(settings.target_angle)
+        self.angle_format      = settings.angle_format
+
     @property
     def on_target(self):
         """True when no target is set, or blade magnitude is within threshold of target."""

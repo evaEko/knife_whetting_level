@@ -18,6 +18,13 @@ class PresetStore:
         except Exception as e:
             print(f"angles.csv error: {e}")
 
+    def find_name(self, angle):
+        """Return the preset name whose angle matches, or None."""
+        for name, a in self._presets:
+            if abs(abs(a) - abs(angle)) < 1e-6:
+                return name
+        return None
+
     def __len__(self):
         return len(self._presets)
 

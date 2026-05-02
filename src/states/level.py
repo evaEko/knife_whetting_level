@@ -62,8 +62,10 @@ class LevelState(State):
 
         elif self._phase == 'settling':
             if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
-                settings.save_board_offset(engine.raw_angle)
-                settings.reset_calibration()
+                settings.board_offset      = engine.raw_angle
+                settings.calibrated_offset = 0.0
+                settings.target_angle      = 0.0
+                settings.save()
                 engine.board_offset      = engine.raw_angle
                 engine.calibrated_offset = 0.0
                 engine.smooth_angle      = 0.0

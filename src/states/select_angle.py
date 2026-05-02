@@ -63,7 +63,7 @@ class SelectAngleState(State):
                 angle = abs(engine.smooth_angle)
                 engine.set_target(angle, name="Custom")
                 device.settings.target_angle = angle
-                device.settings.save_calibration()
+                device.settings.save()
                 print(f"-> CUSTOM {angle:.2f}°")
                 if device.ble is not None and device.ble.connected:
                     device.ble.send_target_state(device)
@@ -96,7 +96,7 @@ class SelectAngleState(State):
                 angle = abs(angle)
                 engine.set_target(angle, name=name)
                 device.settings.target_angle = angle
-                device.settings.save_calibration()
+                device.settings.save()
                 print(f"-> PRESET '{name}' {angle}°")
                 if device.ble is not None and device.ble.connected:
                     device.ble.send_target_state(device)
@@ -105,7 +105,7 @@ class SelectAngleState(State):
             else:
                 engine.clear_target()
                 device.settings.target_angle = 0.0
-                device.settings.save_calibration()
+                device.settings.save()
                 print("-> PRESET cleared")
                 if device.ble is not None and device.ble.connected:
                     device.ble.send_target_state(device)

@@ -49,7 +49,7 @@ class SelectAngleFormatState(State):
             if key != engine.angle_format:
                 engine.angle_format = key
                 device.settings.angle_format = key
-                device.settings.save_angle_format()
+                device.settings.save()
                 display.show_reboot_confirm(name[:9], "FORMAT")
                 self._reboot  = True
                 self._done_at = time.ticks_add(time.ticks_ms(), 120)

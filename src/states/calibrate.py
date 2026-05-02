@@ -33,7 +33,7 @@ class CalibrateState(State):
         if event == ('short', 'low'):
             engine.calibrate()
             device.settings.calibrated_offset = engine.calibrated_offset
-            device.settings.save_calibration()
+            device.settings.save()
             display.show_angle(0.0, label="SET", fmt=engine.angle_format)
             self._done_at = time.ticks_add(time.ticks_ms(), 500)
             return None
