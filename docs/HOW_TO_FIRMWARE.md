@@ -102,7 +102,7 @@ git clone https://github.com/evaEko/knife_whetting_level.git
 cd knife_whetting_level
 ```
 
-Edit [`src/config.py`](../src/config.py) to set your pin assignments, angle deviation threshold, display smoothing, and default angle format before flashing. The file is commented — each setting explains itself.
+Edit [`src/config.py`](../src/config.py) to set your pin assignments, deviation threshold, display smoothing, and default angle format before flashing. The file is commented — each setting explains itself.
 
 You can also edit [`src/angles.csv`](../src/angles.csv) before flashing if you want to ship a default preset list in the firmware image.
 
@@ -198,7 +198,7 @@ Hit **Ctrl+C** to interrupt `main.py` and get the `>>>` prompt.
 
 ## Runtime controls
 
-- Short-press low: open settings menu (`Calib`, `Level`, `Bluetooth`, `Exit`)
+- Short-press low: open settings menu (`Calib`, `Level`, `Bluetooth`, `Exit`); long-press low inside Level = full reset including surface normal
 - Short-press top: open preset-angle selection menu
 - Long-press top: open angle-format menu (`2 decimals`, `1 decimal`, `0/5 steps`), short-press low to confirm; format is saved and the device auto-reboots
 - Short-press both buttons: enter flash mode

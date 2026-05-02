@@ -25,7 +25,7 @@ fun LevelSettingsContent(
             ExpandableSection("Measurement") {
                 EnumSetting("Format", draft["angle_format"] ?: "1d_half", listOf("2d", "1d", "1d_half"), compact = true) { draft["angle_format"] = it }
                 SliderSetting("Smoothing", draft["smoothing"]?.toFloatOrNull() ?: 0.7f, 0.3f, 0.9f, 5) { draft["smoothing"] = "%.1f".format(it) }
-                SliderSetting("Deviation Threshold (°)", draft["deviation_threshold"]?.toFloatOrNull() ?: 1.0f, 0.5f, 5.0f, 8) { draft["deviation_threshold"] = "%.1f".format(it) }
+                SliderSetting("Deviation Threshold (°)", draft["deviation_threshold"]?.toFloatOrNull() ?: 1.0f, 0.0f, 4.0f, 15) { draft["deviation_threshold"] = "%.2f".format(it) }
             }
         }
     }

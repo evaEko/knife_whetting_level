@@ -6,6 +6,7 @@ from states.ble_toggle import read_ble_enabled, write_ble_enabled
 _OPTIONS = [
     "Calib",
     "Level",
+    "Deviat",
     "Bluetooth",
     "Exit",
 ]
@@ -42,6 +43,9 @@ class SettingsMenuState(State):
             if choice == "Level":
                 from states.level import LevelState
                 return LevelState()
+            if choice == "Deviat":
+                from states.deviation import DeviationState
+                return DeviationState()
             if choice == "Bluetooth":
                 enabled = not read_ble_enabled()
                 write_ble_enabled(enabled)

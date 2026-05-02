@@ -130,14 +130,14 @@ Go to the same [workflow run page](https://github.com/evaEko/knife_whetting_leve
 
 ### Level the board (first time only)
 
-> **What this is for:** The sensor may not sit perfectly flat on the PCB due to soldering, sockets, or mechanical tolerances. Board levelling stores a correction angle so all subsequent readings are accurate regardless of mounting. It is needed only the first time: the setting survives flashing and when the position of the sensor changes.
+> **What this is for:** Board levelling captures the full 3D orientation of the sensor when placed on a flat reference surface. This encodes the surface normal — the direction perpendicular to the blade contact face — so that all subsequent angle readings are accurate regardless of sensor mounting orientation, and invariant to the sensor spinning on the blade. The setting survives flashing. Redo it if the sensor is physically repositioned in the case.
 
 1. Short-press the low button to open **Settings**
 2. Press the top button until **Level** is shown
 3. Short-press the low button to enter board levelling
-4. Place the device on a known flat surface
+4. Place the device flat on a known level surface
 5. Short-press the low button once, then keep the device still for about 1 second
-6. The device saves the board offset and reboots automatically
+6. The device saves the surface normal and reboots automatically
 
 ---
 
@@ -147,9 +147,9 @@ Go to the same [workflow run page](https://github.com/evaEko/knife_whetting_leve
 
 ### Step 1 — Level the board (first time only)
 
-The sensor may not sit perfectly parallel to the surface you attach the device to — this depends on how the PCB was soldered, what adapter you use (magnet, plate, etc.), and how it sits against the knife. Board levelling measures this offset and stores a permanent correction so all subsequent readings are accurate.
+Board levelling records the full 3D orientation of the sensor when placed on a flat reference surface. It encodes the surface normal — the direction perpendicular to the blade contact face — so that all subsequent readings report the true blade inclination angle regardless of how the sensor is mounted in its case or how it has rotated on the blade.
 
-You only need to do this once. The correction survives flashing and power cycles.
+You only need to do this once. The correction survives flashing and power cycles. Redo it if the sensor is physically repositioned in the case.
 
 1. Short-press the low button to open **Settings**
 2. Press the top button until **Level** is shown
@@ -176,7 +176,7 @@ The display now shows angles relative to your stone surface.
 
 Short-press the top button to open the preset menu. Cycle through options with the top button, confirm with the low button.
 
-**To use a preset knife angle** — cycle to the knife name and press low. The display shows the live angle; it inverts when you drift more than 2° from the target.
+**To use a preset knife angle** — cycle to the knife name and press low. The display shows the live angle; it inverts when you drift more than the configured deviation threshold (default 1°, adjustable in the Android app settings).
 
 **To set a custom angle:**
 1. Cycle to **Custom angle** (first item in the menu) and press low
@@ -187,7 +187,7 @@ Short-press the top button to open the preset menu. Cycle through options with t
 
 ### Step 4 — Happy sharpening
 
-The display inverts when you drift more than 2° from the target angle, or when you reach the mirror angle on the opposite side of the blade. Switching presets mid-session always stays relative to your calibration — no compounding.
+The display inverts when you drift more than the configured deviation threshold from the target angle. The threshold supports decimal values (e.g. 0.5°) and can be changed from the Android app settings. Switching presets mid-session always stays relative to your calibration — no compounding.
 
 ---
 

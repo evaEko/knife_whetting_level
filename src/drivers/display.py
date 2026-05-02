@@ -145,6 +145,16 @@ class Display:
         oled.text(msg[:16], 0, 12, 1)
         oled.show()
 
+    def show_deviation(self, value):
+        oled = self._oled
+        if not oled:
+            return
+        oled.fill(0)
+        oled.text("top+ low-", 0, 0, 1)
+        oled.large_text(f"{value:.1f}", 0, 12, scale=2, char_pitch=7)
+        oled.text("hold=set", 0, 32, 1)
+        oled.show()
+
     def show_calibration(self, angle, fmt="1d_half"):
         """Calibration screen: top hint, angle, bottom hint."""
         oled = self._oled

@@ -1,7 +1,19 @@
 # HOW TO: Blunt Android App
 
 ## What is the Blunt Android App?
-The Blunt Android app is a companion application for the Knife Level device. It allows you to connect to your level via Bluetooth, view measurements, set target angles, and customize alerts. The app is not required for using the Knife Level—it is provided purely for convenience and enhanced user experience.
+The Blunt Android app is a companion application for the Knife Level device. It allows you to connect to your level via Bluetooth, view measurements, set target angles, and customize alerts. The app is not required for using the Knife Level — it is provided purely for convenience and enhanced user experience.
+
+### Settings available from the app
+
+**Displayed Data**
+- Show/hide preset name on the measuring screen
+- Show/hide target angle on the measuring screen
+- Restore last selected preset angle on boot
+
+**Measurement**
+- **Format** — angle display format: `2d` (two decimals), `1d` (one decimal), `1d_half` (nearest 0.5°)
+- **Smoothing** — low-pass filter strength (0.3 = reactive, 0.9 = smooth)
+- **Deviation Threshold** — how far from the target angle before the display inverts; supports decimal values (0.5°–5.0° in 0.5° steps)
 
 ## Installation
 You have two options to install the app on your Android phone:

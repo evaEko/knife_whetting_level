@@ -1,6 +1,6 @@
 # Knife Level
 
-A small digital level for knife sharpening. Measures blade pitch in real time using a 9-DOF IMU, displays the angle on an OLED, and alerts you when you drift from your target sharpening angle.
+A small digital level for knife sharpening. Measures blade surface inclination in real time using a 9-DOF IMU, displays the angle on an OLED, and alerts you when you drift from your target sharpening angle.
 
  Built on MicroPython running on an nRF52840 microcontroller with two buttons, a LiPo battery, and a custom PCB. 
 
@@ -32,6 +32,8 @@ Commercial use and resale are not permitted.
 
 If impatient, go over [Quick Start](docs/QUICK_START.md).
 
+For a detailed explanation of how board levelling, calibration, and angle calculation work — including the math — see [Angle Math](docs/ANGLE_MATH.md).
+
 ## Acknowledgements
 
 Thanks to [jkorte-dev](https://github.com/jkorte-dev) for publishing the nRF52840 SuperMini/Nice!Nano MicroPython board definitions and UF2 builds used as a flashing base.
@@ -40,9 +42,10 @@ Development was assisted by [Claude](https://claude.ai) (Anthropic).
 
 ## Features
 
-- **Live sharpening angle** — displays current blade pitch in real time on the OLED
+- **Live sharpening angle** — displays current blade surface inclination in real time on the OLED
+- **Rotation-invariant measurement** — the sensor attaches to the blade with a magnet and can spin freely on the blade face; the reading reports the correct blade angle regardless of how the sensor is rotated on the surface
 - **Session calibration** — set the current surface as zero from the on-device settings menu or the Android app
-- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle, or when you reach the mirror angle on the opposite side of the blade
+- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle; threshold supports decimal values (e.g. 0.5°)
 - **Battery display** — shows battery percentage on startup
 - **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on-device with the top button, with optional restore of the last selected preset after reboot
 - **Calibration + presets are independent** — calibrate once to set your physical reference point (zero), then switch between knife presets freely; each preset angle is always displayed relative to the calibration, never compounding
@@ -51,6 +54,6 @@ Development was assisted by [Claude](https://claude.ai) (Anthropic).
 - **Automatic reboot after persistent changes** — board-levelling save/reset and angle-format changes reboot the MCU automatically so the new setting takes effect immediately
 - **Flash mode** — short-press both buttons simultaneously to drop to REPL for flashing without unplugging (to exit flash mode, reset via RST↔GND or power-cycle the device)
 - **Physical power switch** — B+ latch switch replaces soft power off
-- **Board levelling** — correct for sensor mounting angle once; stored in flash, applied automatically on every boot
+- **Board levelling** — captures the full 3D surface normal once when placed flat; stored in flash and applied automatically on every boot, making readings accurate regardless of sensor mounting orientation
 - **Bluetooth companion app** — configure display/behavior settings over BLE, calibrate from the phone, manage preset angles with CRUD operations, and back up/restore presets plus app-exposed settings after reflashing
 

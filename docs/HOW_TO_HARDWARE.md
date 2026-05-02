@@ -14,7 +14,7 @@ After assembly, the easiest bring-up path is:
 
 1. flash the UF2 MicroPython base firmware
 2. flash the project firmware from this repo or from the workflow artifact bundle
-3. level the board once from the on-device settings menu
+3. level the board once from the on-device settings menu (captures the full 3D surface normal — redo only if the sensor is physically repositioned)
 4. optionally install the Android companion app from the workflow APK artifact for BLE setup, calibration, and preset management
 
 Refer to the images on [breadboarding](images/breadboard/)
