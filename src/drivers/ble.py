@@ -1,5 +1,6 @@
-import ubluetooth
 import time
+
+import ubluetooth
 
 _IRQ_CENTRAL_CONNECT    = 1
 _IRQ_CENTRAL_DISCONNECT = 2
@@ -46,7 +47,7 @@ class BleUart:
 
     def tick(self, device):
         if self._cmd_queue:
-            device.handle_command(self._cmd_queue.pop(0))
+            device.ble_handler.handle(self._cmd_queue.pop(0))
 
         if self._live and self._conn is not None:
             now = time.ticks_ms()
