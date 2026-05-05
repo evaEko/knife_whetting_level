@@ -4,14 +4,18 @@ import machine
 from state import State
 
 _SETTLE_MS = 1000
+_SAMPLE_MS = 500
+_SAMPLE_N  = 20
 
 
 class LevelState(State):
     def __init__(self):
-        self._phase       = 'wait_release'  # wait_release | measuring | timing | settling | feedback
+        self._phase       = 'wait_release'  # wait_release | measuring | timing | settling | sampling | feedback
         self._press_start = None
         self._done_at     = None
         self._action      = None  # 'save' | 'reset'
+        self._samples     = []
+        self._sample_end  = None
 
     def enter(self, device):
         device.display.invert(False)
@@ -64,14 +68,26 @@ class LevelState(State):
 
         elif self._phase == 'settling':
             if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
-                # Capture the full gravity vector as the surface normal.
-                # arccos(dot(g, n)) then gives surface inclination invariant
-                # to sensor spinning on the blade, regardless of mounting orientation.
-                g = sensor.get_gravity()
-                if g is not None:
-                    mag = math.sqrt(g[0]*g[0] + g[1]*g[1] + g[2]*g[2])
+                self._samples    = []
+                self._sample_end = time.ticks_add(time.ticks_ms(), _SAMPLE_MS)
+                self._phase      = 'sampling'
+
+        elif self._phase == 'sampling':
+            g = sensor.get_gravity()
+            if g is not None:
+                self._samples.append(g)
+
+            done = (time.ticks_diff(time.ticks_ms(), self._sample_end) >= 0
+                    or len(self._samples) >= _SAMPLE_N)
+            if done:
+                if self._samples:
+                    n  = len(self._samples)
+                    ax = sum(s[0] for s in self._samples) / n
+                    ay = sum(s[1] for s in self._samples) / n
+                    az = sum(s[2] for s in self._samples) / n
+                    mag = math.sqrt(ax*ax + ay*ay + az*az)
                     if mag > 0.5:
-                        nx, ny, nz = g[0]/mag, g[1]/mag, g[2]/mag
+                        nx, ny, nz = ax/mag, ay/mag, az/mag
                         sensor.set_surface_normal(nx, ny, nz)
                         settings.surface_normal = (nx, ny, nz)
                 # board_offset is 0 by definition: arccos(dot(n, n)) = arccos(1) = 0°
