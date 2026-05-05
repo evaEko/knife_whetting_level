@@ -116,24 +116,6 @@ class BNO085:
                 break
         return got_rv
 
-    def get_roll(self):
-        """Roll angle (rotation around X axis) in degrees, +/-180."""
-        w, x, y, z = self._quat
-        roll = math.degrees(math.atan2(
-            2.0 * (w * x + y * z),
-            1.0 - 2.0 * (x * x + y * y)))
-        if roll > 180.0:
-            roll -= 360.0
-        elif roll < -180.0:
-            roll += 360.0
-        return roll
-
-    def get_pitch(self):
-        """Pitch angle (rotation around Y axis) in degrees, +/-90."""
-        w, x, y, z = self._quat
-        pitch = math.degrees(math.asin(max(-1.0, min(1.0, 2.0 * (w * y - z * x)))))
-        return pitch
-
     def get_gravity(self):
         """Gravity unit vector in sensor body frame (gx, gy, gz), derived from quaternion."""
         w, x, y, z = self._quat
@@ -162,6 +144,3 @@ class BNO085:
             self._read_packet()
             time.sleep_ms(10)
 
-    def suspend(self):
-        """Soft-reset into sleep — on wake, just hard-reset or re-init."""
-        pass

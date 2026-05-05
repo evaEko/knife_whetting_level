@@ -1,5 +1,4 @@
 import framebuf
-import time
 
 # SSD1306 commands
 SET_CONTRAST        = 0x81

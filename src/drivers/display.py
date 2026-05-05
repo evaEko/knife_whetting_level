@@ -136,15 +136,6 @@ class Display:
             oled.text(line, 0, i * 10, 1)
         oled.show()
 
-    def show_error(self, msg):
-        oled = self._oled
-        if not oled:
-            return
-        oled.fill(0)
-        oled.text("ERROR:", 0, 0, 1)
-        oled.text(msg[:16], 0, 12, 1)
-        oled.show()
-
     def show_deviation(self, value):
         oled = self._oled
         if not oled:
@@ -207,16 +198,6 @@ class Display:
         oled.text(title, 0, 0, 1)
         oled.large_text(action, 1, 12, scale=2, char_pitch=7)
         oled.text("Rebooting", 0, 32, 1)
-        oled.show()
-
-    def show_level_prompt(self):
-        oled = self._oled
-        if not oled:
-            return
-        oled.fill(0)
-        oled.text("Place on", 0, 0, 1)
-        oled.large_text("LEVEL", 1, 12, scale=2, char_pitch=7)
-        oled.text("surface", 0, 32, 1)
         oled.show()
 
     def show_clear(self, current_angle, fmt="1d_half"):
@@ -304,8 +285,3 @@ class Display:
         fb.pixel(x + 2, y + 2, 1)
         fb.pixel(x - 2, y + 2, 1)
         fb.pixel(x + 2, y - 2, 1)
-
-    def clear(self):
-        if self._oled:
-            self._oled.fill(0)
-            self._oled.show()
