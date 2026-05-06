@@ -34,16 +34,7 @@ class Display:
         if not oled:
             return
         oled.fill(0)
-        fb = oled.fb
-        fb.fill_rect(2, 15, 14, 10, 1)
-        fb.fill_rect(4, 17, 3, 6, 0)
-        fb.fill_rect(10, 17, 3, 6, 0)
-        fb.fill_rect(17, 11, 3, 18, 1)
-        for x in range(20, 70):
-            spine_y = 16 + (x - 20) * 3 // 49
-            edge_y  = 22 - (x - 20) * 3 // 49
-            fb.vline(x, spine_y, edge_y - spine_y + 1, 1)
-        fb.pixel(70, 19, 1)
+        oled.large_text("Blunt", 1, 12, scale=2, char_pitch=7)
         oled.show()
 
     # --- battery ---
