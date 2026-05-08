@@ -6,9 +6,10 @@ A small digital level for knife sharpening. Measures blade surface inclination i
 
 <img src="docs/images/knife_whetting_level.jpg" width="300"/>
 
-Here is a [demo vid of the sensor responsiveness](https://imgur.com/a/BOzFHaE).
-Here is a [demo vid of the Android app](https://imgur.com/a/6ULBu0x).
-
+Here are some vids:
+* [demo vid of the sensor responsiveness](https://imgur.com/a/BOzFHaE).
+* [demo vid of the Android app](https://i.imgur.com/QXUnDTm.mp4).
+* [foolish idea with 2 displays](https://i.imgur.com/3KEsX2l.mp4)
 
 Commercial use and resale are not permitted.
 
