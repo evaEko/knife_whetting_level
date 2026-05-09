@@ -7,10 +7,14 @@ _CHAN_CONTROL = 2
 _CHAN_REPORTS = 3
 
 # SH-2 report IDs
-_ROTATION_VECTOR = 0x05
+_ROTATION_VECTOR      = 0x05
 _GAME_ROTATION_VECTOR = 0x08
-_SET_FEATURE_CMD = 0xFD
-_BASE_TIMESTAMP = 0xFB
+_SET_FEATURE_CMD      = 0xFD
+_BASE_TIMESTAMP       = 0xFB
+_COMMAND_REQUEST      = 0xF2
+
+# SH-2 command IDs
+_CMD_ME_CALIBRATE = 0x07
 
 _Q14 = 16384.0
 _MAX_PACKET = 128
@@ -79,6 +83,25 @@ class BNO085:
         self._send_packet(_CHAN_CONTROL, cmd)
         time.sleep_ms(50)
         # Drain response packets
+        for _ in range(5):
+            self._read_packet()
+            time.sleep_ms(10)
+
+    def configure_calibration(self, accel=True, gyro=True, mag=False):
+        """Enable or disable dynamic calibration per sensor (§3.1.1).
+        Disable gyro cal when the device has no hand tremor — slow rotations
+        fool the ZRO algorithm and cause quaternion drift (datasheet §3.1.3)."""
+        cmd = bytearray(12)
+        cmd[0] = _COMMAND_REQUEST
+        cmd[1] = 0
+        cmd[2] = _CMD_ME_CALIBRATE
+        cmd[3] = 0           # sub-command: configure
+        cmd[4] = 1 if accel else 0
+        cmd[5] = 1 if gyro  else 0
+        cmd[6] = 1 if mag   else 0
+        # cmd[7] = planar accel (0), cmd[8-11] = reserved (0)
+        self._send_packet(_CHAN_CONTROL, cmd)
+        time.sleep_ms(50)
         for _ in range(5):
             self._read_packet()
             time.sleep_ms(10)

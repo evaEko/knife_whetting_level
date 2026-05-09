@@ -25,6 +25,7 @@ class Sensor:
                 addr=BNO085_ADDR
             )
             self._imu.enable_rotation_vector(interval_ms=_INTERVAL_ACTIVE)
+            self._imu.configure_calibration(accel=True, gyro=False, mag=False)
             self._last_move = time.ticks_ms()
             print("IMU OK")
         except Exception as e:
