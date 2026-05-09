@@ -1,4 +1,5 @@
 import time
+import math
 import machine
 from state import State
 
@@ -9,12 +10,14 @@ _SAMPLE_N  = 20
 
 class LevelState(State):
     def __init__(self):
-        self._phase       = 'wait_release'  # wait_release | prompt_a | timing_a | settling_a | sampling_a | prompt_b | timing_b | settling_b | sampling_b | feedback
-        self._press_start = None
-        self._done_at     = None
-        self._samples     = []
-        self._sample_end  = None
-        self._mean_a      = None
+        self._phase        = 'wait_release'
+        self._press_start  = None
+        self._done_at      = None
+        self._gx_sum       = 0.0
+        self._gy_sum       = 0.0
+        self._gz_sum       = 0.0
+        self._sample_count = 0
+        self._sample_end   = None
 
     def enter(self, device):
         device.display.invert(False)
@@ -37,9 +40,7 @@ class LevelState(State):
                 machine.reset()
             return None
 
-        raw = sensor.update()
-        if raw is not None:
-            engine.raw_angle = raw
+        sensor.update()
 
         if self._phase == 'prompt_a':
             if buttons.is_pressed('low'):
@@ -50,7 +51,6 @@ class LevelState(State):
             if not buttons.is_pressed('low'):
                 duration = time.ticks_diff(time.ticks_ms(), self._press_start)
                 if duration >= 800:
-                    # Long press: full reset including surface normal
                     settings.reset_board_offset()
                     settings.reset_calibration()
                     sensor.clear_surface_normal()
@@ -61,57 +61,41 @@ class LevelState(State):
                     self._done_at = time.ticks_add(time.ticks_ms(), 800)
                     self._phase   = 'feedback'
                 else:
-                    # Clear surface normal so sensor returns raw IMU inclination
-                    sensor.clear_surface_normal()
                     self._done_at = time.ticks_add(time.ticks_ms(), _SETTLE_MS)
-                    self._phase   = 'settling_a'
+                    self._phase   = 'settling'
 
-        elif self._phase == 'settling_a':
+        elif self._phase == 'settling':
             if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
-                self._samples    = []
-                self._sample_end = time.ticks_add(time.ticks_ms(), _SAMPLE_MS)
-                self._phase      = 'sampling_a'
+                self._gx_sum       = 0.0
+                self._gy_sum       = 0.0
+                self._gz_sum       = 0.0
+                self._sample_count = 0
+                self._sample_end   = time.ticks_add(time.ticks_ms(), _SAMPLE_MS)
+                self._phase        = 'sampling'
 
-        elif self._phase == 'sampling_a':
-            if raw is not None:
-                self._samples.append(raw)
+        elif self._phase == 'sampling':
+            g = sensor.get_gravity()
+            if g is not None:
+                gx, gy, gz = g
+                self._gx_sum       += gx
+                self._gy_sum       += gy
+                self._gz_sum       += gz
+                self._sample_count += 1
             done = (time.ticks_diff(time.ticks_ms(), self._sample_end) >= 0
-                    or len(self._samples) >= _SAMPLE_N)
-            if done and self._samples:
-                self._mean_a = sum(self._samples) / len(self._samples)
-                display.show_message("Flip ~180", "low=press")
-                self._phase = 'prompt_b'
-
-        elif self._phase == 'prompt_b':
-            if buttons.is_pressed('low'):
-                self._press_start = time.ticks_ms()
-                self._phase = 'timing_b'
-
-        elif self._phase == 'timing_b':
-            if not buttons.is_pressed('low'):
-                self._done_at = time.ticks_add(time.ticks_ms(), _SETTLE_MS)
-                self._phase   = 'settling_b'
-
-        elif self._phase == 'settling_b':
-            if time.ticks_diff(time.ticks_ms(), self._done_at) >= 0:
-                self._samples    = []
-                self._sample_end = time.ticks_add(time.ticks_ms(), _SAMPLE_MS)
-                self._phase      = 'sampling_b'
-
-        elif self._phase == 'sampling_b':
-            if raw is not None:
-                self._samples.append(raw)
-            done = (time.ticks_diff(time.ticks_ms(), self._sample_end) >= 0
-                    or len(self._samples) >= _SAMPLE_N)
-            if done and self._samples:
-                mean_b  = sum(self._samples) / len(self._samples)
-                offset  = (self._mean_a + mean_b) / 2.0
-                settings.surface_normal    = None
-                settings.board_offset      = offset
+                    or self._sample_count >= _SAMPLE_N)
+            if done and self._sample_count > 0:
+                mx = self._gx_sum / self._sample_count
+                my = self._gy_sum / self._sample_count
+                mz = self._gz_sum / self._sample_count
+                mag = math.sqrt(mx*mx + my*my + mz*mz)
+                nx, ny, nz = (mx/mag, my/mag, mz/mag) if mag > 0.0 else (0.0, 0.0, 1.0)
+                settings.surface_normal    = (nx, ny, nz)
+                settings.board_offset      = 0.0
                 settings.calibrated_offset = 0.0
                 settings.target_angle      = 0.0
                 settings.save()
-                engine.board_offset      = offset
+                sensor.set_surface_normal(nx, ny, nz)
+                engine.board_offset      = 0.0
                 engine.calibrated_offset = 0.0
                 engine.smooth_angle      = 0.0
                 display.show_reboot_confirm("Saved!", "DONE")
