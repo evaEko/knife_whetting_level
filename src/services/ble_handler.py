@@ -13,7 +13,6 @@ class BleCommandHandler:
         self._imu         = imu_service
 
     def tick(self):
-        """Call once per loop tick from MeasureState."""
         cmd = self._ble.poll()
         if cmd:
             self.handle(cmd)
@@ -121,13 +120,10 @@ class BleCommandHandler:
         self._send_target_state()
 
     def _cmd_calibrate(self):
-        self._imu.update()  # drain any pending packets; use last known quaternion if none
+        self._imu.update()  # drain pending packets; use last known quaternion if none arrives
         g = self._imu.get_gravity()
-        fmt = "{:.6f},{:.6f},{:.6f}".format(g[0], g[1], g[2])
-        from helpers.vector_parser import VectorParser
-        self._calibration._n_stone = VectorParser.parse(fmt)
-        self._calibration._storage.set('n_stone', fmt)
-        self._measure.reset_pitch()  # clear smoothing so display snaps to 0° immediately
+        self._calibration.set_stone(g)
+        self._measure.reset_pitch()
         self._ble.send("calibration:0.00")
         self._ble.send("ok:calibrated")
 

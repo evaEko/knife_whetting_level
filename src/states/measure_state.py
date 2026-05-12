@@ -1,65 +1,56 @@
 from core.state import State
-from core.container import Container
 
 
 class MeasureState(State):
-    def __init__(self):
-        pass
+    def enter(self, app):
+        app.calibration.load()
+        app.logging.log("[MeasureState] enter")
+        if not app.calibration.has_stone():
+            app.display.show_text("No calibration", "", "top=calib.", "low=sett")
 
-    def enter(self):
-        Container.calibration_service.load()
-        if not Container.calibration_service.has_stone():
-            Container.display_service.show_text("No calibration", "", "top=calib.", "low=sett")
-            Container.logging_service.log("[MeasureState] no n_stone in storage")
-            return
-        Container.logging_service.log("[MeasureState] enter")
+    def update(self, app):
+        if not app.calibration.has_stone():
+            return self._update_uncalibrated(app)
+        return self._update_calibrated(app)
 
-    def update(self):
-        if not Container.calibration_service.has_stone():
-            if Container.button_event == 'short_top':
-                from states.settings.surface_level_state import SurfaceLevelState
-                return SurfaceLevelState(
-                    storage_key='n_stone',
-                    prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
-                    saved_msg="Calibrated",
-                )
-            if Container.button_event == 'short_low':
-                from states.settings_state import SettingsState
-                return SettingsState(Container.settings_items)
-            Container.ble_handler.tick()
-            if not Container.calibration_service.has_stone():
-                return None
-            # calibration just arrived via BLE — fall through to render
-        if Container.button_event == 'short_top':
-            from states.angle_select_state import AngleSelectState
-            return AngleSelectState(Container.build_angle_items())
-        if Container.button_event == 'short_low':
-            from states.settings_state import SettingsState
-            return SettingsState(Container.settings_items)
+    def exit(self, app):
+        app.display.invert(False)
+        app.logging.log("[MeasureState] exit")
 
-        if Container.calibration_service.has_stone():
-            Container.measure_service.update()
-
-        Container.ble_handler.tick()
-
-        if Container.calibration_service.has_stone():
-            pitch = Container.measure_service.pitch()
-            has_t = Container.calibration_service.has_target()
-            in_pos = Container.measure_service.in_position()
-            target = Container.calibration_service.target_angle()
-            target_str = "{:.1f}".format(target) if target is not None else None
-            Container.logging_service.log("pitch={:.2f} target={} has_target={} in_pos={}".format(
-                pitch, target, has_t, in_pos))
-            Container.display_service.invert(has_t and not in_pos)
-            Container.display_service.show_measurement(
-                pitch,
-                target_str=target_str,
-                ble=Container.ble_service.enabled,
+    def _update_uncalibrated(self, app):
+        if app.button_event == 'short_top':
+            from states.settings.surface_level_state import SurfaceLevelState
+            return SurfaceLevelState(
+                storage_key='n_stone',
+                prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
+                saved_msg="Calibrated",
             )
-
+        if app.button_event == 'short_low':
+            from states.settings_state import SettingsState
+            return SettingsState(app.settings_items)
+        app.ble_handler.tick()
         return None
 
-    def exit(self):
-        Container.display_service.invert(False)
-        Container.logging_service.log("[MeasureState] exit")
+    def _update_calibrated(self, app):
+        if app.button_event == 'short_top':
+            from states.angle_select_state import AngleSelectState
+            return AngleSelectState(app.build_angle_items())
+        if app.button_event == 'short_low':
+            from states.settings_state import SettingsState
+            return SettingsState(app.settings_items)
+        app.measure.update()
+        app.ble_handler.tick()
+        self._render(app)
+        return None
+
+    def _render(self, app):
+        pitch = app.measure.pitch()
+        target = app.calibration.target_angle()
+        has_t = app.calibration.has_target()
+        in_pos = app.measure.in_position()
+        target_str = "{:.1f}".format(target) if target is not None else None
+        app.logging.log("pitch={:.2f} target={} has_target={} in_pos={}".format(
+            pitch, target, has_t, in_pos))
+        app.display.invert(has_t and not in_pos)
+        app.display.show_measurement(pitch, target_str=target_str, ble=app.ble.enabled)
 

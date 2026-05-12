@@ -1,12 +1,12 @@
 from utime import ticks_ms, ticks_diff
-from helpers.pitch_calculator import PitchCalculator
+from helpers.pitch_calculator import pitch
 
-_DRIFT_VEL_THRESHOLD = 0.10   # °/tick — smooth velocity below this = stationary/drift
-_DRIFT_DEV_THRESHOLD = 1.0    # degrees — deviation above this triggers active alpha
-_SPIKE_THRESHOLD     = 25.0   # degrees — deviation above this is an outlier, use frozen
-_ALPHA_FROZEN        = 0.995  # weight on OLD when stationary — display essentially frozen
-_ALPHA_ACTIVE        = 0.70   # weight on OLD when moving — matches src default SMOOTHING
-_LOG_INTERVAL        = 500    # ms between pitch log lines
+_DRIFT_VEL_THRESHOLD = 0.10
+_DRIFT_DEV_THRESHOLD = 1.0
+_SPIKE_THRESHOLD     = 25.0
+_ALPHA_FROZEN        = 0.995
+_ALPHA_ACTIVE        = 0.70
+_LOG_INTERVAL        = 500
 
 
 class MeasureService:
@@ -25,8 +25,7 @@ class MeasureService:
         if not self._calibration.has_stone():
             return False
         g = self._imu.get_gravity()
-        self._smooth(PitchCalculator.pitch(g, self._calibration.n_stone))
-        # Log pitch at regular intervals for debugging/analysis
+        self._smooth(pitch(g, self._calibration.n_stone))
         if ticks_diff(ticks_ms(), self._last_log) >= _LOG_INTERVAL:
             self._last_log = ticks_ms()
             self._log.log("pitch={:.2f}".format(self.pitch()))
@@ -40,11 +39,11 @@ class MeasureService:
         smooth_vel = abs(self._pitch - self._prev_pitch)
         deviation  = abs(raw - self._pitch)
         if deviation >= _SPIKE_THRESHOLD:
-            alpha = _ALPHA_FROZEN                          # outlier — ignore
+            alpha = _ALPHA_FROZEN
         elif smooth_vel >= _DRIFT_VEL_THRESHOLD or deviation >= _DRIFT_DEV_THRESHOLD:
-            alpha = _ALPHA_ACTIVE                          # real movement
+            alpha = _ALPHA_ACTIVE
         else:
-            alpha = _ALPHA_FROZEN                          # stationary
+            alpha = _ALPHA_FROZEN
         self._prev_pitch = self._pitch
         self._pitch = alpha * self._pitch + (1.0 - alpha) * raw
 
@@ -56,11 +55,9 @@ class MeasureService:
         return self._pitch if self._pitch is not None else 0.0
 
     def in_position(self):
-        """True when pitch is within deviation_threshold of target_angle."""
         if self._pitch is None:
             return False
         target = self._calibration.target_angle()
         if target is None:
             return False
         return abs(self._pitch - target) <= self._config.deviation_threshold
-

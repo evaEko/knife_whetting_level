@@ -1,6 +1,9 @@
 from machine import I2C, Pin
 from drivers.ssd1306 import Display
 
+_BLE      = 'BLE'
+_BLE_LIVE = 'BLE*'
+
 
 class DisplayService:
     def __init__(self, sda_pin, scl_pin, i2c_id, addr):
@@ -50,7 +53,7 @@ class DisplayService:
     def show_measurement(self, pitch, target_str, ble):
         indicators = [target_str] if target_str is not None else []
         if ble:
-            indicators.append("BLE")
+            indicators.append(_BLE)
         self.show_angle("{:.1f}".format(pitch), *indicators)
 
     def show_angle(self, angle_str, *indicators):
@@ -66,15 +69,51 @@ class DisplayService:
         if indicators:
             cursor = 0
             for item in indicators:
-                if item == 'BLE' or item == 'BLE*':
+                if item == _BLE or item == _BLE_LIVE:
                     d.ble_icon(cursor, 33)
                     cursor += 6
-                    if item == 'BLE*':
+                    if item == _BLE_LIVE:
                         d.text('*', cursor, 32, 1)
                         cursor += 10
                 else:
                     d.text(str(item), cursor, 32, 1)
                     cursor += len(str(item)) * 8 + 2
+        d.show()
+
+    def show_battery(self, pct):
+        d = self._display
+        d.fill(0)
+        if pct is None:
+            d.text("To charge", 0, 0, 1)
+            d.large_text("PLUG", 8, 12, scale=2, char_pitch=7)
+            d.text("low=pass", 0, 32, 1)
+        else:
+            d.text("BAT", (72 - 24) // 2, 2, 1)
+            pct_str = "{}%".format(pct)
+            pw = len(pct_str) * 16
+            d.large_text(pct_str, (72 - pw) // 2, 14, scale=2)
+            bx, by, bw, bh = 6, 33, 60, 5
+            d.fb.rect(bx, by, bw, bh, 1)
+            filled = int(bw * pct / 100)
+            if filled > 0:
+                d.fb.fill_rect(bx, by, filled, bh, 1)
+        d.show()
+
+    def show_ble_status(self, connected, enabled):
+        if connected:
+            status = "connected"
+        elif enabled:
+            status = "connecting"
+        else:
+            status = "Off"
+        d = self._display
+        d.fill(0)
+        scale = 1
+        w = ((len(status) - 1) * 7 + 8) * scale
+        x = max(0, (d.width - w) // 2)
+        y = max(0, (d.height - 8 * scale) // 2 - 4)
+        d.large_text(status, x, y, scale=scale, char_pitch=7)
+        d.text("top:tgl  low:back", 0, 32, 1)
         d.show()
 
     def clear(self):

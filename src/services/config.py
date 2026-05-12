@@ -1,33 +1,31 @@
 class ConfigService:
-    _config_file = None
-    _keys = []
+    def __init__(self, path):
+        self._path = path
+        self._keys = []
+        self._load()
 
-    @classmethod
-    def load(cls, config_file):
-        cls._config_file = config_file
-        with open(cls._config_file) as f:
+    def _load(self):
+        with open(self._path) as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
                 key, _, val = line.partition("=")
                 key = key.strip()
-                setattr(cls, key, cls._cast(val.strip()))
-                if key not in cls._keys:
-                    cls._keys.append(key)
+                setattr(self, key, self._cast(val.strip()))
+                if key not in self._keys:
+                    self._keys.append(key)
 
-    @classmethod
-    def set(cls, key, value):
-        if key not in cls._keys:
+    def set(self, key, value):
+        if key not in self._keys:
             raise KeyError(key)
-        setattr(cls, key, value)
-        cls._save()
+        setattr(self, key, value)
+        self._save()
 
-    @classmethod
-    def _save(cls):
-        with open(cls._config_file, "w") as f:
-            for key in cls._keys:
-                f.write("{key}={val}\n".format(key=key, val=getattr(cls, key)))
+    def _save(self):
+        with open(self._path, "w") as f:
+            for key in self._keys:
+                f.write("{key}={val}\n".format(key=key, val=getattr(self, key)))
 
     @staticmethod
     def _cast(val):

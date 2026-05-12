@@ -1,10 +1,9 @@
 import math
 import time
 from core.state import State
-from core.container import Container
 
-_N_SAMPLES   = 20
-_SETTLE_MS   = 50    # delay between samples
+_N_SAMPLES = 20
+_SETTLE_MS = 50
 
 
 class SurfaceLevelState(State):
@@ -14,37 +13,37 @@ class SurfaceLevelState(State):
         self._saved_msg   = saved_msg
         self._on_save     = on_save
 
-    def enter(self):
-        Container.display_service.show_text(*self._prompt)
-        Container.logging_service.log("[SurfaceLevelState] enter key=" + self._storage_key)
+    def enter(self, app):
+        app.display.show_text(*self._prompt)
+        app.logging.log("[SurfaceLevelState] enter key=" + self._storage_key)
 
-    def update(self):
-        if Container.button_event == 'short_top':
+    def update(self, app):
+        if app.button_event == 'short_top':
             from states.measure_state import MeasureState
             return MeasureState()
-        if Container.button_event == 'short_low':
-            vec = self._capture()
+        if app.button_event == 'short_low':
+            vec = self._capture(app)
             if self._on_save is not None:
                 self._on_save(vec)
             else:
-                Container.storage_service.set(self._storage_key, self._fmt(vec))
-            Container.logging_service.log("[SurfaceLevelState] " + self._storage_key + "=" + self._fmt(vec))
-            Container.display_service.show_text(self._saved_msg, self._fmt(vec))
+                app.storage.set(self._storage_key, self._fmt(vec))
+            app.logging.log("[SurfaceLevelState] " + self._storage_key + "=" + self._fmt(vec))
+            app.display.show_text(self._saved_msg, self._fmt(vec))
             time.sleep_ms(2000)
             from states.measure_state import MeasureState
             return MeasureState()
         return None
 
-    def _capture(self):
-        delay_ms = int(getattr(Container.config_service, 'capture_delay_sec', 5)) * 1000
-        Container.display_service.show_text("Hold still...")
+    def _capture(self, app):
+        delay_ms = int(getattr(app.config, 'capture_delay_sec', 5)) * 1000
+        app.display.show_text("Hold still...")
         time.sleep_ms(delay_ms)
-        Container.display_service.show_text("Capturing...")
+        app.display.show_text("Capturing...")
         sx, sy, sz = 0.0, 0.0, 0.0
         count = 0
         while count < _N_SAMPLES:
-            if Container.imu_service.update():
-                gx, gy, gz = Container.imu_service.get_gravity()
+            if app.imu.update():
+                gx, gy, gz = app.imu.get_gravity()
                 sx += gx
                 sy += gy
                 sz += gz
@@ -57,5 +56,5 @@ class SurfaceLevelState(State):
     def _fmt(self, v):
         return "{:.3f},{:.3f},{:.3f}".format(v[0], v[1], v[2])
 
-    def exit(self):
-        Container.logging_service.log("[SurfaceLevelState] exit key=" + self._storage_key)
+    def exit(self, app):
+        app.logging.log("[SurfaceLevelState] exit key=" + self._storage_key)

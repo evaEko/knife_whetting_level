@@ -43,10 +43,11 @@ Development was assisted by [Claude](https://claude.ai) (Anthropic).
 
 ## Features
 
-- **Live sharpening angle** — displays current blade surface inclination in real time on the OLED
+- **Live sharpening angle** — displays current blade surface inclination in real time on the OLED, rounded to nearest 0.5° with one decimal place
 - **Rotation-invariant measurement** — the sensor attaches to the blade with a magnet and can spin freely on the blade face; the reading reports the correct blade angle regardless of how the sensor is rotated on the surface
 - **Session calibration** — set the current surface as zero from the on-device settings menu or the Android app
-- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle; threshold supports decimal values (e.g. 0.5°)
+- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle; both 0° and 180° orientations are treated as equivalent (knife flipped upside-down is the same angle); threshold supports decimal values (e.g. 0.5°)
+- **IMU auto-sleep** — sensor drops to 1 Hz report rate after 60 s of no movement, wakes instantly on any motion
 - **Battery display** — shows battery percentage on startup
 - **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on-device with the top button, with optional restore of the last selected preset after reboot
 - **Calibration + presets are independent** — calibrate once to set your physical reference point (zero), then switch between knife presets freely; each preset angle is always displayed relative to the calibration, never compounding

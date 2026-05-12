@@ -60,7 +60,7 @@ You can now view your level's data, set or select a target angle, and adjust ale
 
 Go to the [latest workflow run](https://github.com/evaEko/knife_whetting_level/actions/workflows/build.yml) and download the `knife_level_firmware` artifact. Extract the zip — it contains everything you need.
 
-> **Want to change preset angles or tolerance?** Edit `src/angles.csv` or `src/config.py` before flashing. See [HOW_TO_FIRMWARE.md](HOW_TO_FIRMWARE.md) for the full manual build and flash instructions.
+> **Want to change preset angles or tolerance?** Edit `src/angles.csv` or `src/config.txt` before flashing. See [HOW_TO_FIRMWARE.md](HOW_TO_FIRMWARE.md) for the full manual build and flash instructions.
 
 ### Install mpremote
 
@@ -193,7 +193,7 @@ The display inverts when you drift more than the configured deviation threshold 
 
 ## 6. Tuning for your skill level
 
-Open `src/config.py` before flashing and adjust `SMOOTHING` to match how consistently you hold an angle:
+Open `src/services/measure.py` before flashing and adjust `_ALPHA_ACTIVE` to match how consistently you hold an angle:
 
 | Value | Feel | Best for |
 |---|---|---|
@@ -203,6 +203,8 @@ Open `src/config.py` before flashing and adjust `SMOOTHING` to match how consist
 | `0.9` | Near-frozen display | Experienced sharpeners with consistent technique |
 
 Higher smoothing means the number barely moves during a steady stroke, which is easier to read. The trade-off is it responds more slowly when you intentionally change angle.
+
+`_ALPHA_FROZEN` (default `0.995`) controls how static the display is when the knife is not moving — leave this alone unless the display drifts annoyingly while the knife is held still.
 
 ---
 

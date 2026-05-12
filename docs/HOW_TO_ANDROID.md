@@ -15,6 +15,11 @@ The Blunt Android app is a companion application for the Knife Level device. It 
 - **Smoothing** — low-pass filter strength (0.3 = reactive, 0.9 = smooth)
 - **Deviation Threshold** — how far from the target angle before the display inverts; supports decimal values (0.5°–5.0° in 0.5° steps)
 
+**Sound Alert**
+- **On angle too high** — plays a tone or custom audio file when the blade angle is above the target threshold; tone pitch is configurable
+- **On angle too low** — plays a tone or custom audio file when the blade angle is below the target threshold; tone pitch is configurable
+- **On target** — plays a custom audio file (looped) when the blade is within the target threshold; resumes from where it was interrupted rather than restarting; optional **Continue on lifted** sub-toggle keeps the audio playing when the blade is lifted off the stone
+
 ## Installation
 You have two options to install the app on your Android phone:
 

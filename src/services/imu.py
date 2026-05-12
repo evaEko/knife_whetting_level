@@ -18,13 +18,10 @@ class ImuService:
         self._imu = IMU(i2c, addr=self._addr)
 
     def update(self):
-        """Drain packets, update quaternion. Returns True if new data."""
         return self._imu.update()
 
     def get_gravity(self):
-        """Returns (gx, gy, gz) unit vector."""
         return self._imu.get_gravity()
 
     def get_angular_velocity(self):
-        """Returns (wx, wy, wz) in rad/s."""
         return self._imu.get_angular_velocity()

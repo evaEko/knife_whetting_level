@@ -1,5 +1,4 @@
 from core.state import State
-from core.container import Container
 
 
 class AngleSelectState(State):
@@ -10,22 +9,22 @@ class AngleSelectState(State):
         if AngleSelectState._index >= len(items):
             AngleSelectState._index = 0
 
-    def enter(self):
-        self._render()
+    def enter(self, app):
+        self._render(app)
 
-    def _render(self):
-        item = self._items[AngleSelectState._index]
-        Container.display_service.show_option(item.label, item.subtitle)
-
-    def update(self):
-        if Container.button_event == 'short_top':
+    def update(self, app):
+        if app.button_event == 'short_top':
             AngleSelectState._index = (AngleSelectState._index + 1) % len(self._items)
-            self._render()
-        elif Container.button_event == 'short_low':
+            self._render(app)
+        elif app.button_event == 'short_low':
             next_state = self._items[AngleSelectState._index].make_state()
             if next_state is not None:
                 return next_state
         return None
 
-    def exit(self):
+    def exit(self, app):
         pass
+
+    def _render(self, app):
+        item = self._items[AngleSelectState._index]
+        app.display.show_option(item.label, item.subtitle)

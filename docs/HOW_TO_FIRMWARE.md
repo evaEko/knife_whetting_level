@@ -102,7 +102,7 @@ git clone https://github.com/evaEko/knife_whetting_level.git
 cd knife_whetting_level
 ```
 
-Edit [`src/config.py`](../src/config.py) to set your pin assignments, deviation threshold, display smoothing, and default angle format before flashing. The file is commented — each setting explains itself.
+Edit [`src/config.txt`](../src/config.txt) to set your pin assignments, deviation threshold, and capture delay before flashing. The file is a simple `key=value` text file — each line is self-explanatory.
 
 You can also edit [`src/angles.csv`](../src/angles.csv) before flashing if you want to ship a default preset list in the firmware image.
 
@@ -155,36 +155,49 @@ The script auto-discovers all files under `src/` (excluding `src/tools/`) and fl
 Run from the `knife_level_python` directory:
 
 ```bash
-mpremote connect /dev/ttyACM0 mkdir :domain
+mpremote connect /dev/ttyACM0 mkdir :core
 mpremote connect /dev/ttyACM0 mkdir :drivers
+mpremote connect /dev/ttyACM0 mkdir :helpers
+mpremote connect /dev/ttyACM0 mkdir :services
 mpremote connect /dev/ttyACM0 mkdir :states
-mpremote connect /dev/ttyACM0 cp src/config.py :config.py
-mpremote connect /dev/ttyACM0 cp src/angles.csv :angles.csv
-mpremote connect /dev/ttyACM0 cp src/device.py :device.py
+mpremote connect /dev/ttyACM0 mkdir :states/settings
 mpremote connect /dev/ttyACM0 cp src/main.py :main.py
-mpremote connect /dev/ttyACM0 cp src/state.py :state.py
-mpremote connect /dev/ttyACM0 cp src/domain/__init__.py :domain/__init__.py
-mpremote connect /dev/ttyACM0 cp src/domain/angle_engine.py :domain/angle_engine.py
-mpremote connect /dev/ttyACM0 cp src/domain/preset_store.py :domain/preset_store.py
-mpremote connect /dev/ttyACM0 cp src/domain/settings.py :domain/settings.py
+mpremote connect /dev/ttyACM0 cp src/config.txt :config.txt
+mpremote connect /dev/ttyACM0 cp src/angles.csv :angles.csv
+mpremote connect /dev/ttyACM0 cp src/core/app.py :core/app.py
+mpremote connect /dev/ttyACM0 cp src/core/container.py :core/container.py
+mpremote connect /dev/ttyACM0 cp src/core/state.py :core/state.py
 mpremote connect /dev/ttyACM0 cp src/drivers/battery.py :drivers/battery.py
 mpremote connect /dev/ttyACM0 cp src/drivers/ble.py :drivers/ble.py
 mpremote connect /dev/ttyACM0 cp src/drivers/bno085.py :drivers/bno085.py
-mpremote connect /dev/ttyACM0 cp src/drivers/button.py :drivers/button.py
-mpremote connect /dev/ttyACM0 cp src/drivers/buttons.py :drivers/buttons.py
-mpremote connect /dev/ttyACM0 cp src/drivers/config_rw.py :drivers/config_rw.py
-mpremote connect /dev/ttyACM0 cp src/drivers/display.py :drivers/display.py
-mpremote connect /dev/ttyACM0 cp src/drivers/sensor.py :drivers/sensor.py
 mpremote connect /dev/ttyACM0 cp src/drivers/ssd1306.py :drivers/ssd1306.py
-mpremote connect /dev/ttyACM0 cp src/states/__init__.py :states/__init__.py
-mpremote connect /dev/ttyACM0 cp src/states/ble_toggle.py :states/ble_toggle.py
-mpremote connect /dev/ttyACM0 cp src/states/calibrate.py :states/calibrate.py
-mpremote connect /dev/ttyACM0 cp src/states/flash.py :states/flash.py
-mpremote connect /dev/ttyACM0 cp src/states/level.py :states/level.py
-mpremote connect /dev/ttyACM0 cp src/states/measure.py :states/measure.py
-mpremote connect /dev/ttyACM0 cp src/states/select_angle.py :states/select_angle.py
-mpremote connect /dev/ttyACM0 cp src/states/select_format.py :states/select_format.py
-mpremote connect /dev/ttyACM0 cp src/states/settings_menu.py :states/settings_menu.py
+mpremote connect /dev/ttyACM0 cp src/helpers/pitch_calculator.py :helpers/pitch_calculator.py
+mpremote connect /dev/ttyACM0 cp src/helpers/setting_item.py :helpers/setting_item.py
+mpremote connect /dev/ttyACM0 cp src/helpers/vector_parser.py :helpers/vector_parser.py
+mpremote connect /dev/ttyACM0 cp src/services/battery.py :services/battery.py
+mpremote connect /dev/ttyACM0 cp src/services/ble.py :services/ble.py
+mpremote connect /dev/ttyACM0 cp src/services/ble_handler.py :services/ble_handler.py
+mpremote connect /dev/ttyACM0 cp src/services/buttons.py :services/buttons.py
+mpremote connect /dev/ttyACM0 cp src/services/calibration.py :services/calibration.py
+mpremote connect /dev/ttyACM0 cp src/services/config.py :services/config.py
+mpremote connect /dev/ttyACM0 cp src/services/display.py :services/display.py
+mpremote connect /dev/ttyACM0 cp src/services/imu.py :services/imu.py
+mpremote connect /dev/ttyACM0 cp src/services/logging.py :services/logging.py
+mpremote connect /dev/ttyACM0 cp src/services/measure.py :services/measure.py
+mpremote connect /dev/ttyACM0 cp src/services/preset_store.py :services/preset_store.py
+mpremote connect /dev/ttyACM0 cp src/services/storage.py :services/storage.py
+mpremote connect /dev/ttyACM0 cp src/states/angle_select_state.py :states/angle_select_state.py
+mpremote connect /dev/ttyACM0 cp src/states/flash_mode_state.py :states/flash_mode_state.py
+mpremote connect /dev/ttyACM0 cp src/states/idle_state.py :states/idle_state.py
+mpremote connect /dev/ttyACM0 cp src/states/init_state.py :states/init_state.py
+mpremote connect /dev/ttyACM0 cp src/states/measure_state.py :states/measure_state.py
+mpremote connect /dev/ttyACM0 cp src/states/settings_state.py :states/settings_state.py
+mpremote connect /dev/ttyACM0 cp src/states/settings/__init__.py :states/settings/__init__.py
+mpremote connect /dev/ttyACM0 cp src/states/settings/ble_toggle_state.py :states/settings/ble_toggle_state.py
+mpremote connect /dev/ttyACM0 cp src/states/settings/clear_target_state.py :states/settings/clear_target_state.py
+mpremote connect /dev/ttyACM0 cp src/states/settings/deviation_state.py :states/settings/deviation_state.py
+mpremote connect /dev/ttyACM0 cp src/states/settings/set_preset_state.py :states/settings/set_preset_state.py
+mpremote connect /dev/ttyACM0 cp src/states/settings/surface_level_state.py :states/settings/surface_level_state.py
 mpremote connect /dev/ttyACM0 reset
 ```
 

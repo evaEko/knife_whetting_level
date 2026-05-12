@@ -1,21 +1,18 @@
 from core.state import State
-from core.container import Container
 
 
 class InitState(State):
-    def enter(self):
-        Container.display_service.init()
-        Container.display_service.show_splash("Blunt")
-        Container.logging_service.log("[InitState] enter")
+    def enter(self, app):
+        app.display.init()
+        app.display.show_splash("Blunt")
+        app.logging.log("[InitState] enter")
+        app.imu.init()
+        app.buttons.init()
+        app.battery.show_splash()
 
-        Container.imu_service.init()
-        Container.button_service.init()
-
-        Container.battery_service.show_splash()
-
-    def update(self):
+    def update(self, app):
         from states.measure_state import MeasureState
         return MeasureState()
 
-    def exit(self):
-        Container.logging_service.log("[InitState] exit")
+    def exit(self, app):
+        app.logging.log("[InitState] exit")
