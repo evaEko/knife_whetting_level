@@ -94,21 +94,19 @@ def find_files():
 
 
 def clean_device(tty, src_files, dirs):
-    top_dirs  = sorted({Path(d).parts[0] for d in dirs})
-    top_files = [f.relative_to(Path("src_ref")).as_posix()
-                 for f in src_files if f.parent == Path("src_ref")]
+    # Wipe everything on the device filesystem, not just known paths,
+    # so old src/ files don't accumulate and cause "no space left" errors.
     rmrf = (
         "import os\n"
         "def _rm(p):\n"
         "    try:\n"
         "        for e in os.listdir(p): _rm(p+'/'+e)\n"
-        "        os.rmdir(p)\n"
+        "        if p != '/': os.rmdir(p)\n"
         "    except OSError:\n"
         "        try: os.remove(p)\n"
         "        except: pass\n"
+        "for _x in os.listdir('/'): _rm('/' + _x)\n"
     )
-    rmrf += "\n".join(f"_rm('{d}')" for d in top_dirs)
-    rmrf += "\n" + "\n".join(f"_rm('{f}')" for f in top_files)
     _spin("Cleaning device...", MPREMOTE + ["connect", tty, "exec", rmrf])
 
 

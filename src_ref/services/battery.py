@@ -11,11 +11,22 @@ class BatteryService:
     def show_splash(self):
         import time
         pct = self.read_pct()
+        self._show(pct)
+        if pct is not None:
+            time.sleep_ms(1500)
+            return
+        # battery cut — keep re-reading; bypass on low button held down
+        while True:
+            pct = self.read_pct()
+            if pct is not None:
+                self._show(pct)
+                time.sleep_ms(1500)
+                return
+            if self._buttons.is_pressed('low'):
+                return
+
+    def _show(self, pct):
         if pct is None:
-            self._display.show_text("Not charging!", "Battery cut", "Low: continue")
-            while True:
-                if self._buttons.update() == 'short_low':
-                    break
+            self._display.show_text("Not charging!", "Battery cut", "Low: bypass")
         else:
             self._display.show_text("Battery", "{}%".format(pct))
-            time.sleep_ms(1500)

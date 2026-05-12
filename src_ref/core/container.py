@@ -1,5 +1,6 @@
 from services.battery import BatteryService
 from services.ble import BleService
+from services.ble_handler import BleCommandHandler
 from services.buttons import ButtonService
 from services.calibration import CalibrationService
 from services.config import ConfigService
@@ -13,6 +14,7 @@ from services.storage import StorageService
 
 class Container:
     battery_service      = None
+    ble_handler          = None
     ble_service          = None
     button_event         = None
     button_service       = None
@@ -58,10 +60,18 @@ class Container:
             config_service=cls.config_service,
             logging_service=cls.logging_service,
         )
+        cls.preset_store    = PresetStore()
+        cls.preset_store.load()
         cls.ble_service     = BleService()
+        cls.ble_handler     = BleCommandHandler(
+            ble_service=cls.ble_service,
+            calibration_service=cls.calibration_service,
+            measure_service=cls.measure_service,
+            preset_store=cls.preset_store,
+            config_service=cls.config_service,
+            imu_service=cls.imu_service,
+        )
         cls.battery_service = BatteryService(
             display_service=cls.display_service,
             button_service=cls.button_service,
         )
-        cls.preset_store    = PresetStore()
-        cls.preset_store.load()

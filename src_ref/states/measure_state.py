@@ -27,6 +27,7 @@ class MeasureState(State):
 
         if Container.calibration_service.has_stone():
             Container.measure_service.update()
+            Container.ble_handler.tick()
             pitch = Container.measure_service.pitch()
             Container.display_service.invert(
                 Container.calibration_service.has_target() and not Container.measure_service.in_position()

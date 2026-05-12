@@ -17,6 +17,10 @@ class ButtonService:
         self._low = Pin(self._pin_low, Pin.IN, Pin.PULL_UP)
         self._top = Pin(self._pin_top, Pin.IN, Pin.PULL_UP)
 
+    def is_pressed(self, button='low'):
+        pin = self._low if button == 'low' else self._top
+        return pin.value() == 0
+
     def update(self):
         """Call once per loop tick. Returns event string or None.
 
