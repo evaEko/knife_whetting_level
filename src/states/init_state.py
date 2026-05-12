@@ -8,6 +8,7 @@ class InitState(State):
         app.logging.log("[InitState] enter")
         app.imu.init()
         app.buttons.init()
+        app.calibration.load()
         app.battery.show_splash()
 
     def update(self, app):

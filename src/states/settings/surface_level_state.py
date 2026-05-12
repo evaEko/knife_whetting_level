@@ -7,7 +7,7 @@ _SETTLE_MS = 50
 
 
 class SurfaceLevelState(State):
-    def __init__(self, storage_key, prompt, saved_msg, on_save=None):
+    def __init__(self, storage_key, prompt, saved_msg, on_save):
         self._storage_key = storage_key
         self._prompt      = prompt
         self._saved_msg   = saved_msg
@@ -23,10 +23,7 @@ class SurfaceLevelState(State):
             return MeasureState()
         if app.button_event == 'short_low':
             vec = self._capture(app)
-            if self._on_save is not None:
-                self._on_save(vec)
-            else:
-                app.storage.set(self._storage_key, self._fmt(vec))
+            self._on_save(vec)
             app.logging.log("[SurfaceLevelState] " + self._storage_key + "=" + self._fmt(vec))
             app.display.show_text(self._saved_msg, self._fmt(vec))
             time.sleep_ms(2000)

@@ -70,6 +70,7 @@ def _surface():
         storage_key='n_stone',
         prompt=("Level", "on stone", "top=esc", "low=capt"),
         saved_msg="Calibrated",
+        on_save=calibration.set_stone,
     )
 
 def _target():

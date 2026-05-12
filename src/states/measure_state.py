@@ -3,7 +3,6 @@ from core.state import State
 
 class MeasureState(State):
     def enter(self, app):
-        app.calibration.load()
         app.logging.log("[MeasureState] enter")
         if not app.calibration.has_stone():
             app.display.show_text("No calibration", "", "top=calib.", "low=sett")
@@ -24,6 +23,7 @@ class MeasureState(State):
                 storage_key='n_stone',
                 prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
                 saved_msg="Calibrated",
+                on_save=app.calibration.set_stone,
             )
         if app.button_event == 'short_low':
             from states.settings_state import SettingsState
