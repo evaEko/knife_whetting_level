@@ -25,12 +25,13 @@ class DisplayService:
         d.show()
 
     def show_option(self, label, subtitle=None):
-        """Single-item selector: label large, optional subtitle small below."""
+        """Single-item selector: label and optional subtitle centered."""
         d = self._display
         d.fill(0)
-        d.large_text(label, 0, 4, scale=2)
+        y = 8 if subtitle else 16
+        d.text(label, max(0, (d.width - len(label) * 8) // 2), y, 1)
         if subtitle is not None:
-            d.text(subtitle, 0, 32, 1)
+            d.text(subtitle, max(0, (d.width - len(subtitle) * 8) // 2), 24, 1)
         d.show()
 
     def show_measurement(self, pitch, target_str, ble):

@@ -1,3 +1,4 @@
+from services.battery import BatteryService
 from services.ble import BleService
 from services.buttons import ButtonService
 from services.calibration import CalibrationService
@@ -11,6 +12,7 @@ from services.storage import StorageService
 
 
 class Container:
+    battery_service      = None
     ble_service          = None
     button_event         = None
     button_service       = None
@@ -56,6 +58,10 @@ class Container:
             config_service=cls.config_service,
             logging_service=cls.logging_service,
         )
-        cls.ble_service  = BleService()
-        cls.preset_store = PresetStore()
+        cls.ble_service     = BleService()
+        cls.battery_service = BatteryService(
+            display_service=cls.display_service,
+            button_service=cls.button_service,
+        )
+        cls.preset_store    = PresetStore()
         cls.preset_store.load()

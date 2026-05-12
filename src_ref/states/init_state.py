@@ -11,10 +11,11 @@ class InitState(State):
         Container.imu_service.init()
         Container.button_service.init()
 
+        Container.battery_service.show_splash()
+
     def update(self):
         from states.measure_state import MeasureState
         return MeasureState()
 
     def exit(self):
-        Container.display_service.show_text("Init OK")
         Container.logging_service.log("[InitState] exit")
