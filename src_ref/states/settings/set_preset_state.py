@@ -9,7 +9,7 @@ class SetPresetState(State):
 
     def enter(self):
         Container.calibration_service.set_target_angle(self._angle)
-        Container.display_service.show_text("Target set", "{:.1f}".format(self._angle))
+        Container.display_service.show_splash("{:.1f}".format(self._angle))
         time.sleep_ms(1500)
 
     def update(self):

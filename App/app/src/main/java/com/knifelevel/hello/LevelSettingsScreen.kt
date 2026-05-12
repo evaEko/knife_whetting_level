@@ -17,6 +17,9 @@ fun LevelSettingsContent(
         item {
             SliderSetting("Deviation Threshold (°)", draft["deviation_threshold"]?.toFloatOrNull() ?: 1.0f, 0.0f, 4.0f, 15) { draft["deviation_threshold"] = "%.2f".format(it) }
         }
+        item {
+            StepperSetting("Capture delay (s)", draft["capture_delay_sec"]?.toIntOrNull() ?: 5, 1, 30) { draft["capture_delay_sec"] = it.toString() }
+        }
     }
 }
 

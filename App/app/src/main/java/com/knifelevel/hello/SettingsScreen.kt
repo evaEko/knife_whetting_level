@@ -41,6 +41,9 @@ fun SettingsScreen(
     LaunchedEffect(settings["deviation_threshold"]) {
         settings["deviation_threshold"]?.let { draft["deviation_threshold"] = it }
     }
+    LaunchedEffect(settings["capture_delay_sec"]) {
+        settings["capture_delay_sec"]?.let { draft["capture_delay_sec"] = it }
+    }
 
     var selectedTab by remember { mutableStateOf(0) }
 

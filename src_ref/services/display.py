@@ -17,6 +17,19 @@ class DisplayService:
                   freq=400_000)
         self._display = Display(i2c, addr=self._addr)
 
+    def show_splash(self, word):
+        """Render a single word as large as possible, centred on the full display."""
+        d = self._display
+        d.fill(0)
+        scale = 2
+        char_pitch = 7
+        # width = (len-1)*char_pitch*scale + 8*scale
+        w = ((len(word) - 1) * char_pitch + 8) * scale
+        x = max(0, (d.width - w) // 2)
+        y = (d.height - 8 * scale) // 2
+        d.large_text(word, x, y, scale=scale, char_pitch=char_pitch)
+        d.show()
+
     def show_text(self, *lines):
         d = self._display
         d.fill(0)

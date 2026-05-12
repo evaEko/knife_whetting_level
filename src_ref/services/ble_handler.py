@@ -134,6 +134,7 @@ class BleCommandHandler:
 
     _SETTING_KEYS = [
         'deviation_threshold',
+        'capture_delay_sec',
     ]
 
     def _cmd_get_settings(self):
@@ -143,6 +144,8 @@ class BleCommandHandler:
                 continue
             if key == 'deviation_threshold':
                 self._ble.send("setting:{}:{:.1f}".format(key, val))
+            elif key == 'capture_delay_sec':
+                self._ble.send("setting:{}:{}".format(key, int(val)))
             else:
                 self._ble.send("setting:{}:{}".format(key, val))
             time.sleep_ms(20)
@@ -162,6 +165,15 @@ class BleCommandHandler:
                 self._ble.send("err:invalid value")
                 return
             self._config.set('deviation_threshold', val)
+        elif key == 'capture_delay_sec':
+            try:
+                val = int(raw)
+                if val < 1 or val > 30:
+                    raise ValueError()
+            except Exception:
+                self._ble.send("err:invalid value")
+                return
+            self._config.set('capture_delay_sec', val)
         else:
             self._config.set(key, raw)
         self._ble.send("ok")

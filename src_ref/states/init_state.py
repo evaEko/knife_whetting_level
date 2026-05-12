@@ -5,7 +5,7 @@ from core.container import Container
 class InitState(State):
     def enter(self):
         Container.display_service.init()
-        Container.display_service.show_text("Init...")
+        Container.display_service.show_splash("Blunt")
         Container.logging_service.log("[InitState] enter")
 
         Container.imu_service.init()

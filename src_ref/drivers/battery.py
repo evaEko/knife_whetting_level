@@ -50,8 +50,7 @@ def read_battery_pct():
         # 4.2V regulated maximum). Battery connected clamps VDDH to ≤4.2V.
         # Threshold at 4300mV cleanly separates the two cases.
         vbus = machine.mem32[0x40000438] & 0x01
-        print("BATT mv={} vbus={}".format(mv, vbus))
-        if mv > 4300:   # battery clamps to ≤4.2V; >4.3V means no battery connected
+        if vbus and mv > 4300:
             return None
         return _mv_to_pct(max(3300, min(4200, mv)))
     except Exception as e:

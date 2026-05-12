@@ -9,3 +9,4 @@ oled_addr=60
 btn_low=43
 btn_top=45
 deviation_threshold=2.0
+capture_delay_sec=5

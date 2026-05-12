@@ -9,13 +9,27 @@ class MeasureState(State):
     def enter(self):
         Container.calibration_service.load()
         if not Container.calibration_service.has_stone():
-            Container.display_service.show_text("No surface", "calibration", "Go to Settings")
+            Container.display_service.show_text("No calibration", "", "top=calib", "low=sett")
             Container.logging_service.log("[MeasureState] no n_stone in storage")
             return
-        Container.display_service.show_text("Measuring...")
         Container.logging_service.log("[MeasureState] enter")
 
     def update(self):
+        if not Container.calibration_service.has_stone():
+            if Container.button_event == 'short_top':
+                from states.settings.surface_level_state import SurfaceLevelState
+                return SurfaceLevelState(
+                    storage_key='n_stone',
+                    prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
+                    saved_msg="Surface saved",
+                )
+            if Container.button_event == 'short_low':
+                from states.settings_state import SettingsState
+                return SettingsState(Container.settings_items)
+            Container.ble_handler.tick()
+            if not Container.calibration_service.has_stone():
+                return None
+            # calibration just arrived via BLE — fall through to render
         if Container.button_event == 'short_top':
             from states.angle_select_state import AngleSelectState
             return AngleSelectState(Container.build_angle_items())

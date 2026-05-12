@@ -14,7 +14,7 @@ def _surface():
     from states.settings.surface_level_state import SurfaceLevelState
     return SurfaceLevelState(
         storage_key='n_stone',
-        prompt=("Blade flat", "on stone", "low: capture"),
+        prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
         saved_msg="Surface saved",
     )
 
@@ -22,7 +22,7 @@ def _target():
     from states.settings.surface_level_state import SurfaceLevelState
     return SurfaceLevelState(
         storage_key='n_target',
-        prompt=("Blade at angle", "on stone", "low: capture"),
+        prompt=("Blade", "at angle", "on stone", "top=esc", "low=capt"),
         saved_msg="Target saved",
         on_save=Container.calibration_service.set_target,
     )

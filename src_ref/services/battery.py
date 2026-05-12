@@ -26,7 +26,20 @@ class BatteryService:
                 return
 
     def _show(self, pct):
+        d = self._display._display  # raw Display instance
+        d.fill(0)
         if pct is None:
-            self._display.show_text("Not charging!", "Battery cut", "Low: bypass")
+            d.text("To charge", 0, 0, 1)
+            d.large_text("PLUG", 8, 12, scale=2, char_pitch=7)
+            d.text("low=pass", 0, 32, 1)
         else:
-            self._display.show_text("Battery", "{}%".format(pct))
+            d.text("BAT", (72 - 24) // 2, 2, 1)
+            pct_str = "{}%".format(pct)
+            pw = len(pct_str) * 16
+            d.large_text(pct_str, (72 - pw) // 2, 14, scale=2)
+            bx, by, bw, bh = 6, 33, 60, 5
+            d.fb.rect(bx, by, bw, bh, 1)
+            filled = int(bw * pct / 100)
+            if filled > 0:
+                d.fb.fill_rect(bx, by, filled, bh, 1)
+        d.show()

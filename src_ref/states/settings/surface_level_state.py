@@ -5,7 +5,6 @@ from core.container import Container
 
 _N_SAMPLES   = 20
 _SETTLE_MS   = 50    # delay between samples
-_PRE_DELAY_MS = 800  # wait after button press before sampling
 
 
 class SurfaceLevelState(State):
@@ -20,6 +19,9 @@ class SurfaceLevelState(State):
         Container.logging_service.log("[SurfaceLevelState] enter key=" + self._storage_key)
 
     def update(self):
+        if Container.button_event == 'short_top':
+            from states.measure_state import MeasureState
+            return MeasureState()
         if Container.button_event == 'short_low':
             vec = self._capture()
             if self._on_save is not None:
@@ -34,8 +36,9 @@ class SurfaceLevelState(State):
         return None
 
     def _capture(self):
+        delay_ms = int(getattr(Container.config_service, 'capture_delay_sec', 5)) * 1000
         Container.display_service.show_text("Hold still...")
-        time.sleep_ms(_PRE_DELAY_MS)
+        time.sleep_ms(delay_ms)
         Container.display_service.show_text("Capturing...")
         sx, sy, sz = 0.0, 0.0, 0.0
         count = 0
