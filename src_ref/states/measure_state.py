@@ -9,7 +9,7 @@ class MeasureState(State):
     def enter(self):
         Container.calibration_service.load()
         if not Container.calibration_service.has_stone():
-            Container.display_service.show_text("No calibration", "", "top=calib", "low=sett")
+            Container.display_service.show_text("No calibration", "", "top=calib.", "low=sett")
             Container.logging_service.log("[MeasureState] no n_stone in storage")
             return
         Container.logging_service.log("[MeasureState] enter")
@@ -21,7 +21,7 @@ class MeasureState(State):
                 return SurfaceLevelState(
                     storage_key='n_stone',
                     prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
-                    saved_msg="Surface saved",
+                    saved_msg="Calibrated",
                 )
             if Container.button_event == 'short_low':
                 from states.settings_state import SettingsState

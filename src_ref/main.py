@@ -14,15 +14,15 @@ def _surface():
     from states.settings.surface_level_state import SurfaceLevelState
     return SurfaceLevelState(
         storage_key='n_stone',
-        prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
-        saved_msg="Surface saved",
+        prompt=("Level", "on stone", "top=esc", "low=capt"),
+        saved_msg="Calibrated",
     )
 
 def _target():
     from states.settings.surface_level_state import SurfaceLevelState
     return SurfaceLevelState(
         storage_key='n_target',
-        prompt=("Blade", "at angle", "on stone", "top=esc", "low=capt"),
+        prompt=("Blade", "at angle", "top=esc", "low=capt"),
         saved_msg="Target saved",
         on_save=Container.calibration_service.set_target,
     )
@@ -56,7 +56,7 @@ def build_angle_items():
 Container.build_angle_items = build_angle_items
 
 Container.settings_items = [
-    SettingItem("Surface",   _surface),
+    SettingItem("Calibration", _surface),
     SettingItem("BLE",       _ble),
     SettingItem("Deviation", _deviation),
     SettingItem("Exit",      _exit),
