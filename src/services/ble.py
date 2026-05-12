@@ -11,7 +11,6 @@ class BleService:
         self._live          = False
         self._last_send     = 0
         self._last_target   = 0
-        self._last_on_stone = None
 
     def toggle(self):
         if self._driver.enabled:
@@ -32,12 +31,11 @@ class BleService:
     def start_live(self):
         self._live          = True
         self._last_target   = 0
-        self._last_on_stone = None  # force send on first tick
 
     def stop_live(self):
         self._live = False
 
-    def update(self, pitch, target_angle, on_stone):
+    def update(self, pitch, target_angle):
         """Push live data to the app. Call every tick from MeasureState."""
         if not self._live or not self._driver.connected:
             return
@@ -48,9 +46,6 @@ class BleService:
         if ticks_diff(now, self._last_target) >= _TARGET_INTERVAL_MS:
             self._last_target = now
             self.send_target_state(target_angle)
-        if on_stone != self._last_on_stone:
-            self._last_on_stone = on_stone
-            self.send("on_stone:{}".format(1 if on_stone else 0))
 
     def send_target_state(self, target_angle, name=''):
         angle = target_angle if target_angle is not None else 0.0

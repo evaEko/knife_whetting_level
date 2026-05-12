@@ -21,7 +21,6 @@ class BleCommandHandler:
             self._ble.update(
                 pitch=self._measure.pitch(),
                 target_angle=self._calibration.target_angle(),
-                on_stone=True,
             )
 
     def handle(self, cmd):

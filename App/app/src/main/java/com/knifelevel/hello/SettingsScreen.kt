@@ -17,7 +17,8 @@ fun SettingsScreen(
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
     displayArrow: Boolean,
-    soundAlert: Boolean,
+    soundTooHighEnabled: Boolean,
+    soundTooLowEnabled: Boolean,
     highToneFreq: Float,
     lowToneFreq: Float,
     showTargetName: Boolean,
@@ -29,6 +30,8 @@ fun SettingsScreen(
     arrowSize: ArrowSize,
     customSmallAudioUri: String?,
     customBigAudioUri: String?,
+    onTargetSoundEnabled: Boolean,
+    customOnTargetAudioUri: String?,
     onSaveApp: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -75,7 +78,8 @@ fun SettingsScreen(
                 angleFormat = angleFormat,
                 deviationBackgroundEnabled = deviationBackgroundEnabled,
                 displayArrow = displayArrow,
-                soundAlert = soundAlert,
+                soundTooHighEnabled = soundTooHighEnabled,
+                soundTooLowEnabled  = soundTooLowEnabled,
                 highToneFreq = highToneFreq,
                 lowToneFreq = lowToneFreq,
                 showTargetName = showTargetName,
@@ -87,6 +91,8 @@ fun SettingsScreen(
                 arrowSize = arrowSize,
                 customSmallAudioUri = customSmallAudioUri,
                 customBigAudioUri   = customBigAudioUri,
+                onTargetSoundEnabled = onTargetSoundEnabled,
+                customOnTargetAudioUri = customOnTargetAudioUri,
                 onSave = onSaveApp,
             )
             1 -> when {

@@ -153,7 +153,8 @@ data class AppUiSettings(
     val angleFormat: AppAngleFormat,
     val deviationBackgroundEnabled: Boolean,
     val displayArrow: Boolean,
-    val soundAlert: Boolean,
+    val soundTooHighEnabled: Boolean = true,
+    val soundTooLowEnabled: Boolean = true,
     val highToneFreq: Float,
     val lowToneFreq: Float,
     val showTargetName: Boolean,
@@ -165,6 +166,8 @@ data class AppUiSettings(
     val arrowSize: ArrowSize = ArrowSize.MEDIUM,
     val customSmallAudioUri: String? = null,
     val customBigAudioUri:   String? = null,
+    val onTargetSoundEnabled: Boolean = false,
+    val customOnTargetAudioUri: String? = null,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -173,7 +176,8 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         angleFormat = AppAngleFormat.fromWire(prefs.getString("angle_format", AppAngleFormat.TWO_DECIMALS.wireValue)),
         deviationBackgroundEnabled = prefs.getBoolean("deviation_background_enabled", true),
         displayArrow = prefs.getBoolean("display_arrow", true),
-        soundAlert = prefs.getBoolean("sound_alert", true),
+        soundTooHighEnabled = prefs.getBoolean("sound_too_high_enabled", prefs.getBoolean("sound_alert", true)),
+        soundTooLowEnabled  = prefs.getBoolean("sound_too_low_enabled",  prefs.getBoolean("sound_alert", true)),
         highToneFreq = prefs.getFloat("high_tone_freq", defaultHighToneFreq()),
         lowToneFreq = prefs.getFloat("low_tone_freq", defaultLowToneFreq()),
         showTargetName = prefs.getBoolean("show_target_name", true),
@@ -185,6 +189,8 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         arrowSize = ArrowSize.fromLabel(prefs.getString("arrow_size", ArrowSize.MEDIUM.label)),
         customSmallAudioUri = prefs.getString("custom_small_audio_uri", null),
         customBigAudioUri   = prefs.getString("custom_big_audio_uri",   null),
+        onTargetSoundEnabled = prefs.getBoolean("on_target_sound_enabled", false),
+        customOnTargetAudioUri = prefs.getString("custom_on_target_audio_uri", null),
     )
 }
 
@@ -194,7 +200,8 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putString("angle_format", settings.angleFormat.wireValue)
         .putBoolean("deviation_background_enabled", settings.deviationBackgroundEnabled)
         .putBoolean("display_arrow", settings.displayArrow)
-        .putBoolean("sound_alert", settings.soundAlert)
+        .putBoolean("sound_too_high_enabled", settings.soundTooHighEnabled)
+        .putBoolean("sound_too_low_enabled",  settings.soundTooLowEnabled)
         .putFloat("high_tone_freq", settings.highToneFreq)
         .putFloat("lowTone_freq", settings.lowToneFreq)
         .putBoolean("show_target_name", settings.showTargetName)
@@ -206,6 +213,8 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putString("arrow_size", settings.arrowSize.label)
         .putString("custom_small_audio_uri", settings.customSmallAudioUri)
         .putString("custom_big_audio_uri",   settings.customBigAudioUri)
+        .putBoolean("on_target_sound_enabled", settings.onTargetSoundEnabled)
+        .putString("custom_on_target_audio_uri", settings.customOnTargetAudioUri)
         .apply()
 }
 
@@ -250,7 +259,8 @@ fun MainScreen(context: Context) {
     var appAngleFormat by remember { mutableStateOf(initialAppUi.angleFormat) }
     var appDeviationBackgroundEnabled by remember { mutableStateOf(initialAppUi.deviationBackgroundEnabled) }
     var appDisplayArrow by remember { mutableStateOf(initialAppUi.displayArrow) }
-    var appSoundAlert by remember { mutableStateOf(initialAppUi.soundAlert) }
+    var appSoundTooHighEnabled by remember { mutableStateOf(initialAppUi.soundTooHighEnabled) }
+    var appSoundTooLowEnabled  by remember { mutableStateOf(initialAppUi.soundTooLowEnabled) }
     var appHighToneFreq by remember { mutableStateOf(initialAppUi.highToneFreq) }
     var appLowToneFreq by remember { mutableStateOf(initialAppUi.lowToneFreq) }
     var appShowTargetName by remember { mutableStateOf(initialAppUi.showTargetName) }
@@ -262,6 +272,8 @@ fun MainScreen(context: Context) {
     var appArrowSize         by remember { mutableStateOf(initialAppUi.arrowSize) }
     var appCustomSmallAudioUri by remember { mutableStateOf(initialAppUi.customSmallAudioUri) }
     var appCustomBigAudioUri   by remember { mutableStateOf(initialAppUi.customBigAudioUri) }
+    var appOnTargetSoundEnabled by remember { mutableStateOf(initialAppUi.onTargetSoundEnabled) }
+    var appCustomOnTargetAudioUri by remember { mutableStateOf(initialAppUi.customOnTargetAudioUri) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -276,6 +288,9 @@ fun MainScreen(context: Context) {
     var presetsLoaded    by remember { mutableStateOf(false) }
     var customAngleCountdown by remember { mutableStateOf(-1) }
     var bladeOnStone         by remember { mutableStateOf(true) }
+    var lastAngleFloat       by remember { mutableStateOf<Float?>(null) }
+    var lastAngleTimeMs      by remember { mutableStateOf(0L) }
+    var onStoneJob           by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val mainScope = rememberCoroutineScope()
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -325,6 +340,10 @@ fun MainScreen(context: Context) {
             lastAngleAt = 0L
             measurementStale = true
             bladeOnStone = true
+            lastAngleFloat  = null
+            lastAngleTimeMs = 0L
+            onStoneJob?.cancel()
+            onStoneJob = null
             status = "Disconnected"
             if (screen != Screen.CONNECT && screen != Screen.SETTINGS) {
                 screen = Screen.CONNECT
@@ -355,10 +374,34 @@ fun MainScreen(context: Context) {
     fun onMessage(msg: String) {
         when {
             msg.startsWith("angle:")   -> {
-                angle = msg.removePrefix("angle:")
-                lastAngleAt = SystemClock.elapsedRealtime()
+                val raw = msg.removePrefix("angle:")
+                angle = raw
+                val now = SystemClock.elapsedRealtime()
+                lastAngleAt = now
                 measurementStale = false
                 stopLiveAngleRetry()
+                // velocity-based on-stone detection
+                val newAngle = raw.toFloatOrNull()
+                val prevAngle = lastAngleFloat
+                val prevTime  = lastAngleTimeMs
+                if (newAngle != null && prevAngle != null && prevTime > 0L) {
+                    val dtSec = (now - prevTime) / 1000f
+                    if (dtSec > 0f) {
+                        val vel = Math.abs(newAngle - prevAngle) / dtSec
+                        if (vel > 10f) {
+                            bladeOnStone = false
+                            onStoneJob?.cancel()
+                            onStoneJob = mainScope.launch {
+                                kotlinx.coroutines.delay(400)
+                                bladeOnStone = true
+                            }
+                        }
+                    }
+                }
+                if (newAngle != null) {
+                    lastAngleFloat  = newAngle
+                    lastAngleTimeMs = now
+                }
             }
             msg.startsWith("calibration:") -> calibrationAngle = msg.removePrefix("calibration:")
             msg.startsWith("preset:") -> {
@@ -394,7 +437,6 @@ fun MainScreen(context: Context) {
                 currentTargetName = ""
             }
             msg.startsWith("target_name:") -> currentTargetName = msg.removePrefix("target_name:")
-            msg.startsWith("on_stone:")    -> bladeOnStone = msg.removePrefix("on_stone:").trim() == "1"
             msg == "presets_done"      -> presetsLoaded = true
             msg == "settings_done"      -> settingsLoaded = true
             msg == "ok"                 -> { }
@@ -494,7 +536,8 @@ fun MainScreen(context: Context) {
             tooLowColor  = ALERT_COLORS.firstOrNull { it.label == appTooLowColorLabel  }?.color ?: ALERT_COLORS[4].color,
             arrowSize = appArrowSize,
             displayArrow = appDisplayArrow,
-            soundAlert = appSoundAlert,
+            soundTooHighEnabled = appSoundTooHighEnabled,
+            soundTooLowEnabled  = appSoundTooLowEnabled,
             highToneFreq = appHighToneFreq,
             lowToneFreq = appLowToneFreq,
             showTargetName = appShowTargetName,
@@ -524,6 +567,8 @@ fun MainScreen(context: Context) {
             },
             customAngleCountdown = customAngleCountdown,
             bladeOnStone = bladeOnStone,
+            onTargetSoundEnabled = appOnTargetSoundEnabled,
+            customOnTargetAudioUri = appCustomOnTargetAudioUri,
             onDisconnect = {
                 requestDeviceDisconnect()
                 angle = "--"
@@ -555,7 +600,8 @@ fun MainScreen(context: Context) {
             angleFormat = appAngleFormat,
             deviationBackgroundEnabled = appDeviationBackgroundEnabled,
             displayArrow = appDisplayArrow,
-            soundAlert = appSoundAlert,
+            soundTooHighEnabled = appSoundTooHighEnabled,
+            soundTooLowEnabled  = appSoundTooLowEnabled,
             highToneFreq = appHighToneFreq,
             lowToneFreq = appLowToneFreq,
             showTargetName = appShowTargetName,
@@ -567,11 +613,14 @@ fun MainScreen(context: Context) {
             arrowSize = appArrowSize,
             customSmallAudioUri = appCustomSmallAudioUri,
             customBigAudioUri   = appCustomBigAudioUri,
+            onTargetSoundEnabled = appOnTargetSoundEnabled,
+            customOnTargetAudioUri = appCustomOnTargetAudioUri,
             onSaveApp = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
                 appDisplayArrow = updated.displayArrow
-                appSoundAlert = updated.soundAlert
+                appSoundTooHighEnabled = updated.soundTooHighEnabled
+                appSoundTooLowEnabled  = updated.soundTooLowEnabled
                 appHighToneFreq = updated.highToneFreq
                 appLowToneFreq = updated.lowToneFreq
                 appShowTargetName = updated.showTargetName
@@ -583,6 +632,8 @@ fun MainScreen(context: Context) {
                 appArrowSize = updated.arrowSize
                 appCustomSmallAudioUri = updated.customSmallAudioUri
                 appCustomBigAudioUri   = updated.customBigAudioUri
+                appOnTargetSoundEnabled = updated.onTargetSoundEnabled
+                appCustomOnTargetAudioUri = updated.customOnTargetAudioUri
                 saveAppUiSettings(context, updated)
             },
             onBack = { screen = if (activeGatt != null) Screen.LIVE else Screen.CONNECT }
@@ -762,11 +813,14 @@ fun LiveScreen(
     tooLowColor: Color,
     arrowSize: ArrowSize,
     displayArrow: Boolean,
-    soundAlert: Boolean,
+    soundTooHighEnabled: Boolean = true,
+    soundTooLowEnabled: Boolean = true,
     highToneFreq: Float,
     lowToneFreq: Float,
     customSmallAudioUri: String? = null,
     customBigAudioUri: String? = null,
+    onTargetSoundEnabled: Boolean = false,
+    customOnTargetAudioUri: String? = null,
     showTargetName: Boolean,
     showTargetAngle: Boolean,
     showDelta: Boolean,
@@ -790,10 +844,11 @@ fun LiveScreen(
     val tonePlayer = remember { AlertSoundPlayer(context) }
     var muted by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { tonePlayer.stop() } }
-    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, muted, highToneFreq, lowToneFreq, customSmallAudioUri, customBigAudioUri, bladeOnStone) {
+    LaunchedEffect(tooLow, tooHigh, displayArrow, soundTooHighEnabled, soundTooLowEnabled, muted, highToneFreq, lowToneFreq, customSmallAudioUri, customBigAudioUri, bladeOnStone, onTargetSoundEnabled, customOnTargetAudioUri, hasTarget) {
         when {
-            bladeOnStone && soundAlert && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq, customSmallAudioUri)
-            bladeOnStone && soundAlert && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq, customBigAudioUri)
+            bladeOnStone && soundTooLowEnabled  && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq, customSmallAudioUri)
+            bladeOnStone && soundTooHighEnabled && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq, customBigAudioUri)
+            bladeOnStone && onTargetSoundEnabled && !muted && hasTarget && !tooLow && !tooHigh && customOnTargetAudioUri != null -> tonePlayer.play(0f, customOnTargetAudioUri)
             else                                                            -> tonePlayer.stop()
         }
     }
@@ -822,7 +877,7 @@ fun LiveScreen(
                 color = MaterialTheme.colorScheme.secondary
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (soundAlert) {
+                if (soundTooHighEnabled || soundTooLowEnabled || onTargetSoundEnabled) {
                     TextButton(onClick = { muted = !muted }) {
                         Icon(
                             imageVector = if (muted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,

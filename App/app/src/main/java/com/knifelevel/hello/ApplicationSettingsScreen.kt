@@ -26,7 +26,8 @@ fun AppSettingsContent(
     angleFormat: AppAngleFormat,
     deviationBackgroundEnabled: Boolean,
     displayArrow: Boolean,
-    soundAlert: Boolean,
+    soundTooHighEnabled: Boolean,
+    soundTooLowEnabled: Boolean,
     highToneFreq: Float,
     lowToneFreq: Float,
     showTargetName: Boolean,
@@ -38,9 +39,11 @@ fun AppSettingsContent(
     arrowSize: ArrowSize,
     customSmallAudioUri: String?,
     customBigAudioUri: String?,
+    onTargetSoundEnabled: Boolean,
+    customOnTargetAudioUri: String?,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, customOnTargetAudioUri)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -98,8 +101,8 @@ fun AppSettingsContent(
         }
 
         ExpandableSection("Sound Alert") {
-            BoolSetting("Enable", soundAlert) { onSave(current().copy(soundAlert = it)) }
-            if (soundAlert) {
+            BoolSetting("On angle too high", soundTooHighEnabled) { onSave(current().copy(soundTooHighEnabled = it)) }
+            if (soundTooHighEnabled) {
                 TonePickerSetting("Angle too small (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
                     onSave(current().copy(highToneFreq = it)); previewTone(it)
                 }
@@ -109,6 +112,9 @@ fun AppSettingsContent(
                     onPick = { onSave(current().copy(customSmallAudioUri = it)) },
                     onClear = { onSave(current().copy(customSmallAudioUri = null)) },
                 )
+            }
+            BoolSetting("On angle too low", soundTooLowEnabled) { onSave(current().copy(soundTooLowEnabled = it)) }
+            if (soundTooLowEnabled) {
                 TonePickerSetting("Angle too big (↓)", LOW_TONE_OPTIONS, lowToneFreq) {
                     onSave(current().copy(lowToneFreq = it)); previewTone(it)
                 }
@@ -117,6 +123,15 @@ fun AppSettingsContent(
                     uri = customBigAudioUri,
                     onPick = { onSave(current().copy(customBigAudioUri = it)) },
                     onClear = { onSave(current().copy(customBigAudioUri = null)) },
+                )
+            }
+            BoolSetting("On target", onTargetSoundEnabled) { onSave(current().copy(onTargetSoundEnabled = it)) }
+            if (onTargetSoundEnabled) {
+                AudioFilePicker(
+                    label = "On target — custom file",
+                    uri = customOnTargetAudioUri,
+                    onPick = { onSave(current().copy(customOnTargetAudioUri = it)) },
+                    onClear = { onSave(current().copy(customOnTargetAudioUri = null)) },
                 )
             }
         }
