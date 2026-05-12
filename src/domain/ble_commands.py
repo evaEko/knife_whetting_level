@@ -50,6 +50,10 @@ class BleCommandHandler:
         elif cmd == 'calibrate':
             device.engine.calibrate()
             device.settings.calibrated_offset = device.engine.calibrated_offset
+            g = device.sensor.get_gravity()
+            if g is not None:
+                device.settings.calibrated_gravity = g
+                device.sensor.set_calibrated_g(*g)
             device.settings.save()
             ble.send(f"calibration:{device.settings.calibrated_offset:.2f}")
             ble.send("ok:calibrated")

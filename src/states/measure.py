@@ -22,8 +22,9 @@ class MeasureState(State):
         now = time.ticks_ms()
         if time.ticks_diff(now, self._last_display) >= DISPLAY_INTERVAL_MS:
             self._last_display = now
-            engine = device.engine
-            device.display.invert(not engine.on_target)
+            engine   = device.engine
+            on_stone = device.sensor.on_stone and engine.on_stone
+            device.display.invert(not engine.on_target and on_stone)
             has_target = engine.target_angle != 0.0
             target = engine.target_angle if (has_target and device.show_target_angle) else None
             name   = engine.target_name  if (has_target and device.show_preset_name)  else None
@@ -31,7 +32,8 @@ class MeasureState(State):
                                         fmt=engine.angle_format,
                                         target=target,
                                         name=name,
-                                        ble_on=(device.ble is not None))
+                                        ble_on=(device.ble is not None),
+                                        on_stone=on_stone)
 
         event = device.buttons.update()
         if event == ('short', 'low'):

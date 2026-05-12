@@ -2,8 +2,7 @@
 
 # Firmware
 
-* TEST after god object refactor
-
+* catch flash button press in all modes
 * implement correct detection of battery connected when on usb cable
 * refactor ble protocol and related
 * sometimes after disconnect, the level does not advetise bluetooth

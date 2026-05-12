@@ -3,9 +3,10 @@ class Settings:
         self.calibrated_offset  = 0.0
         self.target_angle       = 0.0
         self.angle_format       = default_angle_format
-        self.board_offset       = 0.0
-        self.surface_normal     = None  # (nx, ny, nz) or None
-        self._load_target_angle = load_target_angle
+        self.board_offset        = 0.0
+        self.surface_normal      = None  # (nx, ny, nz) or None
+        self.calibrated_gravity  = None  # (gx, gy, gz) gravity unit vector at calibration position
+        self._load_target_angle  = load_target_angle
 
     def load(self):
         try:
@@ -29,6 +30,10 @@ class Settings:
                         parts = val.split(',')
                         if len(parts) == 3:
                             self.surface_normal = (float(parts[0]), float(parts[1]), float(parts[2]))
+                    elif key == 'calibrated_gravity':
+                        parts = val.split(',')
+                        if len(parts) == 3:
+                            self.calibrated_gravity = (float(parts[0]), float(parts[1]), float(parts[2]))
             print("Settings loaded")
         except Exception:
             print("No settings saved, using defaults")
@@ -43,12 +48,16 @@ class Settings:
                 if self.surface_normal is not None:
                     nx, ny, nz = self.surface_normal
                     f.write(f"surface_normal={nx:.6f},{ny:.6f},{nz:.6f}\n")
+                if self.calibrated_gravity is not None:
+                    gx, gy, gz = self.calibrated_gravity
+                    f.write(f"calibrated_gravity={gx:.6f},{gy:.6f},{gz:.6f}\n")
         except Exception as e:
             print(f"Settings save error: {e}")
 
     def reset_calibration(self):
-        self.calibrated_offset = 0.0
-        self.target_angle      = 0.0
+        self.calibrated_offset  = 0.0
+        self.target_angle       = 0.0
+        self.calibrated_gravity = None
         self.save()
         print("-> CAL/PRESET cleared")
 

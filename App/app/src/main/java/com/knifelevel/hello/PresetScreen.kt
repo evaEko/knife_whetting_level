@@ -42,6 +42,9 @@ fun PresetScreen(
     status: String,
     currentTargetAngle: String,
     waitingForReconnect: Boolean,
+    currentAngle: String = "--",
+    captureCountdownSec: Int = -1,
+    onCapture: () -> Unit = {},
     onAddPreset: (String, String) -> Unit,
     onUpdatePreset: (Int, String, String) -> Unit,
     onDeletePreset: (Int) -> Unit,
@@ -104,6 +107,28 @@ fun PresetScreen(
             }
             return@Column
         }
+
+        HorizontalDivider()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Set current reading as target",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+            Button(
+                onClick = onCapture,
+                enabled = currentAngle != "--" && captureCountdownSec < 0 && !waitingForReconnect,
+            ) {
+                Text(if (captureCountdownSec > 0) "${captureCountdownSec}s…" else "CAPTURE")
+            }
+        }
+        HorizontalDivider()
 
         Spacer(modifier = Modifier.height(8.dp))
 

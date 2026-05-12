@@ -33,6 +33,10 @@ class CalibrateState(State):
         if event == ('short', 'low'):
             engine.calibrate()
             device.settings.calibrated_offset = engine.calibrated_offset
+            g = device.sensor.get_gravity()
+            if g is not None:
+                device.settings.calibrated_gravity = g
+                device.sensor.set_calibrated_g(*g)
             device.settings.save()
             display.show_angle(0.0, label="SET", fmt=engine.angle_format)
             self._done_at = time.ticks_add(time.ticks_ms(), 500)

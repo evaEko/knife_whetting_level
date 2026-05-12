@@ -8,7 +8,7 @@ _SAMPLE_MS = 500
 _SAMPLE_N  = 20
 
 
-class LevelState(State):
+class Level2State(State):
     def __init__(self):
         self._phase        = 'wait_release'
         self._press_start  = None
@@ -21,12 +21,11 @@ class LevelState(State):
 
     def enter(self, device):
         device.display.invert(False)
-        device.display.show_message("Place flat", "low=press")
+        device.display.show_message("Blade edge", "on stone,", "low=press")
 
     def update(self, device):
         buttons  = device.buttons
         sensor   = device.sensor
-        engine   = device.engine
         settings = device.settings
         display  = device.display
 
@@ -51,13 +50,10 @@ class LevelState(State):
             if not buttons.is_pressed('low'):
                 duration = time.ticks_diff(time.ticks_ms(), self._press_start)
                 if duration >= 800:
-                    settings.reset_board_offset()
-                    settings.reset_calibration()
-                    sensor.clear_surface_normal()
-                    engine.board_offset      = 0.0
-                    engine.calibrated_offset = 0.0
-                    engine.smooth_angle      = 0.0
-                    display.show_reboot_confirm("BL reset", "RESET")
+                    settings.edge_normal = None
+                    settings.save()
+                    sensor.clear_edge_normal()
+                    display.show_reboot_confirm("Blade rst", "RESET")
                     self._done_at = time.ticks_add(time.ticks_ms(), 800)
                     self._phase   = 'feedback'
                 else:
@@ -84,22 +80,44 @@ class LevelState(State):
             done = (time.ticks_diff(time.ticks_ms(), self._sample_end) >= 0
                     or self._sample_count >= _SAMPLE_N)
             if done and self._sample_count > 0:
-                mx = self._gx_sum / self._sample_count
-                my = self._gy_sum / self._sample_count
-                mz = self._gz_sum / self._sample_count
-                mag = math.sqrt(mx*mx + my*my + mz*mz)
-                nx, ny, nz = (mx/mag, my/mag, mz/mag) if mag > 0.0 else (0.0, 0.0, 1.0)
-                settings.surface_normal    = (nx, ny, nz)
-                settings.board_offset      = 0.0
-                settings.calibrated_offset = 0.0
-                settings.target_angle      = 0.0
-                settings.save()
-                sensor.set_surface_normal(nx, ny, nz)
-                engine.board_offset      = 0.0
-                engine.calibrated_offset = 0.0
-                engine.smooth_angle      = 0.0
-                display.show_reboot_confirm("Saved!", "DONE")
-                self._done_at = time.ticks_add(time.ticks_ms(), 800)
-                self._phase   = 'feedback'
+                self._finish(device)
 
         return None
+
+    def _finish(self, device):
+        settings = device.settings
+        sensor   = device.sensor
+        display  = device.display
+
+        if settings.surface_normal is None:
+            display.show_message("Do board", "level first", "top=back")
+            self._done_at = time.ticks_add(time.ticks_ms(), 2000)
+            self._phase   = 'feedback'
+            return
+
+        gx = self._gx_sum / self._sample_count
+        gy = self._gy_sum / self._sample_count
+        gz = self._gz_sum / self._sample_count
+        nx, ny, nz = settings.surface_normal
+
+        # Edge direction = cross(surface_normal, g_step2)
+        # — perpendicular to both the stone normal and the lifted gravity vector,
+        #   which is the axis the blade rotated around (the knife edge).
+        ex = ny*gz - nz*gy
+        ey = nz*gx - nx*gz
+        ez = nx*gy - ny*gx
+        mag = math.sqrt(ex*ex + ey*ey + ez*ez)
+        if mag < 0.05:
+            # Vectors nearly parallel — blade wasn't lifted enough
+            display.show_message("Lift more", "blade too", "flat")
+            self._done_at = time.ticks_add(time.ticks_ms(), 2000)
+            self._phase   = 'feedback'
+            return
+
+        ex, ey, ez = ex/mag, ey/mag, ez/mag
+        settings.edge_normal = (ex, ey, ez)
+        settings.save()
+        sensor.set_edge_normal(ex, ey, ez)
+        display.show_reboot_confirm("Saved!", "DONE")
+        self._done_at = time.ticks_add(time.ticks_ms(), 800)
+        self._phase   = 'feedback'

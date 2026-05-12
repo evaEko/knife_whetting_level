@@ -28,6 +28,7 @@ class BleUart:
         self._live             = False
         self._last_send        = 0
         self._last_target_send = 0
+        self._last_on_stone    = None  # None forces send on first tick after live_start
         self._cmd_queue        = []
 
     def enable(self):
@@ -57,6 +58,10 @@ class BleUart:
             if time.ticks_diff(now, self._last_target_send) >= _TARGET_STATE_INTERVAL_MS:
                 self._last_target_send = now
                 self.send_target_state(device)
+            on_stone = device.sensor.on_stone and device.engine.on_stone
+            if on_stone != self._last_on_stone:
+                self._last_on_stone = on_stone
+                self.send(f"on_stone:{1 if on_stone else 0}")
 
     def send(self, text):
         if self._conn is not None:
@@ -80,6 +85,7 @@ class BleUart:
     def start_live(self):
         self._live = True
         self._last_target_send = 0
+        self._last_on_stone    = None  # force on_stone send on next tick
 
     def stop_live(self):
         self._live = False
@@ -106,8 +112,9 @@ class BleUart:
             self._conn, _, _ = data
             print("BLE connected")
         elif event == _IRQ_CENTRAL_DISCONNECT:
-            self._conn = None
-            self._live = False
+            self._conn          = None
+            self._live          = False
+            self._last_on_stone = None
             self._cmd_queue.clear()
             self._advertise()
             print("BLE disconnected, advertising")

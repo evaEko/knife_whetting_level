@@ -62,7 +62,7 @@ class Display:
 
     # --- angle ---
 
-    def show_measure(self, angle, fmt="1d_half", target=None, name=None, ble_on=False):
+    def show_measure(self, angle, fmt="1d_half", target=None, name=None, ble_on=False, on_stone=True):
         """Measuring screen: optional name top, big angle middle, target bottom."""
         oled = self._oled
         if not oled:
@@ -73,6 +73,8 @@ class Display:
         self._draw_angle_band(angle, fmt, y=12)
         if target is not None:
             oled.text(self._fmt_target(target, fmt), 0, 32, 1)
+        if not on_stone:
+            oled.text("^", 66, 0, 1)
         if ble_on:
             self._draw_ble_star(oled)
         oled.show()
@@ -259,20 +261,37 @@ class Display:
 
     @staticmethod
     def _draw_ble_star(oled):
-        """Draw a tiny BLE indicator in the lower-right corner."""
+        """Draw a Bluetooth symbol in the lower-right corner."""
         x = 68
         y = 35
         fb = oled.fb
+        # Bluetooth symbol: central vertical line
+        fb.pixel(x, y-4, 1)
+        fb.pixel(x, y-3, 1)
+        fb.pixel(x, y-2, 1)
+        fb.pixel(x, y-1, 1)
         fb.pixel(x, y, 1)
-        fb.pixel(x, y - 3, 1)
-        fb.pixel(x, y + 3, 1)
-        fb.pixel(x - 3, y, 1)
-        fb.pixel(x + 3, y, 1)
-        fb.pixel(x, y - 1, 1)
-        fb.pixel(x, y + 1, 1)
-        fb.pixel(x - 1, y, 1)
-        fb.pixel(x + 1, y, 1)
-        fb.pixel(x - 2, y - 2, 1)
-        fb.pixel(x + 2, y + 2, 1)
-        fb.pixel(x - 2, y + 2, 1)
-        fb.pixel(x + 2, y - 2, 1)
+        fb.pixel(x, y+1, 1)
+        fb.pixel(x, y+2, 1)
+        fb.pixel(x, y+3, 1)
+        fb.pixel(x, y+4, 1)
+        # Bluetooth symbol: upper right diagonal
+        fb.pixel(x, y, 1)
+        fb.pixel(x+1, y-1, 1)
+        fb.pixel(x+2, y-2, 1)
+        fb.pixel(x+3, y-3, 1)
+        # Bluetooth symbol: lower right diagonal
+        fb.pixel(x, y, 1)
+        fb.pixel(x+1, y+1, 1)
+        fb.pixel(x+2, y+2, 1)
+        fb.pixel(x+3, y+3, 1)
+        # Bluetooth symbol: upper left diagonal
+        fb.pixel(x, y, 1)
+        fb.pixel(x-1, y-1, 1)
+        fb.pixel(x-2, y-2, 1)
+        fb.pixel(x-3, y-3, 1)
+        # Bluetooth symbol: lower left diagonal
+        fb.pixel(x, y, 1)
+        fb.pixel(x-1, y+1, 1)
+        fb.pixel(x-2, y+2, 1)
+        fb.pixel(x-3, y+3, 1)

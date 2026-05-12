@@ -267,6 +267,7 @@ fun MainScreen(context: Context) {
     var settingsLoaded   by remember { mutableStateOf(false) }
     var presetsLoaded    by remember { mutableStateOf(false) }
     var customAngleCountdown by remember { mutableStateOf(-1) }
+    var bladeOnStone         by remember { mutableStateOf(true) }
     val mainScope = rememberCoroutineScope()
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -315,6 +316,7 @@ fun MainScreen(context: Context) {
             currentTargetName = ""
             lastAngleAt = 0L
             measurementStale = true
+            bladeOnStone = true
             status = "Disconnected"
             if (screen != Screen.CONNECT && screen != Screen.SETTINGS) {
                 screen = Screen.CONNECT
@@ -384,6 +386,7 @@ fun MainScreen(context: Context) {
                 currentTargetName = ""
             }
             msg.startsWith("target_name:") -> currentTargetName = msg.removePrefix("target_name:")
+            msg.startsWith("on_stone:")    -> bladeOnStone = msg.removePrefix("on_stone:").trim() == "1"
             msg == "presets_done"      -> presetsLoaded = true
             msg == "settings_done"      -> settingsLoaded = true
             msg == "ok"                 -> { }
@@ -507,19 +510,8 @@ fun MainScreen(context: Context) {
                 sendCommand("get_calibration")
                 screen = Screen.CALIBRATE
             },
-            onCustomAngle = {
-                if (customAngleCountdown < 0) {
-                    mainScope.launch {
-                        for (s in appCustomAngleCountdownSec downTo 1) {
-                            customAngleCountdown = s
-                            delay(1_000)
-                        }
-                        customAngleCountdown = -1
-                        enqueueCommand("set_custom_angle:$angle")
-                    }
-                }
-            },
             customAngleCountdown = customAngleCountdown,
+            bladeOnStone = bladeOnStone,
             onDisconnect = {
                 requestDeviceDisconnect()
                 angle = "--"
@@ -527,6 +519,7 @@ fun MainScreen(context: Context) {
                 currentTargetName = ""
                 lastAngleAt = 0L
                 measurementStale = true
+                bladeOnStone = true
                 status = ""
                 screen = Screen.CONNECT
             }
@@ -595,6 +588,21 @@ fun MainScreen(context: Context) {
             status = presetStatus,
             currentTargetAngle = currentTargetAngle,
             waitingForReconnect = waitingForReconnect,
+            currentAngle = angle,
+            captureCountdownSec = customAngleCountdown,
+            onCapture = {
+                if (customAngleCountdown < 0) {
+                    screen = Screen.LIVE
+                    mainScope.launch {
+                        for (s in appCustomAngleCountdownSec downTo 1) {
+                            customAngleCountdown = s
+                            delay(1_000)
+                        }
+                        customAngleCountdown = -1
+                        enqueueCommand("set_custom_angle:$angle")
+                    }
+                }
+            },
             onAddPreset = { name, angle ->
                 presets.add(PresetEntry(name, angle))
             },
@@ -747,9 +755,9 @@ fun LiveScreen(
     onAppSettings: () -> Unit,
     onPresets: () -> Unit,
     onCalibrate: () -> Unit,
-    onCustomAngle: () -> Unit,
     onDisconnect: () -> Unit,
-    customAngleCountdown: Int = -1
+    customAngleCountdown: Int = -1,
+    bladeOnStone: Boolean = true,
 ) {
     val displayAngle = formatAngleForDisplay(angle, angleFormat)
     val currentAbs = angle.toFloatOrNull()?.let { kotlin.math.abs(it) }
@@ -763,11 +771,11 @@ fun LiveScreen(
     val tonePlayer = remember { TonePlayer() }
     var muted by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { tonePlayer.stop() } }
-    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, muted, highToneFreq, lowToneFreq) {
+    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, muted, highToneFreq, lowToneFreq, bladeOnStone) {
         when {
-            soundAlert && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq)
-            soundAlert && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq)
-            else                                  -> tonePlayer.stop()
+            bladeOnStone && soundAlert && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq)
+            bladeOnStone && soundAlert && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq)
+            else                                                            -> tonePlayer.stop()
         }
     }
 
@@ -775,7 +783,7 @@ fun LiveScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                if (!deviationBackgroundEnabled) MaterialTheme.colorScheme.background
+                if (!deviationBackgroundEnabled || !bladeOnStone) MaterialTheme.colorScheme.background
                 else if (tooHigh) tooHighColor
                 else if (tooLow) tooLowColor
                 else MaterialTheme.colorScheme.background
@@ -810,7 +818,15 @@ fun LiveScreen(
         }
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            if (displayArrow && hasTarget && currentAbs != null) {
+            if (!bladeOnStone) {
+                Text(
+                    text = "▲  LIFTED",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            if (bladeOnStone && displayArrow && hasTarget && currentAbs != null) {
                 val dimColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f)
                 val arrowGap = when (arrowSize) {
                     ArrowSize.XL     -> 8.dp
@@ -904,14 +920,15 @@ fun LiveScreen(
                 onClick = onPresets,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("ANGLE LIBRARY")
+                Text("TARGET ANGLE")
             }
-            OutlinedButton(
-                onClick = onCustomAngle,
-                enabled = !measurementStale && angle != "--" && customAngleCountdown < 0,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text(if (customAngleCountdown > 0) "CUSTOM ANGLE ($customAngleCountdown)" else "CUSTOM ANGLE")
+            if (customAngleCountdown > 0) {
+                Text(
+                    text = "Capturing in ${customAngleCountdown}s…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
             TextButton(
                 onClick = onDisconnect,

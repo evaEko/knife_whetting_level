@@ -76,3 +76,5 @@ class Device:
         if self.settings.surface_normal is not None:
             nx, ny, nz = self.settings.surface_normal
             self.sensor.set_surface_normal(nx, ny, nz)
+        if self.settings.calibrated_gravity is not None:
+            self.sensor.set_calibrated_g(*self.settings.calibrated_gravity)
