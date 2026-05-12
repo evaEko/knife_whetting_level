@@ -15,18 +15,7 @@ fun LevelSettingsContent(
 ) {
     LazyColumn(modifier = modifier) {
         item {
-            ExpandableSection("Displayed Data") {
-                BoolSetting("Preset Name", draft["show_preset_name"] == "true") { draft["show_preset_name"] = it.toString() }
-                BoolSetting("Target Angle", draft["show_target_angle"] == "true") { draft["show_target_angle"] = it.toString() }
-                BoolSetting("Load Target Angle on Boot", draft["load_target_angle_from_eeprom"] == "true") { draft["load_target_angle_from_eeprom"] = it.toString() }
-            }
-        }
-        item {
-            ExpandableSection("Measurement") {
-                EnumSetting("Format", draft["angle_format"] ?: "1d_half", listOf("2d", "1d", "1d_half"), compact = true) { draft["angle_format"] = it }
-                SliderSetting("Smoothing", draft["smoothing"]?.toFloatOrNull() ?: 0.7f, 0.3f, 0.9f, 5) { draft["smoothing"] = "%.1f".format(it) }
-                SliderSetting("Deviation Threshold (°)", draft["deviation_threshold"]?.toFloatOrNull() ?: 1.0f, 0.0f, 4.0f, 15) { draft["deviation_threshold"] = "%.2f".format(it) }
-            }
+            SliderSetting("Deviation Threshold (°)", draft["deviation_threshold"]?.toFloatOrNull() ?: 1.0f, 0.0f, 4.0f, 15) { draft["deviation_threshold"] = "%.2f".format(it) }
         }
     }
 }

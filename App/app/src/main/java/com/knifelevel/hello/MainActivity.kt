@@ -443,6 +443,10 @@ fun MainScreen(context: Context) {
             onDone = {
                 isScanning = false
                 if (foundDevices.size == 1) connectToDevice(foundDevices[0])
+            },
+            onError = { msg ->
+                isScanning = false
+                status = msg
             }
         )
     }
@@ -1069,9 +1073,19 @@ fun startScan(
     context: Context,
     onFound: (FoundDevice) -> Unit,
     onDone: () -> Unit,
+    onError: (String) -> Unit = {},
 ) {
     val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    val scanner = manager.adapter.bluetoothLeScanner
+    val adapter = manager.adapter
+    if (adapter == null || !adapter.isEnabled) {
+        mainHandler.post { onError("Bluetooth is off") }
+        return
+    }
+    val scanner = adapter.bluetoothLeScanner
+    if (scanner == null) {
+        mainHandler.post { onError("BLE scanner unavailable") }
+        return
+    }
     val seen = mutableSetOf<String>()
 
     val callback = object : ScanCallback() {
@@ -1085,8 +1099,17 @@ fun startScan(
                 }
             }
         }
+
+        override fun onScanFailed(errorCode: Int) {
+            mainHandler.post { onError("Scan failed (code $errorCode)") }
+        }
     }
-    scanner.startScan(callback)
+    try {
+        scanner.startScan(callback)
+    } catch (e: Exception) {
+        mainHandler.post { onError(e.message ?: "Scan error") }
+        return
+    }
     mainHandler.postDelayed({
         scanner.stopScan(callback)
         mainHandler.post { onDone() }

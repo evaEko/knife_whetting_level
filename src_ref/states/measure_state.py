@@ -4,7 +4,7 @@ from core.container import Container
 
 class MeasureState(State):
     def __init__(self):
-        self._target_str = None
+        pass
 
     def enter(self):
         Container.calibration_service.load()
@@ -12,8 +12,6 @@ class MeasureState(State):
             Container.display_service.show_text("No surface", "calibration", "Go to Settings")
             Container.logging_service.log("[MeasureState] no n_stone in storage")
             return
-        target = Container.calibration_service.target_angle()
-        self._target_str = "{:.1f}".format(target) if target is not None else None
         Container.display_service.show_text("Measuring...")
         Container.logging_service.log("[MeasureState] enter")
 
@@ -27,14 +25,21 @@ class MeasureState(State):
 
         if Container.calibration_service.has_stone():
             Container.measure_service.update()
-            Container.ble_handler.tick()
+
+        Container.ble_handler.tick()
+
+        if Container.calibration_service.has_stone():
             pitch = Container.measure_service.pitch()
-            Container.display_service.invert(
-                Container.calibration_service.has_target() and not Container.measure_service.in_position()
-            )
+            has_t = Container.calibration_service.has_target()
+            in_pos = Container.measure_service.in_position()
+            target = Container.calibration_service.target_angle()
+            target_str = "{:.1f}".format(target) if target is not None else None
+            Container.logging_service.log("pitch={:.2f} target={} has_target={} in_pos={}".format(
+                pitch, target, has_t, in_pos))
+            Container.display_service.invert(has_t and not in_pos)
             Container.display_service.show_measurement(
                 pitch,
-                target_str=self._target_str,
+                target_str=target_str,
                 ble=Container.ble_service.enabled,
             )
 

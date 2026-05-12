@@ -14,14 +14,15 @@ class BleCommandHandler:
 
     def tick(self):
         """Call once per loop tick from MeasureState."""
-        self._ble.update(
-            pitch=self._measure.pitch(),
-            target_angle=self._calibration.target_angle(),
-            on_stone=True,
-        )
         cmd = self._ble.poll()
         if cmd:
             self.handle(cmd)
+        if self._calibration.has_stone():
+            self._ble.update(
+                pitch=self._measure.pitch(),
+                target_angle=self._calibration.target_angle(),
+                on_stone=True,
+            )
 
     def handle(self, cmd):
         if cmd == 'live_start':
@@ -121,34 +122,46 @@ class BleCommandHandler:
         self._send_target_state()
 
     def _cmd_calibrate(self):
-        if not self._imu.update():
-            self._ble.send("err:no imu data")
-            return
+        self._imu.update()  # drain any pending packets; use last known quaternion if none
         g = self._imu.get_gravity()
         fmt = "{:.6f},{:.6f},{:.6f}".format(g[0], g[1], g[2])
         from helpers.vector_parser import VectorParser
         self._calibration._n_stone = VectorParser.parse(fmt)
         self._calibration._storage.set('n_stone', fmt)
+        self._measure.reset_pitch()  # clear smoothing so display snaps to 0° immediately
         self._ble.send("calibration:0.00")
         self._ble.send("ok:calibrated")
 
+    _SETTING_KEYS = [
+        'deviation_threshold',
+    ]
+
     def _cmd_get_settings(self):
-        self._ble.send("setting:deviation_threshold:{:.1f}".format(
-            self._config.deviation_threshold))
-        time.sleep_ms(20)
+        for key in self._SETTING_KEYS:
+            val = getattr(self._config, key, None)
+            if val is None:
+                continue
+            if key == 'deviation_threshold':
+                self._ble.send("setting:{}:{:.1f}".format(key, val))
+            else:
+                self._ble.send("setting:{}:{}".format(key, val))
+            time.sleep_ms(20)
         self._ble.send("settings_done")
 
     def _cmd_set_setting(self, args):
         key, _, raw = args.partition(':')
         key = key.strip()
         raw = raw.strip()
+        if key not in self._SETTING_KEYS:
+            self._ble.send("err:unknown key")
+            return
         if key == 'deviation_threshold':
             try:
                 val = float(raw)
             except Exception:
                 self._ble.send("err:invalid value")
                 return
-            self._config.set('deviation_threshold', str(val))
-            self._ble.send("ok:reboot_needed")
+            self._config.set('deviation_threshold', val)
         else:
-            self._ble.send("err:unknown key")
+            self._config.set(key, raw)
+        self._ble.send("ok")

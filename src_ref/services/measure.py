@@ -26,6 +26,7 @@ class MeasureService:
             return False
         g = self._imu.get_gravity()
         self._smooth(PitchCalculator.pitch(g, self._calibration.n_stone))
+        # Log pitch at regular intervals for debugging/analysis
         if ticks_diff(ticks_ms(), self._last_log) >= _LOG_INTERVAL:
             self._last_log = ticks_ms()
             self._log.log("pitch={:.2f}".format(self.pitch()))
@@ -46,6 +47,10 @@ class MeasureService:
             alpha = _ALPHA_FROZEN                          # stationary
         self._prev_pitch = self._pitch
         self._pitch = alpha * self._pitch + (1.0 - alpha) * raw
+
+    def reset_pitch(self):
+        self._pitch = None
+        self._prev_pitch = None
 
     def pitch(self):
         return self._pitch if self._pitch is not None else 0.0

@@ -37,6 +37,10 @@ fun SettingsScreen(
             draft.putAll(settings)
         }
     }
+    // Keep draft in sync if the device pushes an updated value while screen is open
+    LaunchedEffect(settings["deviation_threshold"]) {
+        settings["deviation_threshold"]?.let { draft["deviation_threshold"] = it }
+    }
 
     var selectedTab by remember { mutableStateOf(0) }
 

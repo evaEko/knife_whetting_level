@@ -29,9 +29,6 @@ class CalibrationService:
     def has_target(self):
         return self._target_angle is not None
 
-    def has_target(self):
-        return self._n_target is not None
-
     def target_angle(self):
         return self._target_angle
 

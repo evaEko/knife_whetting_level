@@ -16,6 +16,10 @@ class PresetStore:
         except OSError:
             pass
 
+    def replace_all(self, presets):
+        self._presets = [(name, float(angle)) for name, angle in presets]
+        self.save()
+
     def save(self):
         try:
             with open('angles.csv', 'w') as f:
