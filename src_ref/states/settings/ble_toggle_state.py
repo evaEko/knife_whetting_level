@@ -15,18 +15,18 @@ class BleToggleState(State):
             "Bluetooth",
             status,
             conn,
-            "low: toggle",
-            "hold: back",
+            "top: toggle",
+            "low: back",
         )
 
     def update(self):
-        if Container.button_event == 'short_low':
+        if Container.button_event == 'short_top':
             Container.ble_service.toggle()
             Container.logging_service.log(
                 "[BleToggleState] BLE " + ("on" if Container.ble_service.enabled else "off")
             )
             self._render()
-        elif Container.button_event == 'long_low':
+        elif Container.button_event == 'short_low':
             from states.settings_state import SettingsState
             return SettingsState(Container.settings_items)
         return None
