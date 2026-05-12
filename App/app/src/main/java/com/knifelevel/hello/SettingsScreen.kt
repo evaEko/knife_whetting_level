@@ -27,6 +27,8 @@ fun SettingsScreen(
     tooHighColorLabel: String,
     tooLowColorLabel: String,
     arrowSize: ArrowSize,
+    customSmallAudioUri: String?,
+    customBigAudioUri: String?,
     onSaveApp: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -83,6 +85,8 @@ fun SettingsScreen(
                 tooHighColorLabel = tooHighColorLabel,
                 tooLowColorLabel = tooLowColorLabel,
                 arrowSize = arrowSize,
+                customSmallAudioUri = customSmallAudioUri,
+                customBigAudioUri   = customBigAudioUri,
                 onSave = onSaveApp,
             )
             1 -> when {

@@ -1,8 +1,11 @@
 package com.knifelevel.hello
 
+import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import android.media.MediaPlayer
+import android.net.Uri
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -72,5 +75,57 @@ class TonePlayer {
         audioTrack?.release()
         audioTrack = null
         currentFreq = 0f
+    }
+}
+
+/**
+ * Plays either a generated sine-wave tone or a custom audio file (content URI), looped.
+ * Falls back to the tone if the custom URI is unreadable.
+ */
+class AlertSoundPlayer(private val context: Context) {
+    private val tonePlayer = TonePlayer()
+    private var mediaPlayer: MediaPlayer? = null
+    private var currentKey: String? = null
+
+    fun play(freq: Float, customUri: String?) {
+        if (customUri != null) {
+            val key = "uri:$customUri"
+            if (currentKey == key && mediaPlayer?.isPlaying == true) return
+            tonePlayer.stop()
+            if (currentKey != key) {
+                releaseMedia()
+                currentKey = key
+                try {
+                    mediaPlayer = MediaPlayer().apply {
+                        setDataSource(context, Uri.parse(customUri))
+                        isLooping = true
+                        prepare()
+                        start()
+                    }
+                } catch (_: Exception) {
+                    // URI unreadable — fall back to tone
+                    currentKey = "tone:$freq"
+                    tonePlayer.play(freq)
+                }
+            }
+        } else {
+            val key = "tone:$freq"
+            if (currentKey == key) return
+            releaseMedia()
+            currentKey = key
+            tonePlayer.play(freq)
+        }
+    }
+
+    fun stop() {
+        tonePlayer.stop()
+        releaseMedia()
+        currentKey = null
+    }
+
+    private fun releaseMedia() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }

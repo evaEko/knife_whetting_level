@@ -163,6 +163,8 @@ data class AppUiSettings(
     val tooHighColorLabel: String = ALERT_COLORS[0].label,
     val tooLowColorLabel:  String = ALERT_COLORS[4].label,
     val arrowSize: ArrowSize = ArrowSize.MEDIUM,
+    val customSmallAudioUri: String? = null,
+    val customBigAudioUri:   String? = null,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -181,6 +183,8 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         tooHighColorLabel = prefs.getString("too_high_color_label", ALERT_COLORS[0].label) ?: ALERT_COLORS[0].label,
         tooLowColorLabel  = prefs.getString("too_low_color_label",  ALERT_COLORS[4].label) ?: ALERT_COLORS[4].label,
         arrowSize = ArrowSize.fromLabel(prefs.getString("arrow_size", ArrowSize.MEDIUM.label)),
+        customSmallAudioUri = prefs.getString("custom_small_audio_uri", null),
+        customBigAudioUri   = prefs.getString("custom_big_audio_uri",   null),
     )
 }
 
@@ -200,6 +204,8 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putString("too_high_color_label", settings.tooHighColorLabel)
         .putString("too_low_color_label",  settings.tooLowColorLabel)
         .putString("arrow_size", settings.arrowSize.label)
+        .putString("custom_small_audio_uri", settings.customSmallAudioUri)
+        .putString("custom_big_audio_uri",   settings.customBigAudioUri)
         .apply()
 }
 
@@ -254,6 +260,8 @@ fun MainScreen(context: Context) {
     var appTooHighColorLabel by remember { mutableStateOf(initialAppUi.tooHighColorLabel) }
     var appTooLowColorLabel  by remember { mutableStateOf(initialAppUi.tooLowColorLabel) }
     var appArrowSize         by remember { mutableStateOf(initialAppUi.arrowSize) }
+    var appCustomSmallAudioUri by remember { mutableStateOf(initialAppUi.customSmallAudioUri) }
+    var appCustomBigAudioUri   by remember { mutableStateOf(initialAppUi.customBigAudioUri) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -557,6 +565,8 @@ fun MainScreen(context: Context) {
             tooHighColorLabel = appTooHighColorLabel,
             tooLowColorLabel  = appTooLowColorLabel,
             arrowSize = appArrowSize,
+            customSmallAudioUri = appCustomSmallAudioUri,
+            customBigAudioUri   = appCustomBigAudioUri,
             onSaveApp = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
@@ -571,6 +581,8 @@ fun MainScreen(context: Context) {
                 appTooHighColorLabel = updated.tooHighColorLabel
                 appTooLowColorLabel  = updated.tooLowColorLabel
                 appArrowSize = updated.arrowSize
+                appCustomSmallAudioUri = updated.customSmallAudioUri
+                appCustomBigAudioUri   = updated.customBigAudioUri
                 saveAppUiSettings(context, updated)
             },
             onBack = { screen = if (activeGatt != null) Screen.LIVE else Screen.CONNECT }
@@ -753,6 +765,8 @@ fun LiveScreen(
     soundAlert: Boolean,
     highToneFreq: Float,
     lowToneFreq: Float,
+    customSmallAudioUri: String? = null,
+    customBigAudioUri: String? = null,
     showTargetName: Boolean,
     showTargetAngle: Boolean,
     showDelta: Boolean,
@@ -772,13 +786,14 @@ fun LiveScreen(
     val tooHigh = hasTarget && currentAbs != null && currentAbs > targetAbs!! + deviationThreshold
     val tooLow  = hasTarget && currentAbs != null && currentAbs < targetAbs!! - deviationThreshold
 
-    val tonePlayer = remember { TonePlayer() }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val tonePlayer = remember { AlertSoundPlayer(context) }
     var muted by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { tonePlayer.stop() } }
-    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, muted, highToneFreq, lowToneFreq, bladeOnStone) {
+    LaunchedEffect(tooLow, tooHigh, displayArrow, soundAlert, muted, highToneFreq, lowToneFreq, customSmallAudioUri, customBigAudioUri, bladeOnStone) {
         when {
-            bladeOnStone && soundAlert && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq)
-            bladeOnStone && soundAlert && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq)
+            bladeOnStone && soundAlert && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq, customSmallAudioUri)
+            bladeOnStone && soundAlert && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq, customBigAudioUri)
             else                                                            -> tonePlayer.stop()
         }
     }

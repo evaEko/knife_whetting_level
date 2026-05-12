@@ -12,7 +12,7 @@ class BleToggleState(State):
         if ble.connected:
             status = "connected"
         elif ble.enabled:
-            status = "advert."
+            status = "connecting"
         else:
             status = "Off"
         d = Container.display_service._display

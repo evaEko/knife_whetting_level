@@ -13,7 +13,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
 import kotlinx.coroutines.launch
 
 @Composable
@@ -32,9 +36,11 @@ fun AppSettingsContent(
     tooHighColorLabel: String,
     tooLowColorLabel: String,
     arrowSize: ArrowSize,
+    customSmallAudioUri: String?,
+    customBigAudioUri: String?,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundAlert, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -97,9 +103,21 @@ fun AppSettingsContent(
                 TonePickerSetting("Angle too small (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
                     onSave(current().copy(highToneFreq = it)); previewTone(it)
                 }
+                AudioFilePicker(
+                    label = "Angle too small — custom file",
+                    uri = customSmallAudioUri,
+                    onPick = { onSave(current().copy(customSmallAudioUri = it)) },
+                    onClear = { onSave(current().copy(customSmallAudioUri = null)) },
+                )
                 TonePickerSetting("Angle too big (↓)", LOW_TONE_OPTIONS, lowToneFreq) {
                     onSave(current().copy(lowToneFreq = it)); previewTone(it)
                 }
+                AudioFilePicker(
+                    label = "Angle too big — custom file",
+                    uri = customBigAudioUri,
+                    onPick = { onSave(current().copy(customBigAudioUri = it)) },
+                    onClear = { onSave(current().copy(customBigAudioUri = null)) },
+                )
             }
         }
 
@@ -182,6 +200,52 @@ fun TonePickerSetting(label: String, options: List<TonePreset>, selectedFreq: Fl
                     OutlinedButton(onClick = { onChange(preset.freq) }, contentPadding = pad) { Text(preset.label, style = MaterialTheme.typography.labelSmall) }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun AudioFilePicker(
+    label: String,
+    uri: String?,
+    onPick: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { picked ->
+        if (picked != null) {
+            context.contentResolver.takePersistableUriPermission(
+                picked,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
+            onPick(picked.toString())
+        }
+    }
+    val pad = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (uri != null) {
+                    OutlinedButton(onClick = onClear, contentPadding = pad) {
+                        Text("Clear", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                Button(onClick = { launcher.launch(arrayOf("audio/*")) }, contentPadding = pad) {
+                    Text(if (uri == null) "Pick file" else "Change", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        if (uri != null) {
+            Text(
+                text = uri.substringAfterLast('%').substringAfterLast('/').take(40),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
         }
     }
 }
