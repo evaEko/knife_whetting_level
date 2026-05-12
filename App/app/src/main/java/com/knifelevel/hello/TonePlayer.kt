@@ -79,9 +79,47 @@ class TonePlayer {
 }
 
 /**
- * Plays either a generated sine-wave tone or a custom audio file (content URI), looped.
- * Falls back to the tone if the custom URI is unreadable.
+ * Plays a custom audio file that pauses/resumes instead of stopping, preserving playback
+ * position across interruptions (blade lifted, out of range). Loops at end.
  */
+class OnTargetPlayer(private val context: Context) {
+    private var mediaPlayer: MediaPlayer? = null
+    private var loadedUri: String? = null
+
+    fun play(uri: String) {
+        val mp = mediaPlayer
+        if (loadedUri == uri && mp != null) {
+            if (!mp.isPlaying) mp.start()
+            return
+        }
+        releasePlayer()
+        loadedUri = uri
+        try {
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(context, Uri.parse(uri))
+                isLooping = true
+                prepare()
+                start()
+            }
+        } catch (_: Exception) {
+            releasePlayer()
+        }
+    }
+
+    fun pause() {
+        mediaPlayer?.takeIf { it.isPlaying }?.pause()
+    }
+
+    fun release() {
+        releasePlayer()
+        loadedUri = null
+    }
+
+    private fun releasePlayer() {
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+}
 class AlertSoundPlayer(private val context: Context) {
     private val tonePlayer = TonePlayer()
     private var mediaPlayer: MediaPlayer? = null

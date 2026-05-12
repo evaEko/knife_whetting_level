@@ -167,6 +167,7 @@ data class AppUiSettings(
     val customSmallAudioUri: String? = null,
     val customBigAudioUri:   String? = null,
     val onTargetSoundEnabled: Boolean = false,
+    val onTargetContinueOnLifted: Boolean = false,
     val customOnTargetAudioUri: String? = null,
 )
 
@@ -190,6 +191,7 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         customSmallAudioUri = prefs.getString("custom_small_audio_uri", null),
         customBigAudioUri   = prefs.getString("custom_big_audio_uri",   null),
         onTargetSoundEnabled = prefs.getBoolean("on_target_sound_enabled", false),
+        onTargetContinueOnLifted = prefs.getBoolean("on_target_continue_on_lifted", false),
         customOnTargetAudioUri = prefs.getString("custom_on_target_audio_uri", null),
     )
 }
@@ -214,6 +216,7 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putString("custom_small_audio_uri", settings.customSmallAudioUri)
         .putString("custom_big_audio_uri",   settings.customBigAudioUri)
         .putBoolean("on_target_sound_enabled", settings.onTargetSoundEnabled)
+        .putBoolean("on_target_continue_on_lifted", settings.onTargetContinueOnLifted)
         .putString("custom_on_target_audio_uri", settings.customOnTargetAudioUri)
         .apply()
 }
@@ -273,6 +276,7 @@ fun MainScreen(context: Context) {
     var appCustomSmallAudioUri by remember { mutableStateOf(initialAppUi.customSmallAudioUri) }
     var appCustomBigAudioUri   by remember { mutableStateOf(initialAppUi.customBigAudioUri) }
     var appOnTargetSoundEnabled by remember { mutableStateOf(initialAppUi.onTargetSoundEnabled) }
+    var appOnTargetContinueOnLifted by remember { mutableStateOf(initialAppUi.onTargetContinueOnLifted) }
     var appCustomOnTargetAudioUri by remember { mutableStateOf(initialAppUi.customOnTargetAudioUri) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
@@ -568,6 +572,7 @@ fun MainScreen(context: Context) {
             customAngleCountdown = customAngleCountdown,
             bladeOnStone = bladeOnStone,
             onTargetSoundEnabled = appOnTargetSoundEnabled,
+            onTargetContinueOnLifted = appOnTargetContinueOnLifted,
             customOnTargetAudioUri = appCustomOnTargetAudioUri,
             onDisconnect = {
                 requestDeviceDisconnect()
@@ -614,6 +619,7 @@ fun MainScreen(context: Context) {
             customSmallAudioUri = appCustomSmallAudioUri,
             customBigAudioUri   = appCustomBigAudioUri,
             onTargetSoundEnabled = appOnTargetSoundEnabled,
+            onTargetContinueOnLifted = appOnTargetContinueOnLifted,
             customOnTargetAudioUri = appCustomOnTargetAudioUri,
             onSaveApp = { updated ->
                 appAngleFormat = updated.angleFormat
@@ -633,6 +639,7 @@ fun MainScreen(context: Context) {
                 appCustomSmallAudioUri = updated.customSmallAudioUri
                 appCustomBigAudioUri   = updated.customBigAudioUri
                 appOnTargetSoundEnabled = updated.onTargetSoundEnabled
+                appOnTargetContinueOnLifted = updated.onTargetContinueOnLifted
                 appCustomOnTargetAudioUri = updated.customOnTargetAudioUri
                 saveAppUiSettings(context, updated)
             },
@@ -679,8 +686,9 @@ fun MainScreen(context: Context) {
             onDeletePreset = { index ->
                 presets.removeAt(index)
             },
-            onSelectPreset = { angleValue ->
+            onSelectPreset = { angleValue, name ->
                 presetStatus = ""
+                currentTargetName = name
                 enqueueCommand("set_target_angle:$angleValue")
             },
             onClearTarget = {
@@ -820,6 +828,7 @@ fun LiveScreen(
     customSmallAudioUri: String? = null,
     customBigAudioUri: String? = null,
     onTargetSoundEnabled: Boolean = false,
+    onTargetContinueOnLifted: Boolean = false,
     customOnTargetAudioUri: String? = null,
     showTargetName: Boolean,
     showTargetAngle: Boolean,
@@ -842,15 +851,18 @@ fun LiveScreen(
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val tonePlayer = remember { AlertSoundPlayer(context) }
+    val onTargetPlayer = remember { OnTargetPlayer(context) }
     var muted by remember { mutableStateOf(false) }
-    DisposableEffect(Unit) { onDispose { tonePlayer.stop() } }
-    LaunchedEffect(tooLow, tooHigh, displayArrow, soundTooHighEnabled, soundTooLowEnabled, muted, highToneFreq, lowToneFreq, customSmallAudioUri, customBigAudioUri, bladeOnStone, onTargetSoundEnabled, customOnTargetAudioUri, hasTarget) {
+    DisposableEffect(Unit) { onDispose { tonePlayer.stop(); onTargetPlayer.release() } }
+    LaunchedEffect(tooLow, tooHigh, displayArrow, soundTooHighEnabled, soundTooLowEnabled, muted, highToneFreq, lowToneFreq, customSmallAudioUri, customBigAudioUri, bladeOnStone, onTargetSoundEnabled, onTargetContinueOnLifted, customOnTargetAudioUri, hasTarget) {
         when {
             bladeOnStone && soundTooLowEnabled  && !muted && displayArrow && tooLow  -> tonePlayer.play(highToneFreq, customSmallAudioUri)
             bladeOnStone && soundTooHighEnabled && !muted && displayArrow && tooHigh -> tonePlayer.play(lowToneFreq, customBigAudioUri)
-            bladeOnStone && onTargetSoundEnabled && !muted && hasTarget && !tooLow && !tooHigh && customOnTargetAudioUri != null -> tonePlayer.play(0f, customOnTargetAudioUri)
-            else                                                            -> tonePlayer.stop()
+            else -> tonePlayer.stop()
         }
+        val onTargetActive = onTargetSoundEnabled && !muted && hasTarget && customOnTargetAudioUri != null &&
+            (bladeOnStone && !tooLow && !tooHigh || !bladeOnStone && onTargetContinueOnLifted)
+        if (onTargetActive) onTargetPlayer.play(customOnTargetAudioUri!!) else onTargetPlayer.pause()
     }
 
     Column(

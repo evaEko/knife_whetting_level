@@ -40,10 +40,11 @@ fun AppSettingsContent(
     customSmallAudioUri: String?,
     customBigAudioUri: String?,
     onTargetSoundEnabled: Boolean,
+    onTargetContinueOnLifted: Boolean,
     customOnTargetAudioUri: String?,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, customOnTargetAudioUri)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, onTargetContinueOnLifted, customOnTargetAudioUri)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -127,6 +128,7 @@ fun AppSettingsContent(
             }
             BoolSetting("On target", onTargetSoundEnabled) { onSave(current().copy(onTargetSoundEnabled = it)) }
             if (onTargetSoundEnabled) {
+                BoolSetting("Continue on lifted", onTargetContinueOnLifted) { onSave(current().copy(onTargetContinueOnLifted = it)) }
                 AudioFilePicker(
                     label = "On target — custom file",
                     uri = customOnTargetAudioUri,

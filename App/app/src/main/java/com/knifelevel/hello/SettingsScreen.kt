@@ -31,6 +31,7 @@ fun SettingsScreen(
     customSmallAudioUri: String?,
     customBigAudioUri: String?,
     onTargetSoundEnabled: Boolean,
+    onTargetContinueOnLifted: Boolean,
     customOnTargetAudioUri: String?,
     onSaveApp: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
@@ -92,6 +93,7 @@ fun SettingsScreen(
                 customSmallAudioUri = customSmallAudioUri,
                 customBigAudioUri   = customBigAudioUri,
                 onTargetSoundEnabled = onTargetSoundEnabled,
+                onTargetContinueOnLifted = onTargetContinueOnLifted,
                 customOnTargetAudioUri = customOnTargetAudioUri,
                 onSave = onSaveApp,
             )

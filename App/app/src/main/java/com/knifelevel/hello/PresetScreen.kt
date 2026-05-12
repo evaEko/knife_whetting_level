@@ -48,7 +48,7 @@ fun PresetScreen(
     onAddPreset: (String, String) -> Unit,
     onUpdatePreset: (Int, String, String) -> Unit,
     onDeletePreset: (Int) -> Unit,
-    onSelectPreset: (String) -> Unit,
+    onSelectPreset: (String, String) -> Unit,
     onClearTarget: () -> Unit,
     onSaveToDevice: () -> Unit,
     onBack: () -> Unit,
@@ -152,7 +152,7 @@ fun PresetScreen(
                         Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .clickable { onSelectPreset(preset.angle) }
+                                .clickable { onSelectPreset(preset.angle, preset.name) }
                                 .padding(vertical = 4.dp)
                         ) {
                             Text(
