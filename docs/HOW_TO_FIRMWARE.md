@@ -124,15 +124,11 @@ The port will be `/dev/ttyACM0` or similar.
 
 mpremote needs the device to be at the MicroPython REPL prompt before it can transfer files. There are two ways to get there:
 
-**Option 1 — Short-press both buttons simultaneously (recommended)**
+Short-press both buttons simultaneously
 
-Press both buttons at the same time (short press). The display will show "Ready to flash..." and the device drops to REPL. Run `build_flash.py` immediately after.
+Press both buttons at the same time (short press). The display will show "Ready to flash..." and the device drops to REPL.
 
 Note: once flash mode is active, the only way out is to reset (short RST to GND) or power-cycle the device.
-
-**Option 2 — Flash within 1 second of boot**
-
-`main.py` has a 1-second delay at startup before it begins running. If you unplug and replug the device, you have approximately 1 second to start `build_flash.py` before the window closes.
 
 ### Flash automatically
 
@@ -150,57 +146,6 @@ python build_flash.py /dev/ttyACM0
 
 The script auto-discovers all files under `src/` (excluding `src/tools/`) and flashes them in one go. `angles.csv` is also flashed automatically.
 
-### Flash manually
-
-Run from the `knife_level_python` directory:
-
-```bash
-mpremote connect /dev/ttyACM0 mkdir :core
-mpremote connect /dev/ttyACM0 mkdir :drivers
-mpremote connect /dev/ttyACM0 mkdir :helpers
-mpremote connect /dev/ttyACM0 mkdir :services
-mpremote connect /dev/ttyACM0 mkdir :states
-mpremote connect /dev/ttyACM0 mkdir :states/settings
-mpremote connect /dev/ttyACM0 cp src/main.py :main.py
-mpremote connect /dev/ttyACM0 cp src/config.txt :config.txt
-mpremote connect /dev/ttyACM0 cp src/angles.csv :angles.csv
-mpremote connect /dev/ttyACM0 cp src/core/app.py :core/app.py
-mpremote connect /dev/ttyACM0 cp src/core/container.py :core/container.py
-mpremote connect /dev/ttyACM0 cp src/core/state.py :core/state.py
-mpremote connect /dev/ttyACM0 cp src/drivers/battery.py :drivers/battery.py
-mpremote connect /dev/ttyACM0 cp src/drivers/ble.py :drivers/ble.py
-mpremote connect /dev/ttyACM0 cp src/drivers/bno085.py :drivers/bno085.py
-mpremote connect /dev/ttyACM0 cp src/drivers/ssd1306.py :drivers/ssd1306.py
-mpremote connect /dev/ttyACM0 cp src/helpers/pitch_calculator.py :helpers/pitch_calculator.py
-mpremote connect /dev/ttyACM0 cp src/helpers/setting_item.py :helpers/setting_item.py
-mpremote connect /dev/ttyACM0 cp src/helpers/vector_parser.py :helpers/vector_parser.py
-mpremote connect /dev/ttyACM0 cp src/services/battery.py :services/battery.py
-mpremote connect /dev/ttyACM0 cp src/services/ble.py :services/ble.py
-mpremote connect /dev/ttyACM0 cp src/services/ble_handler.py :services/ble_handler.py
-mpremote connect /dev/ttyACM0 cp src/services/buttons.py :services/buttons.py
-mpremote connect /dev/ttyACM0 cp src/services/calibration.py :services/calibration.py
-mpremote connect /dev/ttyACM0 cp src/services/config.py :services/config.py
-mpremote connect /dev/ttyACM0 cp src/services/display.py :services/display.py
-mpremote connect /dev/ttyACM0 cp src/services/imu.py :services/imu.py
-mpremote connect /dev/ttyACM0 cp src/services/logging.py :services/logging.py
-mpremote connect /dev/ttyACM0 cp src/services/measure.py :services/measure.py
-mpremote connect /dev/ttyACM0 cp src/services/preset_store.py :services/preset_store.py
-mpremote connect /dev/ttyACM0 cp src/services/storage.py :services/storage.py
-mpremote connect /dev/ttyACM0 cp src/states/angle_select_state.py :states/angle_select_state.py
-mpremote connect /dev/ttyACM0 cp src/states/flash_mode_state.py :states/flash_mode_state.py
-mpremote connect /dev/ttyACM0 cp src/states/idle_state.py :states/idle_state.py
-mpremote connect /dev/ttyACM0 cp src/states/init_state.py :states/init_state.py
-mpremote connect /dev/ttyACM0 cp src/states/measure_state.py :states/measure_state.py
-mpremote connect /dev/ttyACM0 cp src/states/settings_state.py :states/settings_state.py
-mpremote connect /dev/ttyACM0 cp src/states/settings/__init__.py :states/settings/__init__.py
-mpremote connect /dev/ttyACM0 cp src/states/settings/ble_toggle_state.py :states/settings/ble_toggle_state.py
-mpremote connect /dev/ttyACM0 cp src/states/settings/clear_target_state.py :states/settings/clear_target_state.py
-mpremote connect /dev/ttyACM0 cp src/states/settings/deviation_state.py :states/settings/deviation_state.py
-mpremote connect /dev/ttyACM0 cp src/states/settings/set_preset_state.py :states/settings/set_preset_state.py
-mpremote connect /dev/ttyACM0 cp src/states/settings/surface_level_state.py :states/settings/surface_level_state.py
-mpremote connect /dev/ttyACM0 reset
-```
-
 ### REPL access
 
 ```bash
@@ -211,29 +156,31 @@ Hit **Ctrl+C** to interrupt `main.py` and get the `>>>` prompt.
 
 ## Runtime controls
 
-- Short-press low: open settings menu (`Calib`, `Level`, `Bluetooth`, `Exit`); long-press low inside Level = full reset including surface normal
-- Short-press top: open preset-angle selection menu
-- Long-press top: open angle-format menu (`2 decimals`, `1 decimal`, `0/5 steps`), short-press low to confirm; format is saved and the device auto-reboots
+- Short-press low: open settings menu (`Calibration`, `BLE`, `Deviation`, `Exit`)
+- Short-press top (when calibrated): open preset-angle selection menu
+- Short-press top (when uncalibrated): go directly to calibration capture
 - Short-press both buttons: enter flash mode
+
+### Settings menu
+
+| Item | Behaviour |
+|---|---|
+| Calibration | Capture stone surface normal; top=cancel, low=capture |
+| BLE | Toggle BLE on/off (top), back to menu (low) |
+| Deviation | Adjust deviation threshold; top=+0.1°, long-top=+0.5°, low=save, long-low=cancel |
+| Exit | Return to measurement |
+
+### Preset-angle selection menu
+
+Cycle through presets with top, confirm with low. Special items at the end:
+
+| Item | Behaviour |
+|---|---|
+| Custom | Capture the current blade angle as target; top=cancel, low=capture |
+| Clear | Unset the current target angle and return to measurement |
+| Exit | Return to measurement without changing target |
 
 ### Android companion app
 
-Install it from the `knife_level_android_apk` workflow artifact described above.
+Install it from the `knife_level_android_apk` workflow artifact. Refer to [Android app how-to](HOW_TO_ANDROID.md)
 
-The app is a BLE companion for setup, preset management, and easy usage.
-
-It can:
-
-- calibrate using the current live reading
-- change device settings exposed over BLE
-- manage preset angles
-
-Compatibility:
-
-- Android only
-- installs as a standalone APK; it is not distributed through Google Play
-
-Known issues:
-
-- if the MCU is outside measurement mode, the app can stay connected while live angle updates pause
-- BLE reconnect behavior varies by phone vendor and Android version; if the device does not immediately reappear after disconnect, wait a moment and try again (turn the device off and on).

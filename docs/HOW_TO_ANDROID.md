@@ -5,20 +5,43 @@ The Blunt Android app is a companion application for the Knife Level device. It 
 
 ### Settings available from the app
 
-**Displayed Data**
-- Show/hide preset name on the measuring screen
-- Show/hide target angle on the measuring screen
-- Restore last selected preset angle on boot
+The settings screen has two tabs: **Application** (stored on the phone) and **Level** (sent to the device over BLE).
 
-**Measurement**
-- **Format** — angle display format: `2d` (two decimals), `1d` (one decimal), `1d_half` (nearest 0.5°)
-- **Smoothing** — low-pass filter strength (0.3 = reactive, 0.9 = smooth)
-- **Deviation Threshold** — how far from the target angle before the display inverts; supports decimal values (0.5°–5.0° in 0.5° steps)
+#### Application tab
+
+**Lifted**
+- **Enable** — detect when the blade leaves the stone and pause deviation alerts
+- **Velocity threshold (°/s)** — minimum angular speed that triggers a lift event (3–30°/s); lower = more sensitive
+- **Debounce (ms)** — how long to wait after the last movement before returning to on-stone state (200–4000 ms); higher = fewer false detections when holding the blade in the air
+
+**Measurement Data**
+- **Angle Format** — `2d` (two decimals), `1d` (one decimal), `0.5` (nearest 0.5°)
+- **Target Name** — show the preset name (e.g. Gyuto) above the live angle
+- **Target Angle** — show the target angle value below the live reading
+- **Deviation Range** — show the allowed angle range (e.g. 13.0°–17.0°) based on target and threshold
+- **Delta** — show the signed difference between the live angle and the target (e.g. Δ+1.2°)
+
+**Visual Alert**
+- **Direction Arrows** — show ↑↓ arrows indicating which way to correct the blade; the active arrow turns the alert colour when outside the threshold
+- **Arrow Size** — Small / Medium / Large / XL (shown when Direction Arrows is on)
+- **Background Color** — change the background colour when outside the deviation threshold
+- **Angle too high / too low colour** — pick from Red, Orange, Pink, Teal, Blue (shown when Background Color is on)
 
 **Sound Alert**
-- **On angle too high** — plays a tone or custom audio file when the blade angle is above the target threshold; tone pitch is configurable
-- **On angle too low** — plays a tone or custom audio file when the blade angle is below the target threshold; tone pitch is configurable
-- **On target** — plays a custom audio file (looped) when the blade is within the target threshold; resumes from where it was interrupted rather than restarting; optional **Continue on lifted** sub-toggle keeps the audio playing when the blade is lifted off the stone
+- **On angle too high** — play a tone when the blade is above target + threshold; tone pitch and optional custom audio file are configurable
+- **On angle too low** — play a tone when the blade is below target − threshold; tone pitch and optional custom audio file are configurable
+- **On target** — play a custom audio file (looped) when the blade is within the target range; resumes from where it was interrupted
+  - **Continue on lifted** — keep the on-target audio playing when the blade is lifted off the stone
+
+**Custom Angle**
+- **Measurement delay (s)** — countdown before the live angle is captured as a custom target (1–15 s); gives time to position the blade
+
+#### Level tab
+
+These settings are written to the device over BLE. Press **Apply** to send.
+
+- **Deviation Threshold (°)** — how far from the target angle before the display inverts (0.0°–4.0°)
+- **Capture delay (s)** — settle time before the surface normal is sampled during calibration (1–30 s)
 
 ## Installation
 You have two options to install the app on your Android phone:
