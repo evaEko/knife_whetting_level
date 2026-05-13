@@ -42,9 +42,10 @@ fun AppSettingsContent(
     onTargetSoundEnabled: Boolean,
     onTargetContinueOnLifted: Boolean,
     customOnTargetAudioUri: String?,
+    showDeviationRange: Boolean,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, onTargetContinueOnLifted, customOnTargetAudioUri)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, onTargetContinueOnLifted, customOnTargetAudioUri, showDeviationRange)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -71,6 +72,7 @@ fun AppSettingsContent(
 
             BoolSetting("Target Name", showTargetName) { onSave(current().copy(showTargetName = it)) }
             BoolSetting("Target Angle", showTargetAngle) { onSave(current().copy(showTargetAngle = it)) }
+            BoolSetting("Deviation Range", showDeviationRange) { onSave(current().copy(showDeviationRange = it)) }
             BoolSetting("Delta", showDelta) { onSave(current().copy(showDelta = it)) }
         }
 

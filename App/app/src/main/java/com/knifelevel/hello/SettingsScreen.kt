@@ -33,6 +33,7 @@ fun SettingsScreen(
     onTargetSoundEnabled: Boolean,
     onTargetContinueOnLifted: Boolean,
     customOnTargetAudioUri: String?,
+    showDeviationRange: Boolean,
     onSaveApp: (AppUiSettings) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -95,6 +96,7 @@ fun SettingsScreen(
                 onTargetSoundEnabled = onTargetSoundEnabled,
                 onTargetContinueOnLifted = onTargetContinueOnLifted,
                 customOnTargetAudioUri = customOnTargetAudioUri,
+                showDeviationRange = showDeviationRange,
                 onSave = onSaveApp,
             )
             1 -> when {

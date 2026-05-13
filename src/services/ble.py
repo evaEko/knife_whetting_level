@@ -1,16 +1,14 @@
 from utime import ticks_ms, ticks_diff
 from drivers.ble import BleDriver
 
-_LIVE_INTERVAL_MS   =    40   # angle push rate
-_TARGET_INTERVAL_MS = 1_000   # target state push rate
+_LIVE_INTERVAL_MS = 40
 
 
 class BleService:
     def __init__(self):
-        self._driver        = BleDriver()
-        self._live          = False
-        self._last_send     = 0
-        self._last_target   = 0
+        self._driver    = BleDriver()
+        self._live      = False
+        self._last_send = 0
 
     def toggle(self):
         if self._driver.enabled:
@@ -29,23 +27,18 @@ class BleService:
         self._driver.disconnect()
 
     def start_live(self):
-        self._live          = True
-        self._last_target   = 0
+        self._live = True
 
     def stop_live(self):
         self._live = False
 
-    def update(self, pitch, target_angle):
-        """Push live data to the app. Call every tick from MeasureState."""
+    def update(self, pitch):
         if not self._live or not self._driver.connected:
             return
         now = ticks_ms()
         if ticks_diff(now, self._last_send) >= _LIVE_INTERVAL_MS:
             self._last_send = now
             self.send("angle:{:.2f}".format(pitch))
-        if ticks_diff(now, self._last_target) >= _TARGET_INTERVAL_MS:
-            self._last_target = now
-            self.send_target_state(target_angle)
 
     def send_target_state(self, target_angle, name=''):
         angle = target_angle if target_angle is not None else 0.0

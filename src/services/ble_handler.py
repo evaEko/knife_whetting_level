@@ -17,10 +17,7 @@ class BleCommandHandler:
         if cmd:
             self.handle(cmd)
         if self._calibration.has_stone():
-            self._ble.update(
-                pitch=self._measure.pitch(),
-                target_angle=self._calibration.target_angle(),
-            )
+            self._ble.update(pitch=self._measure.pitch())
 
     def handle(self, cmd):
         if cmd == 'live_start':
@@ -44,6 +41,9 @@ class BleCommandHandler:
             self._cmd_set_target_angle(cmd[17:])
         elif cmd.startswith('set_custom_angle:'):
             self._cmd_set_custom_angle(cmd[17:])
+        elif cmd == 'clear_target':
+            self._calibration.clear_target()
+            self._send_target_state()
         elif cmd == 'get_target_state':
             self._send_target_state()
         elif cmd == 'app_disconnect':

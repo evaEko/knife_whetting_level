@@ -169,6 +169,7 @@ data class AppUiSettings(
     val onTargetSoundEnabled: Boolean = false,
     val onTargetContinueOnLifted: Boolean = false,
     val customOnTargetAudioUri: String? = null,
+    val showDeviationRange: Boolean = false,
 )
 
 fun loadAppUiSettings(context: Context): AppUiSettings {
@@ -193,6 +194,7 @@ fun loadAppUiSettings(context: Context): AppUiSettings {
         onTargetSoundEnabled = prefs.getBoolean("on_target_sound_enabled", false),
         onTargetContinueOnLifted = prefs.getBoolean("on_target_continue_on_lifted", false),
         customOnTargetAudioUri = prefs.getString("custom_on_target_audio_uri", null),
+        showDeviationRange = prefs.getBoolean("show_deviation_range", false),
     )
 }
 
@@ -218,6 +220,7 @@ fun saveAppUiSettings(context: Context, settings: AppUiSettings) {
         .putBoolean("on_target_sound_enabled", settings.onTargetSoundEnabled)
         .putBoolean("on_target_continue_on_lifted", settings.onTargetContinueOnLifted)
         .putString("custom_on_target_audio_uri", settings.customOnTargetAudioUri)
+        .putBoolean("show_deviation_range", settings.showDeviationRange)
         .apply()
 }
 
@@ -278,6 +281,7 @@ fun MainScreen(context: Context) {
     var appOnTargetSoundEnabled by remember { mutableStateOf(initialAppUi.onTargetSoundEnabled) }
     var appOnTargetContinueOnLifted by remember { mutableStateOf(initialAppUi.onTargetContinueOnLifted) }
     var appCustomOnTargetAudioUri by remember { mutableStateOf(initialAppUi.customOnTargetAudioUri) }
+    var appShowDeviationRange by remember { mutableStateOf(initialAppUi.showDeviationRange) }
     var status           by remember { mutableStateOf("") }
     var permissionsGranted by remember { mutableStateOf(false) }
     var saveStatus       by remember { mutableStateOf("") }
@@ -574,6 +578,7 @@ fun MainScreen(context: Context) {
             onTargetSoundEnabled = appOnTargetSoundEnabled,
             onTargetContinueOnLifted = appOnTargetContinueOnLifted,
             customOnTargetAudioUri = appCustomOnTargetAudioUri,
+            showDeviationRange = appShowDeviationRange,
             onDisconnect = {
                 requestDeviceDisconnect()
                 angle = "--"
@@ -621,6 +626,7 @@ fun MainScreen(context: Context) {
             onTargetSoundEnabled = appOnTargetSoundEnabled,
             onTargetContinueOnLifted = appOnTargetContinueOnLifted,
             customOnTargetAudioUri = appCustomOnTargetAudioUri,
+            showDeviationRange = appShowDeviationRange,
             onSaveApp = { updated ->
                 appAngleFormat = updated.angleFormat
                 appDeviationBackgroundEnabled = updated.deviationBackgroundEnabled
@@ -641,6 +647,7 @@ fun MainScreen(context: Context) {
                 appOnTargetSoundEnabled = updated.onTargetSoundEnabled
                 appOnTargetContinueOnLifted = updated.onTargetContinueOnLifted
                 appCustomOnTargetAudioUri = updated.customOnTargetAudioUri
+                appShowDeviationRange = updated.showDeviationRange
                 saveAppUiSettings(context, updated)
             },
             onBack = { screen = if (activeGatt != null) Screen.LIVE else Screen.CONNECT }
@@ -695,7 +702,7 @@ fun MainScreen(context: Context) {
                 presetStatus = ""
                 currentTargetAngle = ""
                 currentTargetName = ""
-                enqueueCommand("set_target_angle:0")
+                enqueueCommand("clear_target")
             },
             onSaveToDevice = {
                 presetStatus = "Saving presets..."
@@ -839,6 +846,7 @@ fun LiveScreen(
     onDisconnect: () -> Unit,
     customAngleCountdown: Int = -1,
     bladeOnStone: Boolean = true,
+    showDeviationRange: Boolean = false,
 ) {
     val displayAngle = formatAngleForDisplay(angle, angleFormat)
     val currentAbs = angle.toFloatOrNull()?.let { kotlin.math.abs(it) }
@@ -947,7 +955,7 @@ fun LiveScreen(
                 Spacer(modifier = Modifier.height(arrowBottomSpacing))
             }
             Text(
-                text = "CURRENT ANGLE",
+                text = if (showTargetName && hasTarget && targetName.isNotBlank()) targetName else "CURRENT ANGLE",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -958,17 +966,19 @@ fun LiveScreen(
             )
             if (hasTarget) {
                 Spacer(modifier = Modifier.height(8.dp))
-                if (showTargetName && targetName.isNotBlank()) {
-                    Text(
-                        text = targetName,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
-                }
                 if (showTargetAngle) {
                     Text(
                         text = "${"%.1f".format(targetAbs!!)}°",
                         style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (showDeviationRange) {
+                    val lo = "%.1f".format(targetAbs!! - deviationThreshold)
+                    val hi = "%.1f".format(targetAbs!! + deviationThreshold)
+                    Text(
+                        text = "$lo° – $hi°",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
