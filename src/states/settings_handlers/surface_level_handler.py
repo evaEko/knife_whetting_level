@@ -1,12 +1,12 @@
 import math
 import time
-from core.state import State
+from core.setting_handler import SettingHandler
 
 _N_SAMPLES = 20
 _SETTLE_MS = 50
 
 
-class SurfaceLevelState(State):
+class SurfaceLevelHandler(SettingHandler):
     def __init__(self, storage_key, prompt, saved_msg, on_save):
         self._storage_key = storage_key
         self._prompt      = prompt
@@ -15,21 +15,22 @@ class SurfaceLevelState(State):
 
     def enter(self, app):
         app.display.show_text(*self._prompt)
-        app.logging.log("[SurfaceLevelState] enter key=" + self._storage_key)
+        app.logging.log("[SurfaceLevelHandler] enter key=" + self._storage_key)
 
     def update(self, app):
         if app.button_event == 'short_top':
-            from states.measure_state import MeasureState
-            return MeasureState()
+            return 'measure'
         if app.button_event == 'short_low':
             vec = self._capture(app)
             self._on_save(vec)
-            app.logging.log("[SurfaceLevelState] " + self._storage_key + "=" + self._fmt(vec))
+            app.logging.log("[SurfaceLevelHandler] " + self._storage_key + "=" + self._fmt(vec))
             app.display.show_text(self._saved_msg, self._fmt(vec))
             time.sleep_ms(2000)
-            from states.measure_state import MeasureState
-            return MeasureState()
+            return 'measure'
         return None
+
+    def exit(self, app):
+        app.logging.log("[SurfaceLevelHandler] exit key=" + self._storage_key)
 
     def _capture(self, app):
         delay_ms = int(getattr(app.config, 'capture_delay_sec', 5)) * 1000
@@ -52,6 +53,3 @@ class SurfaceLevelState(State):
 
     def _fmt(self, v):
         return "{:.3f},{:.3f},{:.3f}".format(v[0], v[1], v[2])
-
-    def exit(self, app):
-        app.logging.log("[SurfaceLevelState] exit key=" + self._storage_key)

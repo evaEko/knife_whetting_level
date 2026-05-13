@@ -18,13 +18,15 @@ class MeasureState(State):
 
     def _update_uncalibrated(self, app):
         if app.button_event == 'short_top':
-            from states.settings.surface_level_state import SurfaceLevelState
-            return SurfaceLevelState(
+            from states.settings_handlers.surface_level_handler import SurfaceLevelHandler
+            from states.settings_state import SettingsState
+            handler = SurfaceLevelHandler(
                 storage_key='n_stone',
                 prompt=("Lay blade", "flat on stone", "top=esc", "low=capt"),
                 saved_msg="Calibrated",
                 on_save=app.calibration.set_stone,
             )
+            return SettingsState(app.settings_items, active_handler=handler)
         if app.button_event == 'short_low':
             from states.settings_state import SettingsState
             return SettingsState(app.settings_items)
@@ -53,4 +55,3 @@ class MeasureState(State):
             pitch, target, has_t, in_pos))
         app.display.invert(has_t and not in_pos)
         app.display.show_measurement(pitch, target_str=target_str, ble=app.ble.enabled)
-

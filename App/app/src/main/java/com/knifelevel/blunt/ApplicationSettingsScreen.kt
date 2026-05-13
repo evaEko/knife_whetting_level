@@ -113,10 +113,7 @@ fun AppSettingsContent(
         }
 
         ExpandableSection("Visual Alert") {
-            BoolSetting("Enable", deviationBackgroundEnabled,
-                "Change the background colour when the blade drifts outside the deviation threshold.") {
-                onSave(current().copy(deviationBackgroundEnabled = it))
-            }
+
             BoolSetting("Direction Arrows", displayArrow,
                 "Show ↑↓ arrows indicating which direction to correct the blade angle. The active arrow turns red when outside the threshold.") {
                 onSave(current().copy(displayArrow = it))
@@ -128,6 +125,10 @@ fun AppSettingsContent(
                     options = ArrowSize.entries.map { it.label },
                     compact = true
                 ) { onSave(current().copy(arrowSize = ArrowSize.fromLabel(it))) }
+            }
+            BoolSetting("Background Color", deviationBackgroundEnabled,
+                "Change the background colour when the blade drifts outside the deviation threshold.") {
+                onSave(current().copy(deviationBackgroundEnabled = it))
             }
             if (deviationBackgroundEnabled) {
                 AlertColorPickerSetting(

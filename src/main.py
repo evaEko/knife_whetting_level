@@ -61,12 +61,12 @@ battery     = BatteryService(
 
 
 def _deviation():
-    from states.settings.deviation_state import DeviationState
-    return DeviationState()
+    from states.settings_handlers.deviation_handler import DeviationHandler
+    return DeviationHandler()
 
 def _surface():
-    from states.settings.surface_level_state import SurfaceLevelState
-    return SurfaceLevelState(
+    from states.settings_handlers.surface_level_handler import SurfaceLevelHandler
+    return SurfaceLevelHandler(
         storage_key='n_stone',
         prompt=("Level", "on stone", "top=esc", "low=capt"),
         saved_msg="Calibrated",
@@ -74,8 +74,8 @@ def _surface():
     )
 
 def _target():
-    from states.settings.surface_level_state import SurfaceLevelState
-    return SurfaceLevelState(
+    from states.settings_handlers.surface_level_handler import SurfaceLevelHandler
+    return SurfaceLevelHandler(
         storage_key='n_target',
         prompt=("Blade", "at angle", "top=esc", "low=capt"),
         saved_msg="Target saved",
@@ -83,29 +83,34 @@ def _target():
     )
 
 def _ble():
-    from states.settings.ble_toggle_state import BleToggleState
-    return BleToggleState()
+    from states.settings_handlers.ble_toggle_handler import BleToggleHandler
+    return BleToggleHandler()
 
-def _exit():
-    from states.measure_state import MeasureState
-    return MeasureState()
+def _exit(app):
+    return 'measure'
 
-def _clear_target():
-    from states.settings.clear_target_state import ClearTargetState
-    return ClearTargetState()
+def _clear_target(app):
+    import time
+    app.calibration.clear_target()
+    app.display.show_splash("Cleared")
+    time.sleep_ms(1500)
+    return 'measure'
 
 def _make_preset(angle):
-    def _factory():
-        from states.settings.set_preset_state import SetPresetState
-        return SetPresetState(angle)
-    return _factory
+    def action(app):
+        import time
+        app.calibration.set_target_angle(angle)
+        app.display.show_splash("{:.1f}".format(angle))
+        time.sleep_ms(1500)
+        return 'measure'
+    return action
 
 def build_angle_items():
-    items = [SettingItem(name, _make_preset(angle), subtitle="{:g}".format(angle))
+    items = [SettingItem(name, action=_make_preset(angle), subtitle="{:g}".format(angle))
              for name, angle in presets]
-    items.append(SettingItem("Custom", _target))
-    items.append(SettingItem("Clear",  _clear_target))
-    items.append(SettingItem("Exit",   _exit))
+    items.append(SettingItem("Custom", handler=_target))
+    items.append(SettingItem("Clear",  action=_clear_target))
+    items.append(SettingItem("Exit",   action=_exit))
     return items
 
 
@@ -123,10 +128,10 @@ app = App(
     battery=battery,
     presets=presets,
     settings_items=[
-        SettingItem("Calibration", _surface),
-        SettingItem("BLE",         _ble),
-        SettingItem("Deviation",   _deviation),
-        SettingItem("Exit",        _exit),
+        SettingItem("Calibration", handler=_surface),
+        SettingItem("BLE",         handler=_ble),
+        SettingItem("Deviation",   handler=_deviation),
+        SettingItem("Exit",        action=_exit),
     ],
     build_angle_items=build_angle_items,
 )

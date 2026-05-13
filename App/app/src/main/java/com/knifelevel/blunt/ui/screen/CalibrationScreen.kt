@@ -24,9 +24,6 @@ fun CalibrationScreen(
     ) {
         Text("CALIBRATION", style = MaterialTheme.typography.labelLarge)
         Spacer(modifier = Modifier.height(64.dp))
-        Text("LAST CALIBRATION ANGLE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
-        Text("$calibrationAngle°", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.tertiary)
-        Spacer(modifier = Modifier.height(32.dp))
         Text("CURRENT READING", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
         Text(
             text = if (angle != null) "${"%.2f".format(angle)}°" else "--°",
@@ -44,7 +41,6 @@ fun CalibrationScreen(
         ) {
             TextButton(onClick = onBack) { Text("← Back") }
             Button(onClick = {
-                status = "Calibrating..."
                 deviceVm.calibrate()
             }) { Text("Apply") }
         }

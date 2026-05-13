@@ -1,4 +1,4 @@
-from core.state import State
+from core.setting_handler import SettingHandler
 
 _STEP_FINE   = 0.1
 _STEP_COARSE = 0.5
@@ -6,14 +6,14 @@ _MIN         = 0.0
 _MAX         = 4.0
 
 
-class DeviationState(State):
+class DeviationHandler(SettingHandler):
     def __init__(self):
         self._value = None
 
     def enter(self, app):
         self._value = app.config.deviation_threshold
         self._render(app)
-        app.logging.log("[DeviationState] enter")
+        app.logging.log("[DeviationHandler] enter")
 
     def update(self, app):
         if app.button_event == 'short_top':
@@ -24,16 +24,14 @@ class DeviationState(State):
             app.config.set('deviation_threshold', self._value)
             if app.ble.connected:
                 app.ble.send("setting:deviation_threshold:{:.1f}".format(self._value))
-            app.logging.log("[DeviationState] saved: " + str(self._value))
-            from states.settings_state import SettingsState
-            return SettingsState(app.settings_items)
+            app.logging.log("[DeviationHandler] saved: " + str(self._value))
+            return 'settings'
         elif app.button_event == 'long_low':
-            from states.settings_state import SettingsState
-            return SettingsState(app.settings_items)
+            return 'settings'
         return None
 
     def exit(self, app):
-        app.logging.log("[DeviationState] exit")
+        app.logging.log("[DeviationHandler] exit")
 
     def _render(self, app):
         app.display.show_text(
