@@ -1,4 +1,4 @@
-package com.knifelevel.hello
+package com.knifelevel.blunt
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,14 +34,19 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun BoolSetting(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label)
-        Switch(checked = value, onCheckedChange = onChange)
+fun BoolSetting(label: String, value: Boolean, description: String? = null, onChange: (Boolean) -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(label, modifier = Modifier.weight(1f))
+            Switch(checked = value, onCheckedChange = onChange)
+        }
+        if (description != null) {
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
@@ -83,16 +88,17 @@ fun SliderSetting(label: String, value: Float, min: Float, max: Float, steps: In
 }
 
 @Composable
-fun StepperSetting(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
+fun StepperSetting(label: String, value: Int, min: Int, max: Int, step: Int = 1, description: String? = null, onChange: (Int) -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label)
+        Text(label, modifier = Modifier.weight(1f))
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(
-                onClick = { if (value > min) onChange(value - 1) },
+                onClick = { if (value > min) onChange((value - step).coerceAtLeast(min)) },
                 enabled = value > min,
                 modifier = Modifier.size(40.dp),
                 contentPadding = PaddingValues(0.dp),
@@ -103,11 +109,15 @@ fun StepperSetting(label: String, value: Int, min: Int, max: Int, onChange: (Int
                 style = MaterialTheme.typography.bodyLarge
             )
             OutlinedButton(
-                onClick = { if (value < max) onChange(value + 1) },
+                onClick = { if (value < max) onChange((value + step).coerceAtMost(max)) },
                 enabled = value < max,
                 modifier = Modifier.size(40.dp),
                 contentPadding = PaddingValues(0.dp),
             ) { Text("+") }
         }
+    }
+    if (description != null) {
+        Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
     }
 }

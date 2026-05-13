@@ -1,4 +1,4 @@
-package com.knifelevel.hello
+package com.knifelevel.blunt
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +19,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Intent
 import kotlinx.coroutines.launch
+import com.knifelevel.blunt.model.ALERT_COLORS
+import com.knifelevel.blunt.model.AlertColorPreset
+import com.knifelevel.blunt.model.AppAngleFormat
+import com.knifelevel.blunt.model.AppUiSettings
+import com.knifelevel.blunt.model.ArrowSize
 
 @Composable
 fun AppSettingsContent(
@@ -43,9 +48,12 @@ fun AppSettingsContent(
     onTargetContinueOnLifted: Boolean,
     customOnTargetAudioUri: String?,
     showDeviationRange: Boolean,
+    liftedDetectionEnabled: Boolean,
+    liftedVelThreshold: Int,
+    liftedDebounceMs: Int,
     onSave: (AppUiSettings) -> Unit,
 ) {
-    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, onTargetContinueOnLifted, customOnTargetAudioUri, showDeviationRange)
+    fun current() = AppUiSettings(angleFormat, deviationBackgroundEnabled, displayArrow, soundTooHighEnabled, soundTooLowEnabled, highToneFreq, lowToneFreq, showTargetName, showTargetAngle, showDelta, customAngleCountdownSec, tooHighColorLabel, tooLowColorLabel, arrowSize, customSmallAudioUri, customBigAudioUri, onTargetSoundEnabled, onTargetContinueOnLifted, customOnTargetAudioUri, showDeviationRange, liftedDetectionEnabled, liftedVelThreshold, liftedDebounceMs)
 
     val previewPlayer = remember { TonePlayer() }
     DisposableEffect(Unit) { onDispose { previewPlayer.stop() } }
@@ -59,6 +67,22 @@ fun AppSettingsContent(
     }
 
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
+        ExpandableSection("Lifted") {
+            BoolSetting("Enable", liftedDetectionEnabled,
+                "Detect when the blade leaves the stone and pause deviation alerts.") {
+                onSave(current().copy(liftedDetectionEnabled = it))
+            }
+            if (liftedDetectionEnabled) {
+                StepperSetting("Velocity threshold (°/s)", liftedVelThreshold, 3, 30,
+                    description = "Minimum angular speed that triggers a lift event. Lower = more sensitive to slow movements.") {
+                    onSave(current().copy(liftedVelThreshold = it))
+                }
+                StepperSetting("Debounce (ms)", liftedDebounceMs, 200, 4000, 100,
+                    description = "How long to wait after the last movement before returning to on-stone state. Higher = fewer false on-stone detections when holding the blade in the air.") {
+                    onSave(current().copy(liftedDebounceMs = it))
+                }
+            }
+        }
         ExpandableSection("Measurement Data") {
             EnumSetting(
                 label = "Angle Format",
@@ -70,15 +94,33 @@ fun AppSettingsContent(
                 )
             ) { onSave(current().copy(angleFormat = AppAngleFormat.fromWire(it))) }
 
-            BoolSetting("Target Name", showTargetName) { onSave(current().copy(showTargetName = it)) }
-            BoolSetting("Target Angle", showTargetAngle) { onSave(current().copy(showTargetAngle = it)) }
-            BoolSetting("Deviation Range", showDeviationRange) { onSave(current().copy(showDeviationRange = it)) }
-            BoolSetting("Delta", showDelta) { onSave(current().copy(showDelta = it)) }
+            BoolSetting("Target Name", showTargetName,
+                "Show the preset name (e.g. Gyuto) as the label above the live angle.") {
+                onSave(current().copy(showTargetName = it))
+            }
+            BoolSetting("Target Angle", showTargetAngle,
+                "Show the target angle value below the live reading.") {
+                onSave(current().copy(showTargetAngle = it))
+            }
+            BoolSetting("Deviation Range", showDeviationRange,
+                "Show the allowed angle range (e.g. 13.0° – 17.0°) based on the target and deviation threshold.") {
+                onSave(current().copy(showDeviationRange = it))
+            }
+            BoolSetting("Delta", showDelta,
+                "Show the signed difference between the live angle and the target (e.g. Δ+1.2°).") {
+                onSave(current().copy(showDelta = it))
+            }
         }
 
         ExpandableSection("Visual Alert") {
-            BoolSetting("Enable", deviationBackgroundEnabled) { onSave(current().copy(deviationBackgroundEnabled = it)) }
-            BoolSetting("Direction Arrows", displayArrow) { onSave(current().copy(displayArrow = it)) }
+            BoolSetting("Enable", deviationBackgroundEnabled,
+                "Change the background colour when the blade drifts outside the deviation threshold.") {
+                onSave(current().copy(deviationBackgroundEnabled = it))
+            }
+            BoolSetting("Direction Arrows", displayArrow,
+                "Show ↑↓ arrows indicating which direction to correct the blade angle. The active arrow turns red when outside the threshold.") {
+                onSave(current().copy(displayArrow = it))
+            }
             if (displayArrow) {
                 EnumSetting(
                     label = "Arrow Size",
@@ -104,7 +146,10 @@ fun AppSettingsContent(
         }
 
         ExpandableSection("Sound Alert") {
-            BoolSetting("On angle too high", soundTooHighEnabled) { onSave(current().copy(soundTooHighEnabled = it)) }
+            BoolSetting("On angle too high", soundTooHighEnabled,
+                "Play a tone when the blade angle is above target + threshold.") {
+                onSave(current().copy(soundTooHighEnabled = it))
+            }
             if (soundTooHighEnabled) {
                 TonePickerSetting("Angle too small (↑)", HIGH_TONE_OPTIONS, highToneFreq) {
                     onSave(current().copy(highToneFreq = it)); previewTone(it)
@@ -116,7 +161,10 @@ fun AppSettingsContent(
                     onClear = { onSave(current().copy(customSmallAudioUri = null)) },
                 )
             }
-            BoolSetting("On angle too low", soundTooLowEnabled) { onSave(current().copy(soundTooLowEnabled = it)) }
+            BoolSetting("On angle too low", soundTooLowEnabled,
+                "Play a tone when the blade angle is below target − threshold.") {
+                onSave(current().copy(soundTooLowEnabled = it))
+            }
             if (soundTooLowEnabled) {
                 TonePickerSetting("Angle too big (↓)", LOW_TONE_OPTIONS, lowToneFreq) {
                     onSave(current().copy(lowToneFreq = it)); previewTone(it)
@@ -128,9 +176,15 @@ fun AppSettingsContent(
                     onClear = { onSave(current().copy(customBigAudioUri = null)) },
                 )
             }
-            BoolSetting("On target", onTargetSoundEnabled) { onSave(current().copy(onTargetSoundEnabled = it)) }
+            BoolSetting("On target", onTargetSoundEnabled,
+                "Play audio when the blade is within the target range. Requires a custom audio file.") {
+                onSave(current().copy(onTargetSoundEnabled = it))
+            }
             if (onTargetSoundEnabled) {
-                BoolSetting("Continue on lifted", onTargetContinueOnLifted) { onSave(current().copy(onTargetContinueOnLifted = it)) }
+                BoolSetting("Continue on lifted", onTargetContinueOnLifted,
+                    "Keep the on-target audio playing when the blade is lifted off the stone.") {
+                    onSave(current().copy(onTargetContinueOnLifted = it))
+                }
                 AudioFilePicker(
                     label = "On target — custom file",
                     uri = customOnTargetAudioUri,
@@ -141,7 +195,8 @@ fun AppSettingsContent(
         }
 
         ExpandableSection("Custom Angle") {
-            StepperSetting("Measurement delay (s)", customAngleCountdownSec, 1, 15) {
+            StepperSetting("Measurement delay (s)", customAngleCountdownSec, 1, 15,
+                description = "Countdown in seconds before the live angle is captured as a custom target. Gives you time to position the blade.") {
                 onSave(current().copy(customAngleCountdownSec = it))
             }
         }

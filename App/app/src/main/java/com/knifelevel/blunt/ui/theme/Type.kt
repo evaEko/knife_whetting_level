@@ -1,4 +1,4 @@
-package com.knifelevel.hello.ui.theme
+package com.knifelevel.blunt.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

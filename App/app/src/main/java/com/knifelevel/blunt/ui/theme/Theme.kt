@@ -1,4 +1,4 @@
-package com.knifelevel.hello.ui.theme
+package com.knifelevel.blunt.ui.theme
 
 import android.app.Activity
 import android.os.Build
