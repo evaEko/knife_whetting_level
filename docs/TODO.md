@@ -2,16 +2,14 @@
 
 # Firmware
 
-* TEST after god object refactor
-
 * implement correct detection of battery connected when on usb cable
 * refactor ble protocol and related
-* sometimes after disconnect, the level does not advetise bluetooth
+* fix battery status reading
 
 # Known Issues
 
-- When plugging in and the battery is full, the MCU incorrectly notifies that the power is cut off.
-- Occasionally, the Android app cannot detect the level; if this happens, turn the device off and on again and drop me a line with exact scenario.
+- Battery readings can be erratic.
+- Occasionally, the Android app cannot detect the level; if this happens, turn the level device off and on again, enable bluetooth and in your Android app rescan.
 
 ## GitHub
 
@@ -19,10 +17,21 @@
 
 - tidy up
 
-## Android App + Bluetooth
+## Angle Format Setting
 
-* refactor the whole thing
+## Measurement Improvements
 
-also, make the option buttons in application setting smaller: for the arrow and for the angle too high and too low
+### On-Stone Detection *(needs improvement)*
+Basic implementation in place: pitch-based threshold (12°) with 800 ms debounce
+on return. Known limitations:
+- Threshold is a fixed degree value, not tied to actual blade/stone geometry
+- Does not distinguish "blade lifted" from "blade at wrong angle on stone"
+- Needs real-world tuning across different sharpening angles and users
 
-for the angle option: drop the labels: people can see the color and just make them some reasonable size
+## Tests *(from plan — desktop, no hardware)*
+
+- [ ] `test_calibrate_state.py`
+- [ ] `test_deviation_state.py`
+- [ ] `test_storage_service.py`
+- [ ] `test_config_service.py`
+- [ ] `test_bno085_parse.py` — parse_reports returns correct accel/gyro tuples

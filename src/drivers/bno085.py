@@ -1,105 +1,107 @@
 import struct
 import time
-import math
 
 # SHTP channels
 _CHAN_CONTROL = 2
 _CHAN_REPORTS = 3
 
 # SH-2 report IDs
-_ROTATION_VECTOR = 0x05
 _GAME_ROTATION_VECTOR = 0x08
-_SET_FEATURE_CMD = 0xFD
-_BASE_TIMESTAMP = 0xFB
+_GYRO_CALIBRATED      = 0x02
+_SET_FEATURE_CMD      = 0xFD
+_BASE_TIMESTAMP       = 0xFB
+_COMMAND_REQUEST      = 0xF2
 
-_Q14 = 16384.0
+# SH-2 command IDs
+_CMD_ME_CALIBRATE = 0x07
+
+_Q14        = 16384.0
+_Q9         = 512.0
 _MAX_PACKET = 128
 
 
 class BNO085:
-    def __init__(self, i2c, addr=0x4A, rst=None):
-        self.i2c = i2c
-        self.addr = addr
-        self._seq = [0] * 6
-        self._quat = (1.0, 0.0, 0.0, 0.0)  # w, x, y, z
+    """Static driver — knows the BNO085 SHTP protocol. No state."""
 
-        # Hardware reset if pin provided
-        if rst is not None:
-            rst.value(0)
-            time.sleep_ms(10)
-            rst.value(1)
-            time.sleep_ms(100)
-
-        # Wait for boot and drain startup packets
-        time.sleep_ms(200)
-        for _ in range(10):
-            self._read_packet()
-            time.sleep_ms(10)
-
-    def _read_packet(self):
+    @staticmethod
+    def read_packet(i2c, addr):
         """Read one SHTP packet. Returns (channel, payload) or None."""
         try:
-            header = self.i2c.readfrom(self.addr, 4)
+            header = i2c.readfrom(addr, 4)
         except OSError:
             return None
-
         length = (header[1] & 0x7F) << 8 | header[0]
         if length < 4 or length > 32768:
             return None
-
         read_len = min(length, _MAX_PACKET)
         try:
-            data = self.i2c.readfrom(self.addr, read_len)
+            data = i2c.readfrom(addr, read_len)
         except OSError:
             return None
+        return (data[2], data[4:read_len])
 
-        channel = data[2]
-        payload = data[4:read_len]
-        return (channel, payload)
-
-    def _send_packet(self, channel, payload):
-        """Send an SHTP packet."""
+    @staticmethod
+    def send_packet(i2c, addr, seq, channel, payload):
+        """Send one SHTP packet. Returns updated seq array."""
         length = len(payload) + 4
         header = bytes([
             length & 0xFF,
             (length >> 8) & 0x7F,
             channel,
-            self._seq[channel]
+            seq[channel],
         ])
-        self._seq[channel] = (self._seq[channel] + 1) & 0xFF
-        self.i2c.writeto(self.addr, header + bytes(payload))
+        seq[channel] = (seq[channel] + 1) & 0xFF
+        i2c.writeto(addr, header + bytes(payload))
+        return seq
 
-    def enable_rotation_vector(self, interval_ms=10):
-        """Enable game rotation vector (accel+gyro, no mag) at given interval."""
+    @staticmethod
+    def _enable_report(i2c, addr, seq, report_id, interval_ms):
         interval_us = interval_ms * 1000
         cmd = bytearray(17)
         cmd[0] = _SET_FEATURE_CMD
-        cmd[1] = _GAME_ROTATION_VECTOR
+        cmd[1] = report_id
         struct.pack_into('<I', cmd, 5, interval_us)
-        self._send_packet(_CHAN_CONTROL, cmd)
+        seq = BNO085.send_packet(i2c, addr, seq, _CHAN_CONTROL, cmd)
         time.sleep_ms(50)
-        # Drain response packets
         for _ in range(5):
-            self._read_packet()
+            BNO085.read_packet(i2c, addr)
             time.sleep_ms(10)
+        return seq
 
-    def update(self):
-        """Drain all available packets and update quaternion. Returns True if new data."""
-        got_data = False
-        for _ in range(20):  # read up to 20 queued packets
-            result = self._read_packet()
-            if result is None:
-                break
-            channel, payload = result
-            if channel == _CHAN_REPORTS and len(payload) >= 1:
-                if self._parse_reports(payload):
-                    got_data = True
-        return got_data
+    @staticmethod
+    def enable_rotation_vector(i2c, addr, seq, interval_ms=10):
+        """Enable game rotation vector report."""
+        return BNO085._enable_report(i2c, addr, seq, _GAME_ROTATION_VECTOR, interval_ms)
 
-    def _parse_reports(self, payload):
-        """Parse sensor reports from input report channel."""
+    @staticmethod
+    def enable_gyro(i2c, addr, seq, interval_ms=10):
+        """Enable calibrated gyroscope report."""
+        return BNO085._enable_report(i2c, addr, seq, _GYRO_CALIBRATED, interval_ms)
+
+    @staticmethod
+    def configure_calibration(i2c, addr, seq, accel=True, gyro=True, mag=False):
+        """Configure dynamic calibration per sensor."""
+        cmd = bytearray(12)
+        cmd[0] = _COMMAND_REQUEST
+        cmd[1] = 0
+        cmd[2] = _CMD_ME_CALIBRATE
+        cmd[3] = 0
+        cmd[4] = 1 if accel else 0
+        cmd[5] = 1 if gyro  else 0
+        cmd[6] = 1 if mag   else 0
+        seq = BNO085.send_packet(i2c, addr, seq, _CHAN_CONTROL, cmd)
+        time.sleep_ms(50)
+        for _ in range(5):
+            BNO085.read_packet(i2c, addr)
+            time.sleep_ms(10)
+        return seq
+
+    @staticmethod
+    def parse_reports(payload):
+        """Parse all sensor reports in payload.
+        Returns dict with 'quat' (w,x,y,z) and/or 'gyro' (x,y,z rad/s), or None."""
+        result = {}
         i = 0
-        got_rv = False
         while i < len(payload):
             report_id = payload[i]
             if report_id == _BASE_TIMESTAMP and i + 5 <= len(payload):
@@ -109,15 +111,63 @@ class BNO085:
                 qj = struct.unpack_from('<h', payload, i + 6)[0] / _Q14
                 qk = struct.unpack_from('<h', payload, i + 8)[0] / _Q14
                 qr = struct.unpack_from('<h', payload, i + 10)[0] / _Q14
-                self._quat = (qr, qi, qj, qk)  # w, x, y, z
-                got_rv = True
+                result['quat'] = (qr, qi, qj, qk)
                 i += 12
+            elif report_id == _GYRO_CALIBRATED and i + 10 <= len(payload):
+                gx = struct.unpack_from('<h', payload, i + 4)[0] / _Q9
+                gy = struct.unpack_from('<h', payload, i + 6)[0] / _Q9
+                gz = struct.unpack_from('<h', payload, i + 8)[0] / _Q9
+                result['gyro'] = (gx, gy, gz)
+                i += 10
             else:
                 break
-        return got_rv
+        return result or None
+
+
+class IMU:
+    """Instance — owns i2c connection, seq counters and latest quaternion for one BNO085 chip."""
+
+    def __init__(self, i2c, addr=0x4A, rst=None):
+        self.i2c   = i2c
+        self.addr  = addr
+        self._seq  = [0] * 6
+        self._quat = (1.0, 0.0, 0.0, 0.0)  # w, x, y, z
+        self._gyro = (0.0, 0.0, 0.0)        # x, y, z rad/s
+
+        if rst is not None:
+            rst.value(0)
+            time.sleep_ms(10)
+            rst.value(1)
+            time.sleep_ms(100)
+
+        time.sleep_ms(200)
+        for _ in range(10):
+            BNO085.read_packet(self.i2c, self.addr)
+            time.sleep_ms(10)
+
+        self._seq = BNO085.enable_rotation_vector(self.i2c, self.addr, self._seq)
+        self._seq = BNO085.enable_gyro(self.i2c, self.addr, self._seq)
+
+    def update(self):
+        """Drain all available packets, update state. Returns True if new rotation data."""
+        got_data = False
+        for _ in range(20):
+            result = BNO085.read_packet(self.i2c, self.addr)
+            if result is None:
+                break
+            channel, payload = result
+            if channel == _CHAN_REPORTS and len(payload) >= 1:
+                parsed = BNO085.parse_reports(payload)
+                if parsed:
+                    if 'quat' in parsed:
+                        self._quat = parsed['quat']
+                        got_data = True
+                    if 'gyro' in parsed:
+                        self._gyro = parsed['gyro']
+        return got_data
 
     def get_gravity(self):
-        """Gravity unit vector in sensor body frame (gx, gy, gz), derived from quaternion."""
+        """Gravity unit vector derived from quaternion (gx, gy, gz)."""
         w, x, y, z = self._quat
         return (
             2.0 * (w * y - x * z),
@@ -125,22 +175,12 @@ class BNO085:
             2.0 * (x * x + y * y) - 1.0,
         )
 
-    def get_inclination(self):
-        """Surface inclination in degrees [0, 90] using Z axis only.
-        Fallback when no surface normal has been calibrated."""
-        _, _, gz = self.get_gravity()
-        return math.degrees(math.acos(max(-1.0, min(1.0, abs(gz)))))
+    def get_angular_velocity(self):
+        """Angular velocity vector (x, y, z) in rad/s."""
+        return self._gyro
 
-    def set_report_interval(self, interval_ms):
-        """Change rotation vector report interval. Use 1000+ for low-power idle."""
-        interval_us = interval_ms * 1000
-        cmd = bytearray(17)
-        cmd[0] = _SET_FEATURE_CMD
-        cmd[1] = _GAME_ROTATION_VECTOR
-        struct.pack_into('<I', cmd, 5, interval_us)
-        self._send_packet(_CHAN_CONTROL, cmd)
-        time.sleep_ms(50)
-        for _ in range(5):
-            self._read_packet()
-            time.sleep_ms(10)
+    def is_spinning(self, threshold_rads=0.5):
+        """True if angular speed exceeds threshold (default 0.5 rad/s ≈ 30°/s)."""
+        gx, gy, gz = self._gyro
+        return (gx*gx + gy*gy + gz*gz) > threshold_rads * threshold_rads
 

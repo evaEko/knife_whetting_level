@@ -1,4 +1,4 @@
-package com.knifelevel.hello
+package com.knifelevel.blunt
 
 import org.junit.Test
 

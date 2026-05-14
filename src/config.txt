@@ -1,0 +1,13 @@
+sda_imu=38
+scl_imu=36
+sda_oled=6
+sck_oled=8
+i2c_id_imu=0
+i2c_id_oled=1
+bno085_addr=75
+oled_addr=60
+btn_low=43
+btn_top=45
+deviation_threshold=2.0
+capture_delay_sec=5
+ble_enabled=0
