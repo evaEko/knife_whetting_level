@@ -10,3 +10,4 @@ btn_low=43
 btn_top=45
 deviation_threshold=2.0
 capture_delay_sec=5
+ble_enabled=0

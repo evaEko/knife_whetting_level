@@ -136,6 +136,9 @@ app = App(
     build_angle_items=build_angle_items,
 )
 
+if config.ble_enabled:
+    ble.toggle()
+
 app.run(InitState(), global_events={
     'both': FlashModeState,
 })

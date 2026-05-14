@@ -18,6 +18,7 @@ import com.knifelevel.blunt.OnTargetPlayer
 import com.knifelevel.blunt.model.ALERT_COLORS
 import com.knifelevel.blunt.model.AppAngleFormat
 import com.knifelevel.blunt.model.ArrowSize
+import com.knifelevel.blunt.model.ConnectionState
 import com.knifelevel.blunt.viewmodel.AppSettingsViewModel
 import com.knifelevel.blunt.viewmodel.DeviceViewModel
 
@@ -36,6 +37,12 @@ fun LiveScreen(
     val deviceSettings   by deviceVm.deviceSettings.collectAsState()
     val measurementStale by deviceVm.measurementStale.collectAsState()
     val bladeOnStone     by deviceVm.bladeOnStone.collectAsState()
+    val captureCountdown by deviceVm.captureCountdown.collectAsState()
+    val connectionState  by deviceVm.connectionState.collectAsState()
+
+    LaunchedEffect(connectionState) {
+        if (connectionState == ConnectionState.DISCONNECTED) onDisconnect()
+    }
     val settings         by settingsVm.settings.collectAsState()
 
     val deviationThreshold = deviceSettings["deviation_threshold"]?.toFloatOrNull() ?: 1f
@@ -143,7 +150,11 @@ fun LiveScreen(
                     color = if (isOffTarget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
-            if (measurementStale) {
+            if (captureCountdown > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("$captureCountdown", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary)
+                Text("CAPTURING", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            } else if (measurementStale) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Connected, waiting for measurements...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
             }

@@ -15,8 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.knifelevel.blunt.model.PresetEntry
 import com.knifelevel.blunt.viewmodel.DeviceViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun PresetScreen(
@@ -32,14 +30,13 @@ fun PresetScreen(
     val currentTargetStr = targetAngle?.let { "%.2f".format(it) } ?: ""
     val currentAngleStr  = angle?.let { "%.2f".format(it) } ?: "--"
 
-    var localPresets by remember(presetsReady) { mutableStateOf(presets) }
+    val captureCountdown by deviceVm.captureCountdown.collectAsState()
+    var localPresets by remember { mutableStateOf(presets) }
     var status       by remember { mutableStateOf("") }
-    var captureCountdown by remember { mutableStateOf(-1) }
-    val scope = rememberCoroutineScope()
     val editorState = remember { mutableStateOf<PresetEditorState?>(null) }
 
     LaunchedEffect(Unit) { deviceVm.refreshPresetsAndSettings() }
-    LaunchedEffect(presets) { if (presetsReady) localPresets = presets }
+    LaunchedEffect(presetsReady) { if (presetsReady) localPresets = presets }
 
     if (editorState.value != null) {
         PresetEditorDialog(
@@ -77,14 +74,8 @@ fun PresetScreen(
             Text("Set current reading as target", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
             Button(
                 onClick = {
-                    if (captureCountdown < 0) {
-                        onBack()
-                        scope.launch {
-                            for (s in 5 downTo 1) { captureCountdown = s; delay(1_000) }
-                            captureCountdown = -1
-                            deviceVm.sendCommand("set_custom_angle:$currentAngleStr")
-                        }
-                    }
+                    angle?.let { deviceVm.captureAngle(it) }
+                    onBack()
                 },
                 enabled = currentAngleStr != "--" && captureCountdown < 0,
             ) { Text(if (captureCountdown > 0) "${captureCountdown}s…" else "CAPTURE") }

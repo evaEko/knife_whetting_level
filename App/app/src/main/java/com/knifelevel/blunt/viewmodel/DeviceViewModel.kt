@@ -35,8 +35,11 @@ class DeviceViewModel(
     val settingsReady: StateFlow<Boolean>              = repo.settingsReady
     val bladeOnStone: StateFlow<Boolean>               = repo.bladeOnStone
 
-    private val _measurementStale = MutableStateFlow(true)
+    private val _measurementStale  = MutableStateFlow(true)
     val measurementStale: StateFlow<Boolean> = _measurementStale.asStateFlow()
+
+    private val _captureCountdown = MutableStateFlow(-1)
+    val captureCountdown: StateFlow<Int> = _captureCountdown.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -88,6 +91,14 @@ class DeviceViewModel(
     fun calibrate()                  = repo.sendCommand("calibrate")
     fun setTargetAngle(angle: Float) = repo.sendCommand("set_target_angle:$angle")
     fun clearTarget()                = repo.clearTarget()
+
+    fun captureAngle(angle: Float) {
+        viewModelScope.launch {
+            for (s in 5 downTo 1) { _captureCountdown.value = s; delay(1_000) }
+            _captureCountdown.value = -1
+            repo.sendCommand("set_custom_angle:${"%.2f".format(angle)}")
+        }
+    }
 
     fun savePresets(list: List<PresetEntry>, onDone: () -> Unit) {
         repo.setOnQueueDrained(onDone)

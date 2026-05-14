@@ -54,4 +54,5 @@ class MeasureState(State):
         app.logging.log("pitch={:.2f} target={} has_target={} in_pos={}".format(
             pitch, target, has_t, in_pos))
         app.display.invert(has_t and not in_pos)
-        app.display.show_measurement(pitch, target_str=target_str, ble=app.ble.enabled)
+        app.display.show_measurement(pitch, target_str=target_str,
+                                     ble=app.ble.enabled, ble_connected=app.ble.connected)

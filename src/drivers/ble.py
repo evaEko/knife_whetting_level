@@ -1,5 +1,8 @@
 import ubluetooth
 import time
+from utime import ticks_ms, ticks_diff
+
+_WATCHDOG_MS = 1500
 
 _IRQ_CENTRAL_CONNECT    = 1
 _IRQ_CENTRAL_DISCONNECT = 2
@@ -21,8 +24,9 @@ class BleDriver:
         self._conn      = None
         self._tx        = None
         self._rx        = None
-        self._enabled   = False
-        self._cmd_queue = []
+        self._enabled         = False
+        self._cmd_queue       = []
+        self._send_fail_since = None
 
     def enable(self):
         self._ble.active(True)
@@ -56,13 +60,31 @@ class BleDriver:
             return
         try:
             self._ble.gatts_notify(self._conn, self._tx, text.encode())
+            self._send_fail_since = None
         except OSError as e:
             if e.errno == 12:  # ENOMEM — buffer full, retry once
                 time.sleep_ms(50)
                 try:
                     self._ble.gatts_notify(self._conn, self._tx, text.encode())
+                    self._send_fail_since = None
+                    return
                 except Exception:
                     pass
+            self._on_send_failure()
+
+    def _on_send_failure(self):
+        now = ticks_ms()
+        if self._send_fail_since is None:
+            self._send_fail_since = now
+        elif ticks_diff(now, self._send_fail_since) >= _WATCHDOG_MS:
+            self._force_disconnect()
+
+    def _force_disconnect(self):
+        self._conn            = None
+        self._send_fail_since = None
+        self._cmd_queue.clear()
+        if self._enabled:
+            self._advertise()
 
     def poll(self):
         """Return next queued command string or None."""
@@ -91,7 +113,8 @@ class BleDriver:
         if event == _IRQ_CENTRAL_CONNECT:
             self._conn, _, _ = data
         elif event == _IRQ_CENTRAL_DISCONNECT:
-            self._conn = None
+            self._conn            = None
+            self._send_fail_since = None
             self._cmd_queue.clear()
             if self._enabled:
                 self._advertise()
