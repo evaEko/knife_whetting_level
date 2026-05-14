@@ -86,29 +86,32 @@ def pick_tty():
 
 def find_files():
     src = Path("src")
-    all_files = list(src.rglob("*.py")) + list(src.rglob("*.csv"))
+    all_files = list(src.rglob("*.py")) + list(src.rglob("*.csv")) + list(src.rglob("*.txt"))
     src_files = [f for f in all_files if "tools" not in f.parts]
     dirs = sorted({f.parent.relative_to(src).as_posix()
                    for f in src_files if f.parent != src})
     return sorted(src_files), dirs
 
 
-def clean_device(tty, src_files, dirs):
-    top_dirs  = sorted({Path(d).parts[0] for d in dirs})
-    top_files = [f.relative_to(Path("src")).as_posix()
-                 for f in src_files if f.parent == Path("src")]
+_PRESERVE = {'config.txt', 'angles.csv'}
+
+def clean_device(tty):
     rmrf = (
         "import os\n"
-        "def _rm(p):\n"
-        "    try:\n"
-        "        for e in os.listdir(p): _rm(p+'/'+e)\n"
-        "        os.rmdir(p)\n"
-        "    except OSError:\n"
-        "        try: os.remove(p)\n"
-        "        except: pass\n"
+        f"KEEP = {repr(_PRESERVE)}\n"
+        "def _rm(p, top=False):\n"
+        "    for n in os.listdir(p):\n"
+        "        if top and n in KEEP: continue\n"
+        "        full = p + '/' + n\n"
+        "        st = os.stat(full)\n"
+        "        if st[0] & 0x4000:\n"
+        "            _rm(full)\n"
+        "            try: os.rmdir(full)\n"
+        "            except: pass\n"
+        "        else:\n"
+        "            os.remove(full)\n"
+        "_rm('/flash', top=True)\n"
     )
-    rmrf += "\n".join(f"_rm('{d}')" for d in top_dirs)
-    rmrf += "\n" + "\n".join(f"_rm('{f}')" for f in top_files)
     _spin("Cleaning device...", MPREMOTE + ["connect", tty, "exec", rmrf])
 
 
@@ -160,7 +163,7 @@ tty = _args[0] if _args else pick_tty()
 src_files, dirs = find_files()
 print(f"Flashing {len(src_files)} files → {tty}  (use -v for verbose)")
 
-clean_device(tty, src_files, dirs)
+clean_device(tty)
 make_dirs(tty, dirs)
 upload_files(tty, src_files)
 _spin("Resetting device...",  MPREMOTE + ["connect", tty, "reset"])

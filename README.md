@@ -1,8 +1,8 @@
-# Knife Level
+# Knife Level BLUNT
 
-A small digital level for knife sharpening. Measures blade surface inclination in real time using a 9-DOF IMU, displays the angle on an OLED, and alerts you when you drift from your target sharpening angle.
+A small digital level for knife sharpening. Measures blade surface inclination in real time, displays the angle, and alerts you when you drift from your target sharpening angle.
 
- Built on MicroPython running on an nRF52840 microcontroller with two buttons, a LiPo battery, and a custom PCB. 
+ Built on MicroPython running on an nRF52840 microcontroller.
 
 <img src="docs/images/knife_whetting_level.jpg" width="300"/>
 
@@ -31,9 +31,12 @@ Commercial use and resale are not permitted.
 2. [Flash the firmware](docs/HOW_TO_FIRMWARE.md)
 3. Optionally install the Android companion app from the `knife_level_android_apk` workflow artifact
 
-If impatient, go over [Quick Start](docs/QUICK_START.md).
+If impatient, go over to [Quick Start](docs/QUICK_START.md).
 
-For a detailed explanation of how board levelling, calibration, and angle calculation work — including the math — see [Angle Math](docs/ANGLE_MATH.md).
+## Known Issues
+
+- **Android app rescan after restart** — if you power-cycle the level, the Android app will not reconnect automatically; open the app and scan again.
+- **Lifted detection is experimental** — the feature that detects when the blade leaves the stone is not reliable and may produce false positives or miss lift events; treat alerts that depend on it as best-effort.
 
 ## Acknowledgements
 
@@ -43,18 +46,11 @@ Development was assisted by [Claude](https://claude.ai) (Anthropic).
 
 ## Features
 
-- **Live sharpening angle** — displays current blade surface inclination in real time on the OLED
+- **Live sharpening angle** — displays current blade surface inclination in real time on the OLED, rounded to nearest 0.5° with one decimal place
 - **Rotation-invariant measurement** — the sensor attaches to the blade with a magnet and can spin freely on the blade face; the reading reports the correct blade angle regardless of how the sensor is rotated on the surface
 - **Session calibration** — set the current surface as zero from the on-device settings menu or the Android app
-- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle; threshold supports decimal values (e.g. 0.5°)
-- **Battery display** — shows battery percentage on startup
+- **Angle setting** — set the current angle as the sharpening angle
+- **Visual alert** — display inverts when you drift more than the configured threshold from the target angle; both 0° and 180° orientations are treated as equivalent (knife flipped upside-down is the same angle); threshold supports decimal values (e.g. 0.5°)
 - **Preset angle profiles** — define named knives and their angles in `angles.csv`; select them on-device with the top button, with optional restore of the last selected preset after reboot
 - **Calibration + presets are independent** — calibrate once to set your physical reference point (zero), then switch between knife presets freely; each preset angle is always displayed relative to the calibration, never compounding
-- **Expanded two-button controls** — short-press low = settings menu (`Calib`, `Level`, `Bluetooth`), short-press top = preset menu, long-press top = angle-format menu, short-press both = flash mode
-- **Selectable angle display format** — choose `2 decimals`, `1 decimal`, or `0/5 steps` (nearest 0.5) directly on-device; setting is stored in flash and restored on boot
-- **Automatic reboot after persistent changes** — board-levelling save/reset and angle-format changes reboot the MCU automatically so the new setting takes effect immediately
-- **Flash mode** — short-press both buttons simultaneously to drop to REPL for flashing without unplugging (to exit flash mode, reset via RST↔GND or power-cycle the device)
-- **Physical power switch** — B+ latch switch replaces soft power off
-- **Board levelling** — captures the full 3D surface normal once when placed flat; stored in flash and applied automatically on every boot, making readings accurate regardless of sensor mounting orientation
 - **Bluetooth companion app** — configure display/behavior settings over BLE, calibrate from the phone, manage preset angles with CRUD operations, and back up/restore presets plus app-exposed settings after reflashing
-
