@@ -38,7 +38,7 @@ class SSD1306:
             _SET_COM_OUT_DIR | 0x08,
             _SET_DISP_OFFSET,     0x00,
             _SET_COM_PIN_CFG,     0x12,
-            _SET_DISP_CLK_DIV,    0xF0,
+            _SET_DISP_CLK_DIV,    0xF2,
             _SET_PRECHARGE,       0xF1,
             _SET_VCOM_DESEL,      0x30,
             _SET_CONTRAST,        0xFF,

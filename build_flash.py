@@ -86,7 +86,7 @@ def pick_tty():
 
 def find_files():
     src = Path("src")
-    all_files = list(src.rglob("*.py")) + list(src.rglob("*.csv"))
+    all_files = list(src.rglob("*.py")) + list(src.rglob("*.csv")) + list(src.rglob("*.txt"))
     src_files = [f for f in all_files if "tools" not in f.parts]
     dirs = sorted({f.parent.relative_to(src).as_posix()
                    for f in src_files if f.parent != src})

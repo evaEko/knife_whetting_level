@@ -31,11 +31,18 @@ class MeasureService:
             self._log.log("pitch={:.2f}".format(self.pitch()))
         return True
 
+    def _snap_if_stopped(self, raw):
+        """If the filter is lost after a spin but the device has stopped, snap to raw."""
+        if not self._imu.is_spinning() and abs(raw - self._pitch) >= _SPIKE_THRESHOLD:
+            self._pitch = raw
+            self._prev_pitch = raw
+
     def _smooth(self, raw):
         if self._pitch is None:
             self._pitch = raw
             self._prev_pitch = raw
             return
+        self._snap_if_stopped(raw)
         smooth_vel = abs(self._pitch - self._prev_pitch)
         deviation  = abs(raw - self._pitch)
         if deviation >= _SPIKE_THRESHOLD:

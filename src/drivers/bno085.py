@@ -7,6 +7,7 @@ _CHAN_REPORTS = 3
 
 # SH-2 report IDs
 _GAME_ROTATION_VECTOR = 0x08
+_GYRO_CALIBRATED      = 0x02
 _SET_FEATURE_CMD      = 0xFD
 _BASE_TIMESTAMP       = 0xFB
 _COMMAND_REQUEST      = 0xF2
@@ -15,6 +16,7 @@ _COMMAND_REQUEST      = 0xF2
 _CMD_ME_CALIBRATE = 0x07
 
 _Q14        = 16384.0
+_Q9         = 512.0
 _MAX_PACKET = 128
 
 
@@ -72,6 +74,11 @@ class BNO085:
         return BNO085._enable_report(i2c, addr, seq, _GAME_ROTATION_VECTOR, interval_ms)
 
     @staticmethod
+    def enable_gyro(i2c, addr, seq, interval_ms=10):
+        """Enable calibrated gyroscope report."""
+        return BNO085._enable_report(i2c, addr, seq, _GYRO_CALIBRATED, interval_ms)
+
+    @staticmethod
     def configure_calibration(i2c, addr, seq, accel=True, gyro=True, mag=False):
         """Configure dynamic calibration per sensor."""
         cmd = bytearray(12)
@@ -91,7 +98,9 @@ class BNO085:
 
     @staticmethod
     def parse_reports(payload):
-        """Parse sensor reports. Returns quaternion (w,x,y,z) or None."""
+        """Parse all sensor reports in payload.
+        Returns dict with 'quat' (w,x,y,z) and/or 'gyro' (x,y,z rad/s), or None."""
+        result = {}
         i = 0
         while i < len(payload):
             report_id = payload[i]
@@ -102,10 +111,17 @@ class BNO085:
                 qj = struct.unpack_from('<h', payload, i + 6)[0] / _Q14
                 qk = struct.unpack_from('<h', payload, i + 8)[0] / _Q14
                 qr = struct.unpack_from('<h', payload, i + 10)[0] / _Q14
-                return (qr, qi, qj, qk)
+                result['quat'] = (qr, qi, qj, qk)
+                i += 12
+            elif report_id == _GYRO_CALIBRATED and i + 10 <= len(payload):
+                gx = struct.unpack_from('<h', payload, i + 4)[0] / _Q9
+                gy = struct.unpack_from('<h', payload, i + 6)[0] / _Q9
+                gz = struct.unpack_from('<h', payload, i + 8)[0] / _Q9
+                result['gyro'] = (gx, gy, gz)
+                i += 10
             else:
                 break
-        return None
+        return result or None
 
 
 class IMU:
@@ -116,6 +132,7 @@ class IMU:
         self.addr  = addr
         self._seq  = [0] * 6
         self._quat = (1.0, 0.0, 0.0, 0.0)  # w, x, y, z
+        self._gyro = (0.0, 0.0, 0.0)        # x, y, z rad/s
 
         if rst is not None:
             rst.value(0)
@@ -129,9 +146,10 @@ class IMU:
             time.sleep_ms(10)
 
         self._seq = BNO085.enable_rotation_vector(self.i2c, self.addr, self._seq)
+        self._seq = BNO085.enable_gyro(self.i2c, self.addr, self._seq)
 
     def update(self):
-        """Drain all available packets, update quaternion. Returns True if new data."""
+        """Drain all available packets, update state. Returns True if new rotation data."""
         got_data = False
         for _ in range(20):
             result = BNO085.read_packet(self.i2c, self.addr)
@@ -139,10 +157,13 @@ class IMU:
                 break
             channel, payload = result
             if channel == _CHAN_REPORTS and len(payload) >= 1:
-                quat = BNO085.parse_reports(payload)
-                if quat is not None:
-                    self._quat = quat
-                    got_data = True
+                parsed = BNO085.parse_reports(payload)
+                if parsed:
+                    if 'quat' in parsed:
+                        self._quat = parsed['quat']
+                        got_data = True
+                    if 'gyro' in parsed:
+                        self._gyro = parsed['gyro']
         return got_data
 
     def get_gravity(self):
@@ -153,4 +174,13 @@ class IMU:
             -2.0 * (y * z + x * w),
             2.0 * (x * x + y * y) - 1.0,
         )
+
+    def get_angular_velocity(self):
+        """Angular velocity vector (x, y, z) in rad/s."""
+        return self._gyro
+
+    def is_spinning(self, threshold_rads=0.5):
+        """True if angular speed exceeds threshold (default 0.5 rad/s ≈ 30°/s)."""
+        gx, gy, gz = self._gyro
+        return (gx*gx + gy*gy + gz*gz) > threshold_rads * threshold_rads
 
