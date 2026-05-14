@@ -1,5 +1,9 @@
 # TODO
 
+# Case
+
+work in progress
+
 # Firmware
 
 * implement correct detection of battery connected when on usb cable
@@ -15,7 +19,7 @@
 
 ## PCB
 
-- tidy up
+- tidy up: currently multiple versions: the default one, one with sensor on the side, one with sensor on the size and with a larger display (driver needed), 
 
 ## Angle Format Setting
 

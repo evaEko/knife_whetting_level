@@ -3,6 +3,8 @@
 
 Below is the simplest possible how-to.
 
+Note: Check out the TODO file for useful info on what is probably not working.
+
 ## 1. Order the PCB
 
 1. Install [KiCad 10](https://www.kicad.org/download/)
