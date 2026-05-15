@@ -3,13 +3,13 @@
 
 Below is the simplest possible how-to.
 
-Note: Check out the [TODO](TODO.md) file for useful info on what is probably not working.
+Note: Check out the [TODO](TODO.md) file for useful info on what is probably not working. This repository is still under heavy construction.
 
 ## 1. Order the PCB
 
 1. Install [KiCad 10](https://www.kicad.org/download/)
 2. Clone this repo or download the kicad files.
-2. Open [`kicad/kicad.kicad_sch`](../kicad/kicad.kicad_sch) or one of the available kicad pcb designs.
+2. Open [`kicad/kicad.kicad_sch`](../kicad/kicad.kicad_sch) or one of the available kicad pcb designs: run at least the design rules checker.
 3. Generate Gerbers: **File → Fabrication Outputs → Gerbers**
 4. Upload to a PCB manufacturer — [AISLER](https://aisler.net) is recommended (EU-based, good quality)
 
