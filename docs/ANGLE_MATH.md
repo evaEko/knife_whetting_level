@@ -61,6 +61,8 @@ dot( R(n_stone, θ) · g,  n_stone ) = dot( g, n_stone )   for any θ
 
 So the reading is stable regardless of sensor spin. Compare this to pitch `= arcsin(gx)`, which only uses one component — spinning freely redistributes weight among gx, gy, gz and changes the reading.
 
+This invariance is exact in theory, but during a fast physical spin the BNO085's quaternion can drift transiently before the sensor fusion settles. This causes momentary spikes in the raw reading even though the true angle hasn't changed. The smoothing filter handles this — see [Clock-spin transient handling](#clock-spin-transient-handling) below.
+
 ### Clamping
 
 `dot` is clamped to [−1, 1] before passing to `arccos` to guard against floating-point rounding that would cause a domain error.
@@ -130,9 +132,26 @@ The filter is an exponential moving average (EMA) with two different alpha value
 pitch_new = α × pitch_old + (1 − α) × raw
 ```
 
-**Snap-to-raw:** if a spin is detected by the gyroscope and then stops, but the filtered value has drifted far from raw (≥ 25°), the filter snaps immediately to `raw` rather than slowly converging. This prevents a stale reading after the user repositions the sensor.
-
 **Spin detection** (`bno085.py: is_spinning`): the device is considered spinning when angular speed (from the calibrated gyroscope) exceeds 0.5 rad/s (≈ 29°/s).
+
+### Clock-spin transient handling
+
+The sensor is magnetically attached and can be accidentally spun like a clock hand while the blade angle stays constant. Mathematically the reading should be unchanged (see spin invariance above), but in practice the BNO085's quaternion drifts during a fast rotation before sensor fusion re-settles — producing a transient spike in `raw`.
+
+The filter handles this in two stages (`measure.py: _smooth`, `_snap_if_stopped`):
+
+**Stage 1 — freeze during spin:**
+When `raw` deviates from the current filtered pitch by ≥ 25° (`_SPIKE_THRESHOLD`), alpha jumps to 0.995. The filtered value barely moves, so the display stays frozen rather than following the spurious spike. The gyroscope being active during the spin keeps `is_spinning()` True, but the spike threshold alone is sufficient to trigger the freeze even if gyro lags slightly.
+
+**Stage 2 — snap after spin:**
+When the sensor comes to rest (`is_spinning()` returns False, i.e. angular speed drops below 0.5 rad/s) and the filter is still far from `raw` (≥ 25°), the filter snaps immediately to `raw` instead of slowly converging:
+
+```python
+if not is_spinning() and abs(raw - pitch) >= 25°:
+    pitch = raw   # snap
+```
+
+After a clock spin, the math guarantees `raw` has returned to the pre-spin value (within sensor noise). Snapping to it recovers the correct reading instantly rather than over many EMA cycles.
 
 ---
 
