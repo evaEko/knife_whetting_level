@@ -658,16 +658,16 @@
       {
         "filename": "kicad.kicad_sch",
         "name": "kicad",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "uuid": "80d6febd-194a-41da-8c93-73e5ad43e615"
       }
     ],
-    "used_designators": "",
+    "used_designators": "#PWR8,U4",
     "variants": []
   },
   "sheets": [
     [
       "80d6febd-194a-41da-8c93-73e5ad43e615",
-      "Root"
+      "kicad"
     ]
   ],
   "text_variables": {},
