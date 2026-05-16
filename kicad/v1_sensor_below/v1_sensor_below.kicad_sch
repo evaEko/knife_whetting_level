@@ -1562,24 +1562,6 @@
 		)
 	)
 	(junction
-		(at 63.5 43.18)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "106fa8ec-1238-43bf-8948-523a65b10c95")
-	)
-	(junction
-		(at 66.04 45.72)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "a535a086-c69d-4765-a36a-26428dba5a02")
-	)
-	(junction
-		(at 68.58 35.56)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e22b42ab-39d1-4bb8-97a1-d540c534d423")
-	)
-	(junction
 		(at 109.22 50.8)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1594,16 +1576,6 @@
 			(type default)
 		)
 		(uuid "05bb4aee-0356-4f9b-8155-42aaf027eb28")
-	)
-	(wire
-		(pts
-			(xy 31.75 45.72) (xy 66.04 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0d4c0d2e-b04a-4c3e-a0b6-ab2a39535523")
 	)
 	(wire
 		(pts
@@ -1717,16 +1689,6 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 35.56) (xy 68.58 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7697767f-759e-4b6e-a314-55a83d5bd109")
-	)
-	(wire
-		(pts
 			(xy 111.76 58.42) (xy 111.76 63.5)
 		)
 		(stroke
@@ -1777,16 +1739,6 @@
 	)
 	(wire
 		(pts
-			(xy 29.21 43.18) (xy 63.5 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "aad0565d-6b59-4e9a-a288-1b6bb63914d6")
-	)
-	(wire
-		(pts
 			(xy 109.22 50.8) (xy 109.22 35.56)
 		)
 		(stroke
@@ -1794,16 +1746,6 @@
 			(type default)
 		)
 		(uuid "b9ec9a85-9393-47a0-9c04-554a9ccf33b9")
-	)
-	(wire
-		(pts
-			(xy 34.29 31.75) (xy 34.29 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ba8027b2-9fc7-49f3-8ffb-3db211226d3f")
 	)
 	(wire
 		(pts
@@ -1824,16 +1766,6 @@
 			(type default)
 		)
 		(uuid "c2320923-139b-4d49-b4b7-a6b101f7a79e")
-	)
-	(wire
-		(pts
-			(xy 29.21 31.75) (xy 29.21 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cb2c735e-5bd0-4dc7-8ec6-f93a79ce9c66")
 	)
 	(wire
 		(pts
@@ -1884,16 +1816,6 @@
 			(type default)
 		)
 		(uuid "f5562f80-61a4-4283-8b8a-137e17994035")
-	)
-	(wire
-		(pts
-			(xy 31.75 31.75) (xy 31.75 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fa03f6b7-91d5-4e44-931b-fbc07631b1f9")
 	)
 	(wire
 		(pts
@@ -2003,7 +1925,7 @@
 			(uuid "72e2bd61-22f0-4a27-8b27-bd25723fd24a")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U2")
 					(unit 1)
@@ -2082,7 +2004,7 @@
 			(uuid "34064e33-41b3-43bc-ac7c-98a18f3c8291")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR02")
 					(unit 1)
@@ -2161,7 +2083,7 @@
 			(uuid "2819f8ae-bdb8-4bd3-b809-f01b0d1716e6")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR06")
 					(unit 1)
@@ -2239,7 +2161,7 @@
 			(uuid "475ce4af-6109-42bf-8adf-95af79054263")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR03")
 					(unit 1)
@@ -2321,7 +2243,7 @@
 			(uuid "c9623e51-ccb4-4a4d-82ca-0a64d51d6d78")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "SW2")
 					(unit 1)
@@ -2403,88 +2325,9 @@
 			(uuid "adfaaeaf-31c7-4606-aca4-002eae2384d2")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "SW1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 36.83 31.75 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "5909e022-08d5-46d1-a1a9-0f1724d9dcbc")
-		(property "Reference" "#PWR08"
-			(at 43.18 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 40.64 31.7499 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" ""
-			(at 36.83 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 36.83 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 36.83 31.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "0240b145-8d3e-4467-9d78-4d8028ea68bc")
-		)
-		(instances
-			(project "kicad"
-				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
-					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -2559,7 +2402,7 @@
 			(uuid "c542b7f1-c4e2-4591-b62f-5d70b8a17404")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "BAT-1")
 					(unit 1)
@@ -2637,7 +2480,7 @@
 			(uuid "36f11ac2-30ac-4a7a-a25e-94f0d5e986d8")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR07")
 					(unit 1)
@@ -2716,7 +2559,7 @@
 			(uuid "b997b957-2d06-4ace-9e58-3ef128017b32")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR05")
 					(unit 1)
@@ -2795,7 +2638,7 @@
 			(uuid "b886f8a6-5f9c-45bf-b183-b06a09e2539c")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR04")
 					(unit 1)
@@ -2947,7 +2790,7 @@
 			(uuid "80635497-ea52-4bd6-bd81-ced5534ac59d")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U1")
 					(unit 1)
@@ -3035,7 +2878,7 @@
 			(uuid "e4bfef15-13a3-4865-bf06-588d5cad2527")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "U3")
 					(unit 1)
@@ -3118,7 +2961,7 @@
 			(uuid "decd4209-9fe5-4db5-9f3c-89f2912e9eb6")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "SW_POWER1")
 					(unit 1)
@@ -3196,7 +3039,7 @@
 			(uuid "d95a875e-8803-4b66-8041-346f4db55e62")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "#PWR01")
 					(unit 1)
@@ -3275,97 +3118,9 @@
 			(uuid "67bf0fa3-26ce-4535-a92e-4b2828c40446")
 		)
 		(instances
-			(project "kicad"
+			(project "v1_sensor_below"
 				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
 					(reference "BAT+1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "knife_level:SSD1306_OLED_042")
-		(at 33.02 21.59 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "f7611289-1acd-4cac-8fe5-152080a4adac")
-		(property "Reference" "U4"
-			(at 39.37 20.3199 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "SSD1306_OLED_042"
-			(at 39.37 22.8599 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
-			(at 33.02 21.59 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 33.02 21.59 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "SSD1306 0.42 inch I2C OLED display module 72x40"
-			(at 33.02 21.59 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "4"
-			(uuid "2ee449ca-8627-49d6-aec9-910fdb6b6c97")
-		)
-		(pin "3"
-			(uuid "cb999f01-faca-41ed-95df-3f4bcf4d87ba")
-		)
-		(pin "2"
-			(uuid "3f608456-9a40-4b95-be88-ac77a3b4945b")
-		)
-		(pin "1"
-			(uuid "ac1e2cdd-d510-4d1d-b67c-18877e62b895")
-		)
-		(instances
-			(project "kicad"
-				(path "/80d6febd-194a-41da-8c93-73e5ad43e615"
-					(reference "U4")
 					(unit 1)
 				)
 			)

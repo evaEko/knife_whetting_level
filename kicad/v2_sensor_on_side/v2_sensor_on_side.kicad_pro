@@ -488,7 +488,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "kicad_sensor_on_side_big_display.kicad_pro",
+    "filename": "v2_sensor_on_side.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -647,15 +647,20 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "kicad_sensor_on_side_big_display.kicad_sch",
-        "name": "kicad_sensor_on_side_big_display",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "filename": "v2_sensor_on_side.kicad_sch",
+        "name": "v2_sensor_on_side",
+        "uuid": "80d6febd-194a-41da-8c93-73e5ad43e615"
       }
     ],
     "used_designators": "",
     "variants": []
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "80d6febd-194a-41da-8c93-73e5ad43e615",
+      "v2_sensor_on_side"
+    ]
+  ],
   "text_variables": {},
   "tuning_profiles": {
     "meta": {

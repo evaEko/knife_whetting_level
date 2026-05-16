@@ -489,7 +489,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "kicad.kicad_pro",
+    "filename": "v1_sensor_below.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -656,18 +656,18 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "kicad.kicad_sch",
-        "name": "kicad",
+        "filename": "v1_sensor_below.kicad_sch",
+        "name": "v1_sensor_below",
         "uuid": "80d6febd-194a-41da-8c93-73e5ad43e615"
       }
     ],
-    "used_designators": "#PWR8,U4",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [
     [
       "80d6febd-194a-41da-8c93-73e5ad43e615",
-      "kicad"
+      "v1_sensor_below"
     ]
   ],
   "text_variables": {},
