@@ -30,8 +30,9 @@ def read_battery_pct():
         machine.mem32[S+0x500] = 0
         machine.mem32[S+0x510] = 13       # VDDHDIV5
         machine.mem32[S+0x514] = 0
-        machine.mem32[S+0x518] = (4<<8)   # gain=1/2, ref=0.6V, tacq=10us
+        machine.mem32[S+0x518] = (4<<8) | (1<<24)  # gain=1/2, tacq=10us, burst=1
         machine.mem32[S+0x5F0] = 2        # 12-bit
+        machine.mem32[S+0x5F4] = 4        # oversample 16x (2^4)
         buf = bytearray(4)
         machine.mem32[S+0x62C] = uctypes.addressof(buf)
         machine.mem32[S+0x630] = 1
@@ -39,9 +40,9 @@ def read_battery_pct():
         machine.mem32[S+0x100] = 0
         machine.mem32[S+0x104] = 0
         machine.mem32[S+0x000] = 1
-        time.sleep_ms(10)
+        time.sleep_ms(20)
         machine.mem32[S+0x004] = 1
-        time.sleep_ms(10)
+        time.sleep_ms(20)
         machine.mem32[S+0x500] = 0
         raw = max(0, struct.unpack('<h', buf[:2])[0])
         # gain=1/2, ref=0.6V: full-scale input = 1.2V; VDDHDIV5 × 5 → VDDH
