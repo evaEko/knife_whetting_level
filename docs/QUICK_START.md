@@ -25,15 +25,19 @@ Note: Check out the TODO file for useful info on what is probably not working.
 | LiPo battery | 3.7V ~100mAh, smallest that fits under Pro Micro footprint (~20×30mm) |
 
 
-**Battery life estimate**: with the recommended ~100mAh cell, expect about 4 to 6 hours of continuous use with the display on and BLE enabled.
+**Battery life estimate**: with the recommended ~100mAh cell, expect about 4 hours of continuous use. Mind the battery reading has currently some issues.
 
 **Note**: SuperMini clones sometimes need to have a resistor added to allow reading of battery voltage. It is not a showstopper but the displayed battery status will be always 0%.
 
 ## 3. Solder
 
 1. **Display** — solder first, it will get blocked by the MCU board.
-2. **BNO085 module** — next
-3. **MCU** — last; make sure it sits high enough above the PCB for the battery to fit underneath. Consider using machined pin headers (sockets) so you can swap the MCU and battery without desoldering.
+2. Depending on whether the bno085 board's position:
+   * If on the side (parallel with MCU board): 
+     1. **MCU**:  make sure it sits high enough above the PCB for the battery to fit underneath. Consider using machined pin headers (sockets) so you can swap the MCU and battery without desoldering.
+     2. **BNO085 module**: sits on top of the MCU board; also consider using pin headers
+   * If "below" the MCU sitting directly on the PCB: doesnt matter.
+3. Solder the push buttons.
 
 ## 4. Flash
 
