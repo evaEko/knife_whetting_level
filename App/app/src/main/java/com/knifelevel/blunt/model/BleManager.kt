@@ -75,7 +75,7 @@ class BleManager(private val context: Context) {
 
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
-                if (result.device.name != "Knife_Level") return
+                if (result.device.name != "Blunt_Level") return
                 val device = FoundDevice(result.device.address, result.rssi)
                 val current = _foundDevices.value.toMutableList()
                 val idx = current.indexOfFirst { it.address == device.address }

@@ -14,7 +14,7 @@ _RX_UUID  = ubluetooth.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
 
 _ADV_PAYLOAD = (
     b'\x02\x01\x06' +
-    b'\x0c\x09Knife_Level'
+    b'\x0c\x09Blunt_Level'
 )
 
 
