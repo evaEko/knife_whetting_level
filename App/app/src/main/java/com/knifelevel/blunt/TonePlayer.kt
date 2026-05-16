@@ -93,10 +93,11 @@ class OnTargetPlayer(private val context: Context) {
             return
         }
         releasePlayer()
+        val parsedUri = Uri.parse(uri).takeIf { it.scheme == "content" } ?: return
         loadedUri = uri
         try {
             mediaPlayer = MediaPlayer().apply {
-                setDataSource(context, Uri.parse(uri))
+                setDataSource(context, parsedUri)
                 isLooping = true
                 prepare()
                 start()
@@ -133,17 +134,22 @@ class AlertSoundPlayer(private val context: Context) {
             if (currentKey != key) {
                 releaseMedia()
                 currentKey = key
-                try {
-                    mediaPlayer = MediaPlayer().apply {
-                        setDataSource(context, Uri.parse(customUri))
-                        isLooping = true
-                        prepare()
-                        start()
-                    }
-                } catch (_: Exception) {
-                    // URI unreadable — fall back to tone
+                val parsedUri = Uri.parse(customUri).takeIf { it.scheme == "content" }
+                if (parsedUri == null) {
                     currentKey = "tone:$freq"
                     tonePlayer.play(freq)
+                } else {
+                    try {
+                        mediaPlayer = MediaPlayer().apply {
+                            setDataSource(context, parsedUri)
+                            isLooping = true
+                            prepare()
+                            start()
+                        }
+                    } catch (_: Exception) {
+                        currentKey = "tone:$freq"
+                        tonePlayer.play(freq)
+                    }
                 }
             }
         } else {

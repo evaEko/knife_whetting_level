@@ -39,3 +39,10 @@ on return. Known limitations:
 - [ ] `test_storage_service.py`
 - [ ] `test_config_service.py`
 - [ ] `test_bno085_parse.py` — parse_reports returns correct accel/gyro tuples
+
+# Future features
+
+* gradual gradient change on deviation
+* session data recording
+* logs with graphs
+
