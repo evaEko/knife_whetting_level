@@ -1,19 +1,19 @@
 {
   "board": {
-    "active_layer": 7,
+    "active_layer": 1,
     "active_layer_preset": "",
-    "auto_track_width": false,
+    "auto_track_width": true,
     "hidden_netclasses": [],
     "hidden_nets": [],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
-      "images": 1.0,
+      "images": 0.6,
       "pads": 1.0,
       "shapes": 1.0,
       "tracks": 1.0,
       "vias": 1.0,
-      "zones": 1.0
+      "zones": 0.6
     },
     "prototype_zone_fills": false,
     "selection_filter": {
@@ -21,7 +21,7 @@
       "footprints": true,
       "graphics": true,
       "keepouts": true,
-      "lockedItems": false,
+      "lockedItems": true,
       "otherItems": true,
       "pads": true,
       "text": true,
@@ -49,9 +49,11 @@
       "drc_exclusions",
       "locked_item_shadows",
       "conflict_shadows",
-      "shapes"
+      "shapes",
+      "board_outline_area",
+      "ly_points"
     ],
-    "visible_layers": "ffffffff_ffffffff_ffffffff_ffffff7f",
+    "visible_layers": "ffffffff_ffffffff_ff555575_ff555f75",
     "zone_display_mode": 0
   },
   "git": {
@@ -61,7 +63,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "v3_big_display.kicad_prl",
+    "filename": "v4_fully_integrated_pc.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
