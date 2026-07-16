@@ -80,7 +80,7 @@ class DisplayService:
                     cursor += len(str(item)) * 8 + 2
         d.show()
 
-    def show_battery(self, pct):
+    def show_battery(self, pct, charging=False):
         d = self._display
         d.fill(0)
         if pct is None:
@@ -88,7 +88,7 @@ class DisplayService:
             d.large_text("PLUG", 8, 12, scale=2, char_pitch=7)
             d.text("low=pass", 0, 32, 1)
         else:
-            d.text("BAT", (72 - 24) // 2, 2, 1)
+            d.text("CHG" if charging else "BAT", (72 - 24) // 2, 2, 1)
             pct_str = "{}%".format(pct)
             pw = len(pct_str) * 16
             d.large_text(pct_str, (72 - pw) // 2, 14, scale=2)

@@ -3893,7 +3893,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3165888e-84a8-477c-a863-cf8f6c8ff484")
-		(property "Reference" "BAT+1"
+		(property "Reference" "B+1"
 			(at 537.21 88.8999 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3954,7 +3954,7 @@
 		(instances
 			(project "v4_fully_integrated_pc"
 				(path "/8b17f9a6-b000-4ccb-b0d9-cb9857b67250"
-					(reference "BAT+1")
+					(reference "B+1")
 					(unit 1)
 				)
 			)
@@ -5948,7 +5948,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "dc195775-c1f1-499d-ba56-48ae1beafcc2")
-		(property "Reference" "BAT-1"
+		(property "Reference" "B-1"
 			(at 453.39 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6007,7 +6007,7 @@
 		(instances
 			(project "v4_fully_integrated_pc"
 				(path "/8b17f9a6-b000-4ccb-b0d9-cb9857b67250"
-					(reference "BAT-1")
+					(reference "B-1")
 					(unit 1)
 				)
 			)

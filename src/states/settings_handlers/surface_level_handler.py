@@ -1,6 +1,7 @@
 import math
 import time
 from core.setting_handler import SettingHandler
+from services.logging import log
 
 _N_SAMPLES = 20
 _SETTLE_MS = 50
@@ -15,7 +16,7 @@ class SurfaceLevelHandler(SettingHandler):
 
     def enter(self, app):
         app.display.show_text(*self._prompt)
-        app.logging.log("[SurfaceLevelHandler] enter key=" + self._storage_key)
+        log("[SurfaceLevelHandler] enter key=" + self._storage_key)
 
     def update(self, app):
         if app.button_event == 'short_top':
@@ -23,14 +24,14 @@ class SurfaceLevelHandler(SettingHandler):
         if app.button_event == 'short_low':
             vec = self._capture(app)
             self._on_save(vec)
-            app.logging.log("[SurfaceLevelHandler] " + self._storage_key + "=" + self._fmt(vec))
+            log("[SurfaceLevelHandler] " + self._storage_key + "=" + self._fmt(vec))
             app.display.show_text(self._saved_msg, self._fmt(vec))
             time.sleep_ms(2000)
             return 'measure'
         return None
 
     def exit(self, app):
-        app.logging.log("[SurfaceLevelHandler] exit key=" + self._storage_key)
+        log("[SurfaceLevelHandler] exit key=" + self._storage_key)
 
     def _capture(self, app):
         delay_ms = int(getattr(app.config, 'capture_delay_sec', 5)) * 1000

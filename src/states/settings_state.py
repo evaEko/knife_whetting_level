@@ -1,4 +1,5 @@
 from core.state import State
+from services.logging import log
 
 
 class SettingsState(State):
@@ -8,7 +9,7 @@ class SettingsState(State):
         self._handler = active_handler
 
     def enter(self, app):
-        app.logging.log("[SettingsState] enter")
+        log("[SettingsState] enter")
         if self._handler:
             self._handler.enter(app)
         else:
@@ -20,7 +21,7 @@ class SettingsState(State):
         return self._handle_menu(app)
 
     def exit(self, app):
-        app.logging.log("[SettingsState] exit")
+        log("[SettingsState] exit")
 
     def _handle_active(self, app):
         result = self._handler.update(app)

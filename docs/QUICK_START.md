@@ -53,7 +53,7 @@ If `mpremote` is not found after installing on Linux/macOS, add it to your PATH:
 - Linux: `echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc && source ~/.bashrc`
 - macOS: `echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc && source ~/.zshrc`
 
-### 4.2 Flash MicroPython (one-time)
+### 4.2 Flash MicroPython (one-time per board)
 
 1. Download the UF2 (from jkorte-dev):
    ```bash
@@ -111,7 +111,7 @@ Go to the same [workflow run page](https://github.com/evaEko/knife_whetting_leve
 
 ### Step 1 — Calibrate
 
-Calibration records the full 3D orientation of the sensor placed flat on the stone. This is the zero reference — all angle readings are relative to the stone surface regardless of how the sensor is mounted or rotated.
+Calibration records the full 3D orientation of the sensor placed flat on the stone or on the blade placed horizontally on the stone (this counts in the angle of the blade). This is the zero reference — all angle readings are relative to this surface regardless of how the sensor is mounted or rotated.
 
 Do this at the start of every session, after you have positioned your stone. Redo it whenever the stone moves.
 
@@ -121,6 +121,8 @@ Do this at the start of every session, after you have positioned your stone. Red
 4. Short-press the low button again — after a settle delay the reading is saved and the device returns to measurement
 
 The display now shows angles relative to your stone surface.
+
+For more accuracy, calibrate on the blade place horizontally on the stone to include the blade geometry.
 
 ### Step 2 — Set an angle (optional)
 
@@ -145,7 +147,17 @@ With the recommended ~100mAh battery, a full charge is usually enough for one sh
 When you want to update the firmware:
 
 1. Connect to computer.
-2. **Short-press both buttons at the same time** — the display shows "Ready to flash..."
-   - **Note:** once flash mode is active, the only way out is to reset (short RST to GND) or power off/on.
+2. **Short-press both buttons at the same time** — the display shows "Ready to flash...".
 3. If you are flashing from the downloaded firmware package, run `python flash.py`
 4. If you are flashing from this repository checkout, run `python build_flash.py`
+
+
+If you are having troubles reflashing, try the following:
+1. Turn the level off and on and try again :)
+2. Try flashing even though the level is not in flash mode (just skip step 1) and watch the script output.
+3. Short RST to GND twice (the device will be mounted), eject the device and try again.
+3. Short RST to GND twice (the device will be mounted), upload the micropython compiler to the device and try again.
+
+If all attempts above fail, try the following:
+1. Connect to the device using mpremote.
+2. Watch the logs in the terminal.

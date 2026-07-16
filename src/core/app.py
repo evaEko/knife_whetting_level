@@ -1,9 +1,13 @@
+from utime import ticks_ms, ticks_diff
+
+_USB_CHECK_INTERVAL_MS = 4000
+
+
 class App:
-    def __init__(self, display, logging, imu, buttons, storage, config,
+    def __init__(self, display, imu, buttons, storage, config,
                  calibration, measure, ble, ble_handler, battery, presets,
                  settings_items, build_angle_items):
         self.display           = display
-        self.logging           = logging
         self.imu               = imu
         self.buttons           = buttons
         self.storage           = storage
@@ -17,6 +21,7 @@ class App:
         self.settings_items    = settings_items
         self.build_angle_items = build_angle_items
         self.button_event      = None
+        self._last_usb_check   = 0
 
     def run(self, initial_state, global_events=None):
         if global_events is None:
@@ -30,6 +35,11 @@ class App:
                 state = global_events[self.button_event]()
                 state.enter(self)
                 continue
+            self.ble_handler.tick()
+            if ticks_diff(ticks_ms(), self._last_usb_check) >= _USB_CHECK_INTERVAL_MS:
+                self._last_usb_check = ticks_ms()
+                if self.battery.check_usb():
+                    self.button_event = None
             next_state = state.update(self)
             if next_state is not None:
                 state.exit(self)

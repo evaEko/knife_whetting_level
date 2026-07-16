@@ -1,5 +1,6 @@
 from utime import ticks_ms, ticks_diff
 from helpers.pitch_calculator import pitch
+from services.logging import log
 
 _DRIFT_VEL_THRESHOLD = 0.10
 _DRIFT_DEV_THRESHOLD = 1.0
@@ -10,16 +11,16 @@ _LOG_INTERVAL        = 500
 
 
 class MeasureService:
-    def __init__(self, imu_service, calibration_service, config_service, logging_service):
+    def __init__(self, imu_service, calibration_service, config_service):
         self._imu         = imu_service
         self._calibration = calibration_service
         self._config      = config_service
-        self._log         = logging_service
         self._pitch       = None
         self._prev_pitch  = None
         self._last_log    = 0
 
     def update(self):
+        # check if we have new data, if we have a stone, and if so, update the pitch estimate
         if not self._imu.update():
             return False
         if not self._calibration.has_stone():
@@ -28,7 +29,7 @@ class MeasureService:
         self._smooth(pitch(g, self._calibration.n_stone))
         if ticks_diff(ticks_ms(), self._last_log) >= _LOG_INTERVAL:
             self._last_log = ticks_ms()
-            self._log.log("pitch={:.2f}".format(self.pitch()))
+            log("pitch={:.2f}".format(self.pitch()))
         return True
 
     def _snap_if_stopped(self, raw):

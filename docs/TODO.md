@@ -1,5 +1,7 @@
 # TODO
+Test the local changes (refactor in src)
 
+dont commit ic (it's effed up)
 # Case
 
 work in progress
@@ -34,14 +36,9 @@ on return. Known limitations:
 
 ## Tests *(from plan — desktop, no hardware)*
 
-- [ ] `test_calibrate_state.py`
-- [ ] `test_deviation_state.py`
-- [ ] `test_storage_service.py`
-- [ ] `test_config_service.py`
-- [ ] `test_bno085_parse.py` — parse_reports returns correct accel/gyro tuples
-
 # Future features
 
+* secure the ble connection
 * gradual gradient change on deviation
 * session data recording
 * logs with graphs

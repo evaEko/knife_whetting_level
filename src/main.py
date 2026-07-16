@@ -6,7 +6,6 @@ from services.calibration import CalibrationService
 from services.config import ConfigService
 from services.display import DisplayService
 from services.imu import ImuService
-from services.logging import LoggingService
 from services.measure import MeasureService
 from services.preset_store import PresetStore
 from services.storage import StorageService
@@ -16,7 +15,6 @@ from states.init_state import InitState
 from states.flash_mode_state import FlashModeState
 
 config      = ConfigService("config.txt")
-logging     = LoggingService()
 
 storage     = StorageService("data.txt")
 storage.load()
@@ -41,7 +39,6 @@ measure     = MeasureService(
     imu_service=imu,
     calibration_service=calibration,
     config_service=config,
-    logging_service=logging,
 )
 presets     = PresetStore()
 presets.load()
@@ -116,7 +113,6 @@ def build_angle_items():
 
 app = App(
     display=display,
-    logging=logging,
     imu=imu,
     buttons=buttons,
     storage=storage,

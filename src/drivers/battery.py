@@ -23,6 +23,11 @@ def _mv_to_pct(mv):
     return 0
 
 
+def usb_connected():
+    """True if USB VBUS is present (nice!nano v2)."""
+    return bool(machine.mem32[0x40000438] & 0x01)
+
+
 def read_battery_pct():
     """Read battery % via nRF52840 internal VDDH/5 measurement (nice!nano v2)."""
     try:

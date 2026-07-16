@@ -60,7 +60,7 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.0,
+          "min_clearance": 0.2,
           "min_island_area": 10.0,
           "min_thickness": 0.25,
           "pad_connection": 1,
@@ -598,7 +598,7 @@
     "last_paths": {
       "idf": "",
       "netlist": "",
-      "plot": "/home/eko/bno_ic/",
+      "plot": "/home/eko/bno_ic_compared_to_ali/",
       "specctra_dsn": "",
       "vrml": ""
     },
@@ -722,7 +722,7 @@
         "uuid": "8b17f9a6-b000-4ccb-b0d9-cb9857b67250"
       }
     ],
-    "used_designators": "R5-8",
+    "used_designators": "B\\-1,B+1,R5-8",
     "variants": []
   },
   "sheets": [

@@ -1,9 +1,10 @@
 from core.state import State
+from services.logging import log
 
 
 class MeasureState(State):
     def enter(self, app):
-        app.logging.log("[MeasureState] enter")
+        log("[MeasureState] enter")
         if not app.calibration.has_stone():
             app.display.show_text("No calibration", "", "top=calib.", "low=sett")
 
@@ -14,7 +15,7 @@ class MeasureState(State):
 
     def exit(self, app):
         app.display.invert(False)
-        app.logging.log("[MeasureState] exit")
+        log("[MeasureState] exit")
 
     def _update_uncalibrated(self, app):
         if app.button_event == 'short_top':
@@ -30,7 +31,6 @@ class MeasureState(State):
         if app.button_event == 'short_low':
             from states.settings_state import SettingsState
             return SettingsState(app.settings_items)
-        app.ble_handler.tick()
         return None
 
     def _update_calibrated(self, app):
@@ -41,7 +41,6 @@ class MeasureState(State):
             from states.settings_state import SettingsState
             return SettingsState(app.settings_items)
         app.measure.update()
-        app.ble_handler.tick()
         self._render(app)
         return None
 
@@ -51,7 +50,7 @@ class MeasureState(State):
         has_t = app.calibration.has_target()
         in_pos = app.measure.in_position()
         target_str = "{:.1f}".format(target) if target is not None else None
-        app.logging.log("pitch={:.2f} target={} has_target={} in_pos={}".format(
+        log("pitch={:.2f} target={} has_target={} in_pos={}".format(
             pitch, target, has_t, in_pos))
         app.display.invert(has_t and not in_pos)
         app.display.show_measurement(pitch, target_str=target_str,

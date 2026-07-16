@@ -1,5 +1,8 @@
 import time
 import machine
+from utime import ticks_ms, ticks_diff
+
+_SEND_INTERVAL_MS = 20
 
 
 class BleCommandHandler:
@@ -11,13 +14,40 @@ class BleCommandHandler:
         self._presets     = preset_store
         self._config      = config_service
         self._imu         = imu_service
+        self._pending      = None  # iterator of lines still to send
+        self._pending_done = None  # final message, sent once iterator is exhausted
+        self._next_send    = 0     # ticks_ms() of the last drained send
 
     def tick(self):
+        if self._pending is not None:
+            self._drain_pending()
+            return
         cmd = self._ble.poll()
         if cmd:
             self.handle(cmd)
         if self._calibration.has_stone():
             self._ble.update(pitch=self._measure.pitch())
+
+    def _start_pending(self, lines, done_msg):
+        """Queue a multi-line reply to be sent one line per tick(), instead of
+        blocking the main loop (and button polling) with sleeps."""
+        self._pending      = iter(lines)
+        self._pending_done = done_msg
+        self._next_send    = 0
+
+    def _drain_pending(self):
+        now = ticks_ms()
+        if ticks_diff(now, self._next_send) < _SEND_INTERVAL_MS:
+            return
+        self._next_send = now
+        try:
+            line = next(self._pending)
+        except StopIteration:
+            self._ble.send(self._pending_done)
+            self._pending      = None
+            self._pending_done = None
+            return
+        self._ble.send(line)
 
     def handle(self, cmd):
         if cmd == 'live_start':
@@ -28,10 +58,9 @@ class BleCommandHandler:
         elif cmd == 'get_calibration':
             self._ble.send("calibration:0.00")
         elif cmd == 'get_presets':
-            for name, angle in self._presets:
-                self._ble.send("preset:{}:{:.2f}".format(name, abs(angle)))
-                time.sleep_ms(20)
-            self._ble.send("presets_done")
+            lines = ["preset:{}:{:.2f}".format(name, abs(angle))
+                     for name, angle in self._presets]
+            self._start_pending(lines, "presets_done")
         elif cmd == 'clear_presets':
             self._presets.replace_all([])
             self._ble.send("ok")
@@ -133,18 +162,18 @@ class BleCommandHandler:
     ]
 
     def _cmd_get_settings(self):
+        lines = []
         for key in self._SETTING_KEYS:
             val = getattr(self._config, key, None)
             if val is None:
                 continue
             if key == 'deviation_threshold':
-                self._ble.send("setting:{}:{:.1f}".format(key, val))
+                lines.append("setting:{}:{:.1f}".format(key, val))
             elif key == 'capture_delay_sec':
-                self._ble.send("setting:{}:{}".format(key, int(val)))
+                lines.append("setting:{}:{}".format(key, int(val)))
             else:
-                self._ble.send("setting:{}:{}".format(key, val))
-            time.sleep_ms(20)
-        self._ble.send("settings_done")
+                lines.append("setting:{}:{}".format(key, val))
+        self._start_pending(lines, "settings_done")
 
     def _cmd_set_setting(self, args):
         key, _, raw = args.partition(':')

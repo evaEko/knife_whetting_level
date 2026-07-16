@@ -1,11 +1,12 @@
 from core.state import State
+from services.logging import log
 
 
 class InitState(State):
     def enter(self, app):
         app.display.init()
         app.display.show_splash("Blunt")
-        app.logging.log("[InitState] enter")
+        log("[InitState] enter")
         app.imu.init()
         app.buttons.init()
         app.calibration.load()
@@ -16,4 +17,4 @@ class InitState(State):
         return MeasureState()
 
     def exit(self, app):
-        app.logging.log("[InitState] exit")
+        log("[InitState] exit")
