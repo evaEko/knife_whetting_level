@@ -32,13 +32,13 @@ class BleService:
     def stop_live(self):
         self._live = False
 
-    def update(self, pitch):
+    def update(self, angle):
         if not self._live or not self._driver.connected:
             return
         now = ticks_ms()
         if ticks_diff(now, self._last_send) >= _LIVE_INTERVAL_MS:
             self._last_send = now
-            self.send("angle:{:.2f}".format(pitch))
+            self.send("angle:{:.2f}".format(angle))
 
     def send_target_state(self, target_angle, name=''):
         angle = target_angle if target_angle is not None else 0.0

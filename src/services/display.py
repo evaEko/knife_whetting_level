@@ -50,11 +50,11 @@ class DisplayService:
             d.text(subtitle, max(0, (d.width - len(subtitle) * 8) // 2), 24, 1)
         d.show()
 
-    def show_measurement(self, pitch, target_str, ble, ble_connected=False):
+    def show_measurement(self, angle, target_str, ble, ble_connected=False):
         indicators = [target_str] if target_str is not None else []
         if ble:
             indicators.append(_BLE_LIVE if ble_connected else _BLE)
-        self.show_angle("{:.1f}".format(pitch), *indicators)
+        self.show_angle("{:.1f}".format(angle), *indicators)
 
     def show_angle(self, angle_str, *indicators):
         """Large centred angle in top 32px, small indicator row in bottom 8px.

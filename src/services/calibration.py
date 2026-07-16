@@ -1,5 +1,5 @@
 from helpers.vector_parser import parse
-from helpers.pitch_calculator import pitch
+from helpers.angle_calculator import calculate_angle
 
 
 class CalibrationService:
@@ -51,6 +51,6 @@ class CalibrationService:
         fmt = "{:.6f},{:.6f},{:.6f}".format(vec[0], vec[1], vec[2])
         self._storage.set('n_target', fmt)
         if self._n_stone is not None:
-            angle = pitch(vec, self._n_stone)
+            angle = calculate_angle(vec, self._n_stone)
             self._target_angle = angle
             self._storage.set('target_angle', "{:.4f}".format(angle))

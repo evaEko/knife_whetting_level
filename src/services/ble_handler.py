@@ -26,7 +26,7 @@ class BleCommandHandler:
         if cmd:
             self.handle(cmd)
         if self._calibration.has_stone():
-            self._ble.update(pitch=self._measure.pitch())
+            self._ble.update(angle=self._measure.angle())
 
     def _start_pending(self, lines, done_msg):
         """Queue a multi-line reply to be sent one line per tick(), instead of
@@ -152,7 +152,7 @@ class BleCommandHandler:
         self._imu.update()  # drain pending packets; use last known quaternion if none arrives
         g = self._imu.get_gravity()
         self._calibration.set_stone(g)
-        self._measure.reset_pitch()
+        self._measure.reset_angle()
         self._ble.send("calibration:0.00")
         self._ble.send("ok:calibrated")
 

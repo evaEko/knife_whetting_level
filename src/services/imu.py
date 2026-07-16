@@ -1,5 +1,6 @@
 from machine import I2C, Pin
 from drivers.bno085 import IMU
+from helpers.angle_calculator import quaternion_to_gravity
 
 
 class ImuService:
@@ -20,8 +21,11 @@ class ImuService:
     def update(self):
         return self._imu.update()
 
+    def get_quaternion(self):
+        return self._imu.get_quaternion()
+
     def get_gravity(self):
-        return self._imu.get_gravity()
+        return quaternion_to_gravity(self.get_quaternion())
 
     def get_angular_velocity(self):
         return self._imu.get_angular_velocity()

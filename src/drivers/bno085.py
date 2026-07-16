@@ -166,14 +166,9 @@ class IMU:
                         self._gyro = parsed['gyro']
         return got_data
 
-    def get_gravity(self):
-        """Gravity unit vector derived from quaternion (gx, gy, gz)."""
-        w, x, y, z = self._quat
-        return (
-            2.0 * (w * y - x * z),
-            -2.0 * (y * z + x * w),
-            2.0 * (x * x + y * y) - 1.0,
-        )
+    def get_quaternion(self):
+        """Latest orientation quaternion (w, x, y, z)."""
+        return self._quat
 
     def get_angular_velocity(self):
         """Angular velocity vector (x, y, z) in rad/s."""

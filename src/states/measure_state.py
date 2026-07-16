@@ -45,13 +45,13 @@ class MeasureState(State):
         return None
 
     def _render(self, app):
-        pitch = app.measure.pitch()
+        angle = app.measure.angle()
         target = app.calibration.target_angle()
         has_t = app.calibration.has_target()
         in_pos = app.measure.in_position()
         target_str = "{:.1f}".format(target) if target is not None else None
-        log("pitch={:.2f} target={} has_target={} in_pos={}".format(
-            pitch, target, has_t, in_pos))
+        log("angle={:.2f} target={} has_target={} in_pos={}".format(
+            angle, target, has_t, in_pos))
         app.display.invert(has_t and not in_pos)
-        app.display.show_measurement(pitch, target_str=target_str,
+        app.display.show_measurement(angle, target_str=target_str,
                                      ble=app.ble.enabled, ble_connected=app.ble.connected)

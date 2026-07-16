@@ -1,5 +1,5 @@
 from utime import ticks_ms, ticks_diff
-from helpers.pitch_calculator import pitch
+from helpers.angle_calculator import calculate_angle
 from services.logging import log
 
 _DRIFT_VEL_THRESHOLD = 0.10
@@ -15,57 +15,69 @@ class MeasureService:
         self._imu         = imu_service
         self._calibration = calibration_service
         self._config      = config_service
-        self._pitch       = None
-        self._prev_pitch  = None
+        self._angle       = None
+        self._prev_angle  = None
         self._last_log    = 0
 
     def update(self):
-        # check if we have new data, if we have a stone, and if so, update the pitch estimate
-        if not self._imu.update():
+        raw = self._read_raw_angle()
+        if raw is None:
             return False
-        if not self._calibration.has_stone():
-            return False
-        g = self._imu.get_gravity()
-        self._smooth(pitch(g, self._calibration.n_stone))
-        if ticks_diff(ticks_ms(), self._last_log) >= _LOG_INTERVAL:
-            self._last_log = ticks_ms()
-            log("pitch={:.2f}".format(self.pitch()))
+        self._smooth(raw)
+        self._log_periodically()
         return True
+
+    def _read_raw_angle(self):
+        """Fresh gravity sample -> raw blade angle, or None if no new data / no calibration."""
+        if not self._imu.update():
+            return None
+        if not self._calibration.has_stone():
+            return None
+        gravity = self._imu.get_gravity()
+        return calculate_angle(gravity, self._calibration.n_stone)
+
+    def _smooth(self, raw):
+        if self._angle is None:
+            self._angle = raw
+            self._prev_angle = raw
+            return
+        self._snap_if_stopped(raw)
+        alpha = self._select_alpha(raw)
+        self._prev_angle = self._angle
+        self._angle = alpha * self._angle + (1.0 - alpha) * raw
 
     def _snap_if_stopped(self, raw):
         """If the filter is lost after a spin but the device has stopped, snap to raw."""
-        if not self._imu.is_spinning() and abs(raw - self._pitch) >= _SPIKE_THRESHOLD:
-            self._pitch = raw
-            self._prev_pitch = raw
+        if not self._imu.is_spinning() and abs(raw - self._angle) >= _SPIKE_THRESHOLD:
+            self._angle = raw
+            self._prev_angle = raw
 
-    def _smooth(self, raw):
-        if self._pitch is None:
-            self._pitch = raw
-            self._prev_pitch = raw
-            return
-        self._snap_if_stopped(raw)
-        smooth_vel = abs(self._pitch - self._prev_pitch)
-        deviation  = abs(raw - self._pitch)
+    def _select_alpha(self, raw):
+        """Freeze on spikes, track quickly while moving, hold steady otherwise."""
+        smooth_vel = abs(self._angle - self._prev_angle)
+        deviation  = abs(raw - self._angle)
         if deviation >= _SPIKE_THRESHOLD:
-            alpha = _ALPHA_FROZEN
-        elif smooth_vel >= _DRIFT_VEL_THRESHOLD or deviation >= _DRIFT_DEV_THRESHOLD:
-            alpha = _ALPHA_ACTIVE
-        else:
-            alpha = _ALPHA_FROZEN
-        self._prev_pitch = self._pitch
-        self._pitch = alpha * self._pitch + (1.0 - alpha) * raw
+            return _ALPHA_FROZEN
+        if smooth_vel >= _DRIFT_VEL_THRESHOLD or deviation >= _DRIFT_DEV_THRESHOLD:
+            return _ALPHA_ACTIVE
+        return _ALPHA_FROZEN
 
-    def reset_pitch(self):
-        self._pitch = None
-        self._prev_pitch = None
+    def _log_periodically(self):
+        if ticks_diff(ticks_ms(), self._last_log) >= _LOG_INTERVAL:
+            self._last_log = ticks_ms()
+            log("angle={:.2f}".format(self.angle()))
 
-    def pitch(self):
-        return self._pitch if self._pitch is not None else 0.0
+    def reset_angle(self):
+        self._angle = None
+        self._prev_angle = None
+
+    def angle(self):
+        return self._angle if self._angle is not None else 0.0
 
     def in_position(self):
-        if self._pitch is None:
+        if self._angle is None:
             return False
         target = self._calibration.target_angle()
         if target is None:
             return False
-        return abs(self._pitch - target) <= self._config.deviation_threshold
+        return abs(self._angle - target) <= self._config.deviation_threshold
