@@ -174,8 +174,3 @@ class IMU:
         """Angular velocity vector (x, y, z) in rad/s."""
         return self._gyro
 
-    def is_spinning(self, threshold_rads=0.5):
-        """True if angular speed exceeds threshold (default 0.5 rad/s ≈ 30°/s)."""
-        gx, gy, gz = self._gyro
-        return (gx*gx + gy*gy + gz*gz) > threshold_rads * threshold_rads
-

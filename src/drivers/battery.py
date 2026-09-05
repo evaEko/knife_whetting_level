@@ -24,39 +24,56 @@ def _mv_to_pct(mv):
 
 
 def usb_connected():
-    """True if USB VBUS is present (nice!nano v2)."""
+    """True if USB VBUS is present."""
     return bool(machine.mem32[0x40000438] & 0x01)
 
 
+def _saadc_raw(psel, gain):
+    """One 12-bit oversampled SAADC conversion of channel input `psel`.
+    tacq=40us: required for the internal VDDHDIV5 divider and for the
+    ~570k source resistance of the v1 battery divider."""
+    S = 0x40007000
+    machine.mem32[S+0x500] = 0
+    machine.mem32[S+0x510] = psel
+    machine.mem32[S+0x514] = 0
+    machine.mem32[S+0x518] = (gain<<8) | (5<<16) | (1<<24)  # tacq=40us, burst=1
+    machine.mem32[S+0x5F0] = 2        # 12-bit
+    machine.mem32[S+0x5F4] = 4        # oversample 16x (2^4)
+    buf = bytearray(4)
+    machine.mem32[S+0x62C] = uctypes.addressof(buf)
+    machine.mem32[S+0x630] = 1
+    machine.mem32[S+0x500] = 1
+    machine.mem32[S+0x100] = 0
+    machine.mem32[S+0x104] = 0
+    machine.mem32[S+0x000] = 1
+    time.sleep_ms(20)
+    machine.mem32[S+0x004] = 1
+    time.sleep_ms(20)
+    machine.mem32[S+0x500] = 0
+    return max(0, struct.unpack('<h', buf[:2])[0])
+
+
+def _battery_mv():
+    """Battery voltage in mV; picks the measurement path per board design.
+    POWER->MAINREGSTATUS bit 0 tells which power circuit the board has:
+    1 = high voltage mode (nice!nano v2: battery feeds VDDH directly),
+    0 = normal mode (nice!nano v1 / clones: external 3.3V LDO, battery
+        sensed through the on-board 806k/2M divider on P0.04/AIN2)."""
+    if machine.mem32[0x40000640] & 0x01:
+        # VDDHDIV5, gain=1/2, ref=0.6V: full-scale 1.2V; ×5 → VDDH
+        return _saadc_raw(13, 4) * 6000 // 4096
+    # AIN2, gain=1/6: full-scale 3.6V; divider ratio 2M/(2M+806k)
+    return _saadc_raw(3, 0) * 3600 * 2806 // (4096 * 2000)
+
+
 def read_battery_pct():
-    """Read battery % via nRF52840 internal VDDH/5 measurement (nice!nano v2)."""
+    """Read battery % (nice!nano v1/v2 and compatibles)."""
     try:
-        S = 0x40007000
-        machine.mem32[S+0x500] = 0
-        machine.mem32[S+0x510] = 13       # VDDHDIV5
-        machine.mem32[S+0x514] = 0
-        machine.mem32[S+0x518] = (4<<8) | (1<<24)  # gain=1/2, tacq=10us, burst=1
-        machine.mem32[S+0x5F0] = 2        # 12-bit
-        machine.mem32[S+0x5F4] = 4        # oversample 16x (2^4)
-        buf = bytearray(4)
-        machine.mem32[S+0x62C] = uctypes.addressof(buf)
-        machine.mem32[S+0x630] = 1
-        machine.mem32[S+0x500] = 1
-        machine.mem32[S+0x100] = 0
-        machine.mem32[S+0x104] = 0
-        machine.mem32[S+0x000] = 1
-        time.sleep_ms(20)
-        machine.mem32[S+0x004] = 1
-        time.sleep_ms(20)
-        machine.mem32[S+0x500] = 0
-        raw = max(0, struct.unpack('<h', buf[:2])[0])
-        # gain=1/2, ref=0.6V: full-scale input = 1.2V; VDDHDIV5 × 5 → VDDH
-        mv = int(raw * 6000 / 4096)
-        # USB without battery: raw USB voltage reaches ~4.46V (above the charger's
-        # 4.2V regulated maximum). Battery connected clamps VDDH to ≤4.2V.
-        # Threshold at 4300mV cleanly separates the two cases.
-        vbus = machine.mem32[0x40000438] & 0x01
-        if vbus and mv > 4300:
+        mv = _battery_mv()
+        # USB without battery: VDDH sees raw USB voltage, ~4.46V (above the
+        # charger's 4.2V regulated maximum). Battery connected clamps the
+        # measured voltage to ≤4.2V. Threshold at 4300mV separates the two.
+        if usb_connected() and mv > 4300:
             return None
         return _mv_to_pct(max(3300, min(4200, mv)))
     except Exception as e:

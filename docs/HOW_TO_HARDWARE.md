@@ -19,7 +19,7 @@ After assembly, [flash the firmware](HOW_TO_FIRMWARE.md)
 |---|---|---|
 | Microcontroller | **nice!nano** or nRF52840 pro-micro compatible board | nRF52840-based, chosen for built-in LiPo charging — no separate charging module needed |
 | IMU | BNO085 | I2C, addr `0x4B` |
-| Display | SSD1306 0.91" OLED | I2C, 128×32 px, addr `0x3C` |
+| Display | 0.42" OLED | I2C, |
 | Two push buttons  | Tactile push button | SMD, e.g. CK KSC6xxG footprint |
 | Battery | LiPo 3.7V 100mAh | Smallest single-cell LiPo that fits under the Pro Micro footprint (e.g. 20×30mm) |
 | PCB| Custom PCB (see kicad folder) | The PCB makes everything simpler, however, you can perfboard it: you will need to use both sides: plan ahead. |

@@ -1,10 +1,11 @@
 from utime import ticks_ms, ticks_diff
-from helpers.angle_calculator import calculate_angle
+from helpers.angle_calculator import calculate_angle, spin_rate
 from services.logging import log
 
 _DRIFT_VEL_THRESHOLD = 0.10
-_DRIFT_DEV_THRESHOLD = 1.0
-_SPIKE_THRESHOLD     = 25.0
+_DRIFT_DEV_THRESHOLD = 0.4
+_SPIKE_THRESHOLD     = 10.0
+_SPIN_THRESHOLD      = 0.5     # rad/s, matches the old is_spinning() default
 _ALPHA_FROZEN        = 0.995
 _ALPHA_ACTIVE        = 0.70
 _LOG_INTERVAL        = 500
@@ -47,10 +48,17 @@ class MeasureService:
         self._angle = alpha * self._angle + (1.0 - alpha) * raw
 
     def _snap_if_stopped(self, raw):
-        """If the filter is lost after a spin but the device has stopped, snap to raw."""
-        if not self._imu.is_spinning() and abs(raw - self._angle) >= _SPIKE_THRESHOLD:
+        """If the filter is lost after a coin-spin but that spin has stopped, snap to raw."""
+        if not self._is_spinning_on_stone() and abs(raw - self._angle) >= _SPIKE_THRESHOLD:
             self._angle = raw
             self._prev_angle = raw
+
+    def _is_spinning_on_stone(self):
+        """True while rotating fast about the n_stone axis (the magnet coin-spin that can
+        cause transient quaternion drift). Rotation about any other axis — e.g. tilting the
+        blade while sharpening — doesn't count, so real motion isn't mistaken for a spin."""
+        gyro = self._imu.get_angular_velocity()
+        return spin_rate(gyro, self._calibration.n_stone) >= _SPIN_THRESHOLD
 
     def _select_alpha(self, raw):
         """Freeze on spikes, track quickly while moving, hold steady otherwise."""

@@ -5656,7 +5656,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d3e017c5-029f-490f-8831-7d68daac1a9c")
-		(property "Reference" "BNO085"
+		(property "Reference" "U2"
 			(at 361.95 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5930,7 +5930,7 @@
 		(instances
 			(project "v4_fully_integrated_pc"
 				(path "/8b17f9a6-b000-4ccb-b0d9-cb9857b67250"
-					(reference "BNO085")
+					(reference "U2")
 					(unit 1)
 				)
 			)

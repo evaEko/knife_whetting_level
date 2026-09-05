@@ -29,6 +29,3 @@ class ImuService:
 
     def get_angular_velocity(self):
         return self._imu.get_angular_velocity()
-
-    def is_spinning(self):
-        return self._imu.is_spinning()

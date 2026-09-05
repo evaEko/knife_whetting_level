@@ -31,3 +31,13 @@ def calculate_angle(gravity, surface_normal):
     """Blade angle above the stone: 0 = flat, positive = lifted. Values > 90° are folded back."""
     raw = angle_between(gravity, surface_normal)
     return 180.0 - raw if raw > 90.0 else raw
+
+
+def spin_rate(gyro, axis):
+    """Angular speed (rad/s) of rotation about `axis` — the gyro component along it.
+
+    `axis` is a body-frame-fixed unit vector (e.g. n_stone), so this isolates the
+    magnet's coin-spin-on-the-blade-face motion from rotation about any other axis
+    (such as tilting the blade), regardless of the blade's current inclination.
+    """
+    return abs(_dot(gyro, axis))
